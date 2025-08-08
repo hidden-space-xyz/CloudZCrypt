@@ -6,24 +6,24 @@
     Width="800"
     Height="450">
     <StackPanel Margin="20">
-        <TextBlock Text="Directorio a encriptar:" Margin="0,0,0,5"/>
+        <TextBlock Text="Directory to encrypt:" Margin="0,0,0,5"/>
         <DockPanel Margin="0,0,0,15">
             <TextBox x:Name="SourceDirectoryBox" IsReadOnly="True" Width="400"/>
-            <Button Content="Seleccionar..." Click="SelectSourceDirectory_Click" Margin="5,0,0,0"/>
+            <Button Content="Select..." Click="SelectSourceDirectory_Click" Margin="5,0,0,0"/>
         </DockPanel>
 
-        <TextBlock Text="Directorio destino:" Margin="0,0,0,5"/>
+        <TextBlock Text="Destination directory:" Margin="0,0,0,5"/>
         <DockPanel Margin="0,0,0,15">
             <TextBox x:Name="DestinationDirectoryBox" IsReadOnly="True" Width="400"/>
-            <Button Content="Seleccionar..." Click="SelectDestinationDirectory_Click" Margin="5,0,0,0"/>
+            <Button Content="Select..." Click="SelectDestinationDirectory_Click" Margin="5,0,0,0"/>
         </DockPanel>
 
-        <TextBlock Text="Algoritmo de cifrado:" Margin="0,0,0,5"/>
+        <TextBlock Text="Encryption algorithm:" Margin="0,0,0,5"/>
         <ComboBox x:Name="AlgorithmComboBox" Width="200" Margin="0,0,0,15"/>
 
-        <TextBlock Text="Contraseña:" Margin="0,0,0,5"/>
+        <TextBlock Text="Password:" Margin="0,0,0,5"/>
         <PasswordBox x:Name="PasswordBox" Width="300" Height="30" Margin="0,0,0,15"/>
 
-        <Button Content="Encriptar" Width="100" Height="30" Click="EncryptButton_Click"/>
+        <Button Content="Encrypt" Width="100" Height="30" Click="EncryptButton_Click"/>
     </StackPanel>
 </Window>

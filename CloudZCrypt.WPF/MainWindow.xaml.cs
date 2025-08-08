@@ -37,7 +37,7 @@ namespace CloudZCrypt.WPF
         private void SelectSourceDirectory_Click(object sender, RoutedEventArgs e)
         {
             using FolderBrowserDialog dialog = new();
-            dialog.Description = "Selecciona el directorio a encriptar";
+            dialog.Description = "Select directory to encrypt";
             if (dialog.ShowDialog() == Forms.DialogResult.OK)
             {
                 SourceDirectoryBox.Text = dialog.SelectedPath;
@@ -47,7 +47,7 @@ namespace CloudZCrypt.WPF
         private void SelectDestinationDirectory_Click(object sender, RoutedEventArgs e)
         {
             using FolderBrowserDialog dialog = new();
-            dialog.Description = "Selecciona el directorio destino";
+            dialog.Description = "Select destination directory";
             if (dialog.ShowDialog() == Forms.DialogResult.OK)
             {
                 DestinationDirectoryBox.Text = dialog.SelectedPath;
@@ -60,7 +60,7 @@ namespace CloudZCrypt.WPF
                 string.IsNullOrWhiteSpace(DestinationDirectoryBox.Text) ||
                 string.IsNullOrWhiteSpace(PasswordBox.Password))
             {
-                System.Windows.MessageBox.Show("Por favor, completa todos los campos.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Please complete all fields.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -73,6 +73,7 @@ namespace CloudZCrypt.WPF
                     string destinationFilePath = System.IO.Path.Combine(DestinationDirectoryBox.Text, relativePath);
                     string destinationDirectory = System.IO.Path.GetDirectoryName(destinationFilePath);
 
+                    // Create destination directory if it doesn't exist
                     if (!System.IO.Directory.Exists(destinationDirectory))
                     {
                         System.IO.Directory.CreateDirectory(destinationDirectory);
@@ -81,12 +82,12 @@ namespace CloudZCrypt.WPF
                     bool result = await _encryptionService.EncryptFileAsync(file, destinationFilePath, PasswordBox.Password);
                     if (!result)
                     {
-                        System.Windows.MessageBox.Show($"Error al encriptar el archivo: {file}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        System.Windows.MessageBox.Show($"Error encrypting file: {file}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
                 }
 
-                System.Windows.MessageBox.Show("Encriptación completada con éxito.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show("Encryption completed successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
