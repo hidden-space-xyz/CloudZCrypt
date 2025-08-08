@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CloudZCrypt.Application\CloudZCrypt.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Storage\" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="CloudZCrypt.Composition" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+	</ItemGroup>
+
+</Project>
