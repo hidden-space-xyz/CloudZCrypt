@@ -23,7 +23,7 @@
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="SelectSourceDirectoryButton"
-                    Click="SelectSourceDirectory_Click"
+                    Click="SelectDirectory_Click"
                     Content="📂"
                     DockPanel.Dock="Right" />
                 <TextBox
@@ -39,7 +39,7 @@
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="SelectDestinationDirectoryButton"
-                    Click="SelectDestinationDirectory_Click"
+                    Click="SelectDirectory_Click"
                     Content="📂"
                     DockPanel.Dock="Right" />
                 <TextBox
@@ -58,7 +58,8 @@
                     Width="200"
                     Margin="0,5,0,0"
                     Padding="5"
-                    HorizontalAlignment="Left" />
+                    HorizontalAlignment="Left" 
+                    SelectionChanged="AlgorithmComboBox_SelectionChanged"/>
             </StackPanel>
 
 
