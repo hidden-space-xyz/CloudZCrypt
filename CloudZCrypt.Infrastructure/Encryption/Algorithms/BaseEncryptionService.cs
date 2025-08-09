@@ -1,4 +1,5 @@
 using CloudZCrypt.Application.Interfaces.Encryption;
+using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
@@ -97,13 +98,6 @@ internal abstract class BaseEncryptionService : IEncryptionService
         return keyDerivation.GetBytes(keySize / 8);
     }
 
-    protected static byte[] DeriveIv(string password, byte[] salt, int ivSize)
-    {
-        using Rfc2898DeriveBytes keyDerivation = new(password, salt, Iterations, HashAlgorithmName.SHA256);
-        keyDerivation.GetBytes(32); // Skip the key bytes
-        return keyDerivation.GetBytes(ivSize);
-    }
-
     protected static async Task WriteSaltAsync(FileStream stream, byte[] salt)
     {
         await stream.WriteAsync(salt);
@@ -112,7 +106,7 @@ internal abstract class BaseEncryptionService : IEncryptionService
     protected static async Task<byte[]> ReadSaltAsync(FileStream stream)
     {
         byte[] salt = new byte[SaltSize];
-        await stream.ReadAsync(salt);
+        _ = await stream.ReadAsync(salt);
         return salt;
     }
 
@@ -124,14 +118,14 @@ internal abstract class BaseEncryptionService : IEncryptionService
     protected static async Task<byte[]> ReadNonceAsync(FileStream stream)
     {
         byte[] nonce = new byte[NonceSize];
-        await stream.ReadAsync(nonce);
+        _ = await stream.ReadAsync(nonce);
         return nonce;
     }
 
-    protected static async Task ProcessFileWithCipherAsync(FileStream sourceStream, FileStream destinationStream, dynamic cipher)
+    protected static async Task ProcessFileWithCipherAsync(FileStream sourceStream, FileStream destinationStream, IAeadCipher cipher)
     {
         byte[] inputBuffer = new byte[BufferSize];
-        byte[] outputBuffer = new byte[cipher.GetOutputSize(BufferSize)];
+        byte[] outputBuffer = new byte[BufferSize];
 
         int bytesRead;
         while ((bytesRead = await sourceStream.ReadAsync(inputBuffer)) > 0)
