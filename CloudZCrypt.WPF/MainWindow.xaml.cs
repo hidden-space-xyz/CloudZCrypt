@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Application.Constants;
 using CloudZCrypt.Application.Interfaces.Encryption;
-using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +15,7 @@ namespace CloudZCrypt.WPF
         private IEncryptionService _encryptionService;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isProcessing;
+        private readonly Stopwatch _stopwatch = new();
 
         public MainWindow(IEncryptionServiceFactory encryptionServiceFactory)
         {
@@ -25,21 +26,7 @@ namespace CloudZCrypt.WPF
             AlgorithmComboBox.SelectedIndex = 0;
             AlgorithmComboBox.SelectionChanged += AlgorithmComboBox_SelectionChanged;
 
-            EncryptMode.Checked += Mode_Changed;
-            DecryptMode.Checked += Mode_Changed;
-
             UpdateEncryptionService();
-            UpdateUIState();
-        }
-
-        private void Mode_Changed(object sender, RoutedEventArgs e)
-        {
-            UpdateUIState();
-        }
-
-        private void UpdateUIState()
-        {
-            ProcessButton.Content = EncryptMode.IsChecked == true ? "Encrypt" : "Decrypt";
         }
 
         private void AlgorithmComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -56,9 +43,7 @@ namespace CloudZCrypt.WPF
         private void SelectSourceDirectory_Click(object sender, RoutedEventArgs e)
         {
             using FolderBrowserDialog dialog = new();
-            dialog.Description = EncryptMode.IsChecked == true
-                ? "Select directory to encrypt"
-                : "Select directory with encrypted files";
+            dialog.Description = "Select source directory";
             if (dialog.ShowDialog() == Forms.DialogResult.OK)
             {
                 SourceDirectoryBox.Text = dialog.SelectedPath;
@@ -75,7 +60,17 @@ namespace CloudZCrypt.WPF
             }
         }
 
-        private async void ProcessButton_Click(object sender, RoutedEventArgs e)
+        private async void EncryptButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessButton_Click(sender, e, true);
+        }
+
+        private async void DecryptButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessButton_Click(sender, e, false);
+        }
+
+        private async void ProcessButton_Click(object sender, RoutedEventArgs e, bool isEncrypt)
         {
             if (_isProcessing)
             {
@@ -89,7 +84,7 @@ namespace CloudZCrypt.WPF
             try
             {
                 _isProcessing = true;
-                UpdateControlState(true);
+                UpdateControlState(true, isEncrypt);
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 string[] files = Directory.GetFiles(SourceDirectoryBox.Text, "*.*", SearchOption.AllDirectories);
@@ -103,52 +98,58 @@ namespace CloudZCrypt.WPF
                     return;
                 }
 
-                ConcurrentBag<string> errors = [];
+                List<string> errors = [];
                 int processedFiles = 0;
+                long totalBytes = files.Sum(f => new FileInfo(f).Length);
+                long processedBytes = 0;
 
                 string src = SourceDirectoryBox.Text;
                 string dest = DestinationDirectoryBox.Text;
                 string pass = PasswordBox.Password;
-                bool? encryptMode = EncryptMode.IsChecked;
 
-                await Task.Run(async () =>
+                _stopwatch.Restart();
+
+                foreach (string file in files)
                 {
-                    ParallelOptions options = new()
+                    if (_cancellationTokenSource.Token.IsCancellationRequested)
+                        break;
+
+                    string relativePath = Path.GetRelativePath(src, file);
+                    string destinationFilePath = Path.Combine(dest, relativePath);
+                    string destinationDirectory = Path.GetDirectoryName(destinationFilePath)!;
+
+                    if (!Directory.Exists(destinationDirectory))
                     {
-                        MaxDegreeOfParallelism = Environment.ProcessorCount,
-                        CancellationToken = _cancellationTokenSource.Token
-                    };
+                        Directory.CreateDirectory(destinationDirectory);
+                    }
 
-                    await Parallel.ForEachAsync(files, options, async (file, token) =>
+                    bool success = isEncrypt
+                        ? await _encryptionService.EncryptFileAsync(file, destinationFilePath, pass)
+                        : await _encryptionService.DecryptFileAsync(file, destinationFilePath, pass);
+
+                    if (!success)
                     {
-                        string relativePath = Path.GetRelativePath(src, file);
-                        string destinationFilePath = Path.Combine(dest, relativePath);
-                        string destinationDirectory = Path.GetDirectoryName(destinationFilePath)!;
+                        errors.Add(file);
+                    }
 
-                        if (!Directory.Exists(destinationDirectory))
-                        {
-                            Directory.CreateDirectory(destinationDirectory);
-                        }
+                    processedFiles++;
+                    processedBytes += new FileInfo(file).Length;
 
-                        bool success = encryptMode == true
-                            ? await _encryptionService.EncryptFileAsync(file, destinationFilePath, pass)
-                            : await _encryptionService.DecryptFileAsync(file, destinationFilePath, pass);
+                    double progress = (double)processedBytes / totalBytes * 100;
+                    double bytesPerSecond = processedBytes / _stopwatch.Elapsed.TotalSeconds;
+                    TimeSpan estimatedTimeRemaining = TimeSpan.FromSeconds((totalBytes - processedBytes) / bytesPerSecond);
 
-                        if (!success)
-                        {
-                            errors.Add(file);
-                        }
-
-                        int current = Interlocked.Increment(ref processedFiles);
-                        await Dispatcher.InvokeAsync(() =>
-                        {
-                            ProgressBar.Value = (double)current / files.Length * 100;
-                            ProgressText.Text = $"Processing: {current}/{files.Length} files completed";
-                        });
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        ProgressBar.Value = progress;
+                        ProgressText.Text = $"Processing: {processedFiles}/{files.Length} files" +
+                            $" ({progress:F1}%) - ETA: {estimatedTimeRemaining:hh\\:mm\\:ss}";
                     });
-                });
+                }
 
-                string operation = encryptMode == true ? "Encryption" : "Decryption";
+                _stopwatch.Stop();
+                string operation = isEncrypt ? "Encryption" : "Decryption";
+
                 if (errors.Count > 0)
                 {
                     MessageBox.Show(
@@ -159,8 +160,13 @@ namespace CloudZCrypt.WPF
                 }
                 else
                 {
+                    TimeSpan totalTime = _stopwatch.Elapsed;
+                    double speedMBps = totalBytes / (1024.0 * 1024.0) / totalTime.TotalSeconds;
+
                     MessageBox.Show(
-                        $"{operation} completed successfully.",
+                        $"{operation} completed successfully.\n" +
+                        $"Time: {totalTime:hh\\:mm\\:ss}\n" +
+                        $"Speed: {speedMBps:F2} MB/s",
                         "Success",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -185,7 +191,7 @@ namespace CloudZCrypt.WPF
             finally
             {
                 _isProcessing = false;
-                UpdateControlState(false);
+                UpdateControlState(false, isEncrypt);
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
@@ -228,21 +234,27 @@ namespace CloudZCrypt.WPF
             return true;
         }
 
-        private void UpdateControlState(bool processing)
+        private void UpdateControlState(bool processing, bool isEncrypt)
         {
-            ProgressBar.Value = processing ? 0 : 100;
-            ProgressText.Text = processing ? "Starting..." : "Ready";
-
-            AlgorithmComboBox.IsEnabled = !processing;
             SourceDirectoryBox.IsEnabled = !processing;
             DestinationDirectoryBox.IsEnabled = !processing;
+
+            SelectSourceDirectoryButton.IsEnabled = !processing;
+            SelectDestinationDirectoryButton.IsEnabled = !processing;
+
+            AlgorithmComboBox.IsEnabled = !processing;
+
             PasswordBox.IsEnabled = !processing;
             ConfirmPasswordBox.IsEnabled = !processing;
-            EncryptMode.IsEnabled = !processing;
-            DecryptMode.IsEnabled = !processing;
 
-            ProcessButton.Content = processing ? "Cancel" : (EncryptMode.IsChecked == true ? "Encrypt" : "Decrypt");
-            CancelButton.IsEnabled = processing;
+            EncryptButton.IsEnabled = !processing || isEncrypt;
+            DecryptButton.IsEnabled = !processing || !isEncrypt;
+            EncryptButton.Content = processing && isEncrypt ? "Cancel" : "Encrypt";
+            DecryptButton.Content = processing && !isEncrypt ? "Cancel" : "Decrypt";
+
+            ProgressBar.Value = processing ? 0 : 100;
+            ProgressBar.Visibility = processing ? Visibility.Visible : Visibility.Hidden;
+            ProgressText.Visibility = processing ? Visibility.Visible : Visibility.Hidden;
         }
     }
 }

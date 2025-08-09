@@ -4,87 +4,120 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="CloudZCrypt"
     Width="800"
-    Height="600"
-    WindowStartupLocation="CenterScreen"
-    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-    <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="15,5"/>
-            <Setter Property="MinWidth" Value="80"/>
-            <Setter Property="Margin" Value="5"/>
-        </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,10,0,5"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="RadioButton">
-            <Setter Property="Margin" Value="0,5"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-    </Window.Resources>
+    Height="510"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen">
+    <Window.Resources />
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Mode Selection -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="Operation Mode:" FontWeight="Bold"/>
-            <StackPanel Orientation="Horizontal" Margin="0,5,0,15">
-                <RadioButton x:Name="EncryptMode" Content="Encrypt" IsChecked="True" Margin="0,0,20,0"/>
-                <RadioButton x:Name="DecryptMode" Content="Decrypt"/>
+
+        <!--  Main Content  -->
+        <StackPanel Grid.Row="0">
+            <TextBlock FontWeight="Bold" Text="Source Directory:" />
+            <DockPanel Margin="0,5,0,0">
+                <Button
+                    Name="SelectSourceDirectoryButton"
+                    Click="SelectSourceDirectory_Click"
+                    Content="📂"
+                    DockPanel.Dock="Right" />
+                <TextBox
+                    x:Name="SourceDirectoryBox"
+                    Padding="5"
+                    IsReadOnly="True" />
+            </DockPanel>
+
+            <TextBlock
+                Margin="0,20,0,0"
+                FontWeight="Bold"
+                Text="Destination Directory:" />
+            <DockPanel Margin="0,5,0,0">
+                <Button
+                    Name="SelectDestinationDirectoryButton"
+                    Click="SelectDestinationDirectory_Click"
+                    Content="📂"
+                    DockPanel.Dock="Right" />
+                <TextBox
+                    x:Name="DestinationDirectoryBox"
+                    Padding="5"
+                    IsReadOnly="True" />
+            </DockPanel>
+
+            <StackPanel
+                Grid.Column="0"
+                Margin="0,20,0,0"
+                Orientation="Vertical">
+                <TextBlock FontWeight="Bold" Text="Algorithm:" />
+                <ComboBox
+                    x:Name="AlgorithmComboBox"
+                    Width="200"
+                    Margin="0,5,0,0"
+                    Padding="5"
+                    HorizontalAlignment="Left" />
             </StackPanel>
+
+
+            <TextBlock
+                Margin="0,20,0,0"
+                FontWeight="Bold"
+                Text="Password:" />
+            <PasswordBox
+                x:Name="PasswordBox"
+                Height="30"
+                Margin="0,5,0,0"
+                Padding="5" />
+
+            <TextBlock
+                Margin="0,20,0,0"
+                FontWeight="Bold"
+                Text="Confirm Password:" />
+            <PasswordBox
+                x:Name="ConfirmPasswordBox"
+                Height="30"
+                Margin="0,5,0,0"
+                Padding="5" />
+
+
         </StackPanel>
 
-        <!-- Main Content -->
-        <StackPanel Grid.Row="1">
-            <TextBlock Text="Source Directory:"/>
-            <DockPanel Margin="0,0,0,15">
-                <Button DockPanel.Dock="Right" Content="Browse..." Click="SelectSourceDirectory_Click"/>
-                <TextBox x:Name="SourceDirectoryBox" IsReadOnly="True" Padding="5"/>
-            </DockPanel>
-
-            <TextBlock Text="Destination Directory:"/>
-            <DockPanel Margin="0,0,0,15">
-                <Button DockPanel.Dock="Right" Content="Browse..." Click="SelectDestinationDirectory_Click"/>
-                <TextBox x:Name="DestinationDirectoryBox" IsReadOnly="True" Padding="5"/>
-            </DockPanel>
-
-            <TextBlock Text="Encryption Algorithm:"/>
-            <ComboBox x:Name="AlgorithmComboBox" Width="200" Margin="0,0,0,15" Padding="5"/>
-
-            <TextBlock Text="Password:"/>
-            <PasswordBox x:Name="PasswordBox" Height="30" Margin="0,0,0,15" Padding="5"/>
-            
-            <TextBlock Text="Confirm Password:"/>
-            <PasswordBox x:Name="ConfirmPasswordBox" Height="30" Margin="0,0,0,15" Padding="5"/>
-
-            <TextBlock x:Name="ProgressText" Text="Ready" FontWeight="SemiBold"/>
-            <ProgressBar x:Name="ProgressBar" Height="20" Margin="0,5,0,15"/>
-        </StackPanel>
-
-        <!-- Action Buttons -->
-        <Grid Grid.Row="2">
+        <!--  Action Buttons  -->
+        <Grid Grid.Row="1" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            
-            <Button x:Name="CancelButton" 
-                    Content="Cancel" 
-                    Grid.Column="0"
-                    HorizontalAlignment="Left"
-                    IsEnabled="False"/>
-            
-            <Button x:Name="ProcessButton"
-                    Content="Encrypt"
-                    Grid.Column="1"
-                    Click="ProcessButton_Click"
-                    Background="#FF007ACC"
-                    Foreground="White"/>
+
+            <Button
+                x:Name="EncryptButton"
+                Grid.Column="1"
+                Margin="0,0,5,0"
+                Click="EncryptButton_Click"
+                Content="Encrypt" />
+            <Button
+                x:Name="DecryptButton"
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                Click="DecryptButton_Click"
+                Content="Decrypt" />
         </Grid>
+        <StackPanel Grid.Row="2">
+            <TextBlock
+                x:Name="ProgressText"
+                HorizontalAlignment="Center"
+                FontWeight="SemiBold"
+                Visibility="Hidden" />
+            <ProgressBar
+                x:Name="ProgressBar"
+                Margin="0,5,0,0"
+                Visibility="Hidden" />
+
+        </StackPanel>
+
     </Grid>
 </Window>
