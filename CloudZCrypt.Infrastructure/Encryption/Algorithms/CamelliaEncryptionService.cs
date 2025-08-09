@@ -1,148 +1,30 @@
-﻿using CloudZCrypt.Application.Interfaces.Encryption;
-using Org.BouncyCastle.Crypto.Engines;
+﻿using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
-using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
 
-internal class CamelliaEncryptionService : IEncryptionService
+internal class CamelliaEncryptionService : BaseEncryptionService
 {
-    private const int KeySize = 256; // Key size for Camellia (256 bits)
-    private const int BlockSize = 128; // Block size for Camellia (128 bits)
-    private const int IvSize = 16; // Initialization Vector (IV) size (128 bits / 16 bytes)
-    private const int SaltSize = 32; // Size of the salt for PBKDF2
-    private const int Iterations = 100000; // Number of iterations for PBKDF2
-
-    /// <summary>
-    /// Encrypts a file using Camellia-256 with a password
-    /// </summary>
-    /// <param name="sourceFilePath">Path to the file to encrypt</param>
-    /// <param name="destinationFilePath">Path where the encrypted file will be saved</param>
-    /// <param name="password">Password for encryption</param>
-    /// <returns>True if encryption succeeds</returns>
-    public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password)
+    protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        try
-        {
-            // Generate a random salt
-            byte[] salt = new byte[SaltSize];
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
+        // Configure BouncyCastle Camellia-GCM engine
+        CamelliaEngine camelliaEngine = new();
+        GcmBlockCipher gcmCipher = new(camelliaEngine);
+        AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
+        gcmCipher.Init(true, parameters);
 
-            // Generate key and IV from password using PBKDF2
-            using Rfc2898DeriveBytes keyDerivation = new(password, salt, Iterations, HashAlgorithmName.SHA256);
-            byte[] key = keyDerivation.GetBytes(KeySize / 8);
-            byte[] iv = keyDerivation.GetBytes(IvSize);
-
-            // Create Camellia engine
-            CamelliaEngine camelliaEngine = new();
-            CbcBlockCipher cbcBlockCipher = new(camelliaEngine);
-            ParametersWithIV keyParam = new(new KeyParameter(key), iv);
-            cbcBlockCipher.Init(true, keyParam);
-
-            using FileStream sourceFile = File.OpenRead(sourceFilePath);
-            using FileStream destinationFile = File.Create(destinationFilePath);
-
-            // Write salt at the beginning of the file
-            await destinationFile.WriteAsync(salt, 0, salt.Length);
-
-            // Process the file in blocks
-            int blockSize = BlockSize / 8;
-            byte[] inputBuffer = new byte[blockSize];
-            byte[] outputBuffer = new byte[blockSize];
-
-            int bytesRead;
-            while ((bytesRead = await sourceFile.ReadAsync(inputBuffer, 0, blockSize)) > 0)
-            {
-                if (bytesRead < blockSize)
-                {
-                    // Apply PKCS7 padding
-                    int paddingLength = blockSize - bytesRead;
-                    for (int i = bytesRead; i < blockSize; i++)
-                    {
-                        inputBuffer[i] = (byte)paddingLength;
-                    }
-                }
-
-                cbcBlockCipher.ProcessBlock(inputBuffer, 0, outputBuffer, 0);
-                await destinationFile.WriteAsync(outputBuffer, 0, blockSize);
-            }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+        await ProcessFileWithCipherAsync(sourceStream, destinationStream, gcmCipher);
     }
 
-    /// <summary>
-    /// Decrypts a file that was encrypted using EncryptFile
-    /// </summary>
-    /// <param name="sourceFilePath">Path to the encrypted file</param>
-    /// <param name="destinationFilePath">Path where the decrypted file will be saved</param>
-    /// <param name="password">Password used for encryption</param>
-    /// <returns>True if decryption succeeds</returns>
-    public async Task<bool> DecryptFileAsync(string sourceFilePath, string destinationFilePath, string password)
+    protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        try
-        {
-            using FileStream sourceFile = File.OpenRead(sourceFilePath);
+        // Configure BouncyCastle Camellia-GCM engine
+        CamelliaEngine camelliaEngine = new();
+        GcmBlockCipher gcmCipher = new(camelliaEngine);
+        AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
+        gcmCipher.Init(false, parameters);
 
-            // Read the salt from the beginning of the file
-            byte[] salt = new byte[SaltSize];
-            await sourceFile.ReadAsync(salt, 0, salt.Length);
-
-            // Generate key and IV from password and salt
-            using Rfc2898DeriveBytes keyDerivation = new(password, salt, Iterations, HashAlgorithmName.SHA256);
-            byte[] key = keyDerivation.GetBytes(KeySize / 8);
-            byte[] iv = keyDerivation.GetBytes(IvSize);
-
-            // Create Camellia engine
-            CamelliaEngine camelliaEngine = new();
-            CbcBlockCipher cbcBlockCipher = new(camelliaEngine);
-            ParametersWithIV keyParam = new(new KeyParameter(key), iv);
-            cbcBlockCipher.Init(false, keyParam);
-
-            using FileStream destinationFile = File.Create(destinationFilePath);
-
-            // Process the file in blocks
-            int blockSize = BlockSize / 8;
-            byte[] inputBuffer = new byte[blockSize];
-            byte[] outputBuffer = new byte[blockSize];
-            long totalBytes = sourceFile.Length - SaltSize;
-            long processedBytes = 0;
-
-            while (processedBytes < totalBytes)
-            {
-                await sourceFile.ReadAsync(inputBuffer, 0, blockSize);
-                cbcBlockCipher.ProcessBlock(inputBuffer, 0, outputBuffer, 0);
-
-                processedBytes += blockSize;
-
-                if (processedBytes >= totalBytes)
-                {
-                    // Handle PKCS7 padding in the last block
-                    int paddingLength = outputBuffer[blockSize - 1];
-                    if (paddingLength > 0 && paddingLength <= blockSize)
-                    {
-                        await destinationFile.WriteAsync(outputBuffer, 0, blockSize - paddingLength);
-                    }
-                }
-                else
-                {
-                    await destinationFile.WriteAsync(outputBuffer, 0, blockSize);
-                }
-            }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+        await ProcessFileWithCipherAsync(sourceStream, destinationStream, gcmCipher);
     }
 }
