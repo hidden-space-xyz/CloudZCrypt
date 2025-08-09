@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Application.Constants;
+﻿using CloudZCrypt.Domain.Constants;
 
 namespace CloudZCrypt.Application.Interfaces.Encryption;
 

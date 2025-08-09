@@ -10,10 +10,6 @@
     <ProjectReference Include="..\CloudZCrypt.Application\CloudZCrypt.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Storage\" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<InternalsVisibleTo Include="CloudZCrypt.Composition" />
 	</ItemGroup>

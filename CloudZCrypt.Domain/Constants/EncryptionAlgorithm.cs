@@ -1,4 +1,4 @@
-﻿namespace CloudZCrypt.Application.Constants;
+﻿namespace CloudZCrypt.Domain.Constants;
 
 public enum EncryptionAlgorithm
 {

@@ -1,5 +1,5 @@
-﻿using CloudZCrypt.Application.Constants;
-using CloudZCrypt.Application.Interfaces.Encryption;
+﻿using CloudZCrypt.Application.Interfaces.Encryption;
+using CloudZCrypt.Domain.Constants;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudZCrypt.Infrastructure.Encryption;

@@ -1,17 +1,17 @@
-using CloudZCrypt.Application.Constants;
 using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Application.Interfaces.Files;
+using CloudZCrypt.Application.Interfaces.Storage;
+using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Entities;
 using System.Diagnostics;
 
-namespace CloudZCrypt.Infrastructure.Files;
+namespace CloudZCrypt.Infrastructure.Storage;
 
-internal class FileProcessingService : IFileProcessingService
+internal class FileProcessingService(IEncryptionServiceFactory encryptionServiceFactory) : IFileProcessingService
 {
-    public async Task<FileProcessingResult> ProcessFilesAsync(
+    public async Task<FileProcessingResult> EncryptFilesAsync(
         FileProcessingRequest request,
-        IEncryptionService encryptionService,
-        IProgress<FileEncryptionProcessStatus>? progress = null,
+        IProgress<FileProcessingStatus>? progress = null,
         CancellationToken cancellationToken = default)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -41,18 +41,21 @@ internal class FileProcessingService : IFileProcessingService
             string destinationFilePath = Path.Combine(request.DestinationDirectory, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(destinationFilePath)!);
 
-            Task<bool> operation = request.CryptOperation == CryptOperation.Encrypt
-                ? encryptionService.EncryptFileAsync(file, destinationFilePath, request.Password)
-                : encryptionService.DecryptFileAsync(file, destinationFilePath, request.Password);
+            IEncryptionService encryptionService = encryptionServiceFactory.Create(request.EncryptionAlgorithm);
+
+            Task<bool> operation = request.EncryptOperation switch
+            {
+                EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(file, destinationFilePath, request.Password),
+                EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(file, destinationFilePath, request.Password),
+                _ => throw new NotSupportedException($"Unsupported operation: {request.EncryptOperation}")
+            };
 
             if (!await operation)
-            {
                 errors.Add(file);
-            }
 
             processedBytes += new FileInfo(file).Length;
 
-            progress?.Report(new FileEncryptionProcessStatus(
+            progress?.Report(new FileProcessingStatus(
                 ProcessedFiles: i + 1,
                 TotalFiles: files.Length,
                 ProcessedBytes: processedBytes,

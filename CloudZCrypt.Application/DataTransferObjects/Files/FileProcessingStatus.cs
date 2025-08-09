@@ -1,7 +1,7 @@
 namespace CloudZCrypt.Application.DataTransferObjects.Files;
 
 
-public record FileEncryptionProcessStatus(
+public record FileProcessingStatus(
     int ProcessedFiles,
     int TotalFiles,
     long ProcessedBytes,

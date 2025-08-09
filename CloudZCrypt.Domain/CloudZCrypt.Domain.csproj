@@ -9,8 +9,4 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="CloudZCrypt.Application" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Entities\" />
-	</ItemGroup>
 </Project>

@@ -1,7 +1,8 @@
-using CloudZCrypt.Application.Constants;
 using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Application.Interfaces.Files;
+using CloudZCrypt.Application.Interfaces.Storage;
+using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Entities;
 using CloudZCrypt.WPF.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,7 +16,6 @@ public partial class MainWindowViewModel : ObservableObject
 {
     #region Private Fields
 
-    private readonly IEncryptionServiceFactory _encryptionServiceFactory;
     private readonly IDialogService _dialogService;
     private readonly IFileProcessingService _fileProcessingService;
 
@@ -82,7 +82,6 @@ public partial class MainWindowViewModel : ObservableObject
         IDialogService dialogService,
         IFileProcessingService fileProcessingService)
     {
-        _encryptionServiceFactory = encryptionServiceFactory;
         _dialogService = dialogService;
         _fileProcessingService = fileProcessingService;
 
@@ -94,7 +93,7 @@ public partial class MainWindowViewModel : ObservableObject
         DestinationDirectory = @"D:\WorkSpace\EncryptionTest\Result";
         Password = "TestPassword123";
         ConfirmPassword = "TestPassword123";
-        SelectedAlgorithm = EncryptionAlgorithm.Serpent;
+        SelectedAlgorithm = EncryptionAlgorithm.Aes;
 #endif
     }
 
@@ -125,13 +124,13 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanExecuteEncrypt))]
     private async Task EncryptAsync()
     {
-        await ProcessFilesAsync(CryptOperation.Encrypt);
+        await ProcessFilesAsync(EncryptOperation.Encrypt);
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteDecrypt))]
     private async Task DecryptAsync()
     {
-        await ProcessFilesAsync(CryptOperation.Decrypt);
+        await ProcessFilesAsync(EncryptOperation.Decrypt);
     }
 
     #endregion
@@ -163,22 +162,21 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Private Methods
 
-    private async Task ProcessFilesAsync(CryptOperation cryptOperation)
+    private async Task ProcessFilesAsync(EncryptOperation encryptOperation)
     {
         if (IsProcessing)
         {
-            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.CancelAsync();
             return;
         }
 
         if (!AreInputsValid())
-        {
             return;
-        }
 
         IsProcessing = true;
-        UpdateButtonStates(cryptOperation);
         _cancellationTokenSource = new CancellationTokenSource();
+
+        UpdateButtonStates(encryptOperation);
 
         try
         {
@@ -186,18 +184,15 @@ public partial class MainWindowViewModel : ObservableObject
                 SourceDirectory,
                 DestinationDirectory,
                 Password,
-                cryptOperation);
+                encryptOperation,
+                SelectedAlgorithm);
 
-            Progress<FileEncryptionProcessStatus> progress = new(OnProgressUpdate);
+            Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
 
-            IEncryptionService encryptionService = _encryptionServiceFactory.Create(SelectedAlgorithm);
-            FileProcessingResult result = await _fileProcessingService.ProcessFilesAsync(
-                request,
-                encryptionService,
-                progress,
-                _cancellationTokenSource.Token);
+            FileProcessingResult result =
+                await _fileProcessingService.EncryptFilesAsync(request, progress, _cancellationTokenSource.Token);
 
-            ShowCompletionMessage(cryptOperation, result);
+            ShowCompletionMessage(encryptOperation, result);
         }
         catch (OperationCanceledException)
         {
@@ -210,13 +205,13 @@ public partial class MainWindowViewModel : ObservableObject
         finally
         {
             IsProcessing = false;
-            ResetButtonStates();
             _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+
+            ResetButtonStates();
         }
     }
 
-    private void OnProgressUpdate(FileEncryptionProcessStatus update)
+    private void OnProgressUpdate(FileProcessingStatus update)
     {
         double progress = update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
         double bytesPerSecond = update.ProcessedBytes / update.Elapsed.TotalSeconds;
@@ -228,9 +223,9 @@ public partial class MainWindowViewModel : ObservableObject
         ProgressText = $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
     }
 
-    private void ShowCompletionMessage(CryptOperation cryptOperation, FileProcessingResult result)
+    private void ShowCompletionMessage(EncryptOperation encryptOperation, FileProcessingResult result)
     {
-        string operation = cryptOperation == CryptOperation.Encrypt ? "Encryption" : "Decryption";
+        string operation = encryptOperation == EncryptOperation.Encrypt ? "Encryption" : "Decryption";
 
         if (!result.IsSuccess && result.Errors.Count > 0)
         {
@@ -275,6 +270,19 @@ public partial class MainWindowViewModel : ObservableObject
             return false;
         }
 
+        if (DestinationDirectory.StartsWith(SourceDirectory, StringComparison.OrdinalIgnoreCase))
+        {
+            _dialogService.ShowMessage("Destination directory cannot be inside the source directory.", "Error", MessageBoxImage.Error);
+            return false;
+        }
+
+        if (!Directory.Exists(SourceDirectory))
+        {
+            _dialogService.ShowMessage("Source directory does not exist.", "Error", MessageBoxImage.Error);
+            return false;
+        }
+
+
         return true;
     }
 
@@ -290,9 +298,9 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    private void UpdateButtonStates(CryptOperation cryptOperation)
+    private void UpdateButtonStates(EncryptOperation encryptOperation)
     {
-        if (cryptOperation == CryptOperation.Encrypt)
+        if (encryptOperation == EncryptOperation.Encrypt)
         {
             EncryptButtonText = "Encrypt";
             DecryptButtonText = "Cancel";
