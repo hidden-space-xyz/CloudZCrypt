@@ -8,7 +8,7 @@
     Height="510"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen">
-    
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -29,8 +29,8 @@
                 <TextBox
                     x:Name="SourceDirectoryBox"
                     Padding="5"
-                    IsReadOnly="True"
                     IsEnabled="{Binding AreControlsEnabled}"
+                    IsReadOnly="True"
                     Text="{Binding SourceDirectory}" />
             </DockPanel>
 
@@ -48,8 +48,8 @@
                 <TextBox
                     x:Name="DestinationDirectoryBox"
                     Padding="5"
-                    IsReadOnly="True"
                     IsEnabled="{Binding AreControlsEnabled}"
+                    IsReadOnly="True"
                     Text="{Binding DestinationDirectory}" />
             </DockPanel>
 
@@ -118,7 +118,7 @@
                 Command="{Binding DecryptCommand}"
                 Content="{Binding DecryptButtonText}" />
         </Grid>
-        
+
         <StackPanel Grid.Row="2">
             <TextBlock
                 x:Name="ProgressText"
@@ -129,8 +129,8 @@
             <ProgressBar
                 x:Name="ProgressBar"
                 Margin="0,5,0,0"
-                Value="{Binding ProgressValue}"
-                Visibility="{Binding ProgressVisibility}" />
+                Visibility="{Binding ProgressVisibility}"
+                Value="{Binding ProgressValue}" />
         </StackPanel>
 
     </Grid>

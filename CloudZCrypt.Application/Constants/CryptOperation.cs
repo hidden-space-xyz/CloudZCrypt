@@ -1,7 +1,6 @@
-﻿namespace CloudZCrypt.Application.Constants
+﻿namespace CloudZCrypt.Application.Constants;
+
+public enum CryptOperation
 {
-    public enum CryptOperation
-    {
-        Encrypt, Decrypt
-    }
+    Encrypt, Decrypt
 }

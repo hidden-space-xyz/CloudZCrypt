@@ -1,9 +1,8 @@
 ﻿using CloudZCrypt.Application.Constants;
 
-namespace CloudZCrypt.Application.Interfaces.Encryption
+namespace CloudZCrypt.Application.Interfaces.Encryption;
+
+public interface IEncryptionServiceFactory
 {
-    public interface IEncryptionServiceFactory
-    {
-        IEncryptionService Create(EncryptionAlgorithm algorithm);
-    }
+    IEncryptionService Create(EncryptionAlgorithm algorithm);
 }

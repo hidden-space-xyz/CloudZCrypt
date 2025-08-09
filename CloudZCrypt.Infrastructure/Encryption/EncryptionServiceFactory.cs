@@ -1,22 +1,13 @@
 ﻿using CloudZCrypt.Application.Constants;
 using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Infrastructure.Encryption.Algorithms;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace CloudZCrypt.Infrastructure.Encryption
+namespace CloudZCrypt.Infrastructure.Encryption;
+
+internal class EncryptionServiceFactory(IServiceProvider serviceProvider) : IEncryptionServiceFactory
 {
-    internal class EncryptionServiceFactory : IEncryptionServiceFactory
+    public IEncryptionService Create(EncryptionAlgorithm algorithm)
     {
-        public IEncryptionService Create(EncryptionAlgorithm algorithm)
-        {
-            return algorithm switch
-            {
-                EncryptionAlgorithm.Aes => new AesEncryptionService(),
-                EncryptionAlgorithm.Twofish => new TwofishEncryptionService(),
-                EncryptionAlgorithm.Serpent => new SerpentEncryptionService(),
-                EncryptionAlgorithm.ChaCha20 => new ChaCha20EncryptionService(),
-                EncryptionAlgorithm.Camellia => new CamelliaEncryptionService(),
-                _ => throw new NotSupportedException($"The encryption algorithm '{algorithm}' is not supported.")
-            };
-        }
+        return serviceProvider.GetRequiredKeyedService<IEncryptionService>(algorithm);
     }
 }

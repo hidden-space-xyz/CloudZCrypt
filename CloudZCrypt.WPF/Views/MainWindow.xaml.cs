@@ -1,14 +1,13 @@
 ﻿using CloudZCrypt.WPF.ViewModels;
 using System.Windows;
 
-namespace CloudZCrypt.WPF
+namespace CloudZCrypt.WPF;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    public MainWindow(MainWindowViewModel viewModel)
     {
-        public MainWindow(MainWindowViewModel viewModel)
-        {
-            InitializeComponent();
-            DataContext = viewModel;
-        }
+        InitializeComponent();
+        DataContext = viewModel;
     }
 }

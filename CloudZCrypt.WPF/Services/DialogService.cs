@@ -1,19 +1,22 @@
+using CloudZCrypt.WPF.Views;
 using System.Windows;
-using MessageBox = System.Windows.MessageBox;
 
-namespace CloudZCrypt.WPF.Services
+namespace CloudZCrypt.WPF.Services;
+
+public class DialogService : IDialogService
 {
-    public class DialogService : IDialogService
+    public void ShowMessage(string message, string title, MessageBoxImage icon)
     {
-        public void ShowMessage(string message, string title, MessageBoxImage icon)
-        {
-            MessageBox.Show(message, title, MessageBoxButton.OK, icon);
-        }
+        // Get the current active window as owner for proper centering
+        Window? owner = System.Windows.Application.Current?.MainWindow;
 
-        public string? ShowFolderDialog(string description)
-        {
-            using FolderBrowserDialog dialog = new() { Description = description };
-            return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null;
-        }
+        MessageDialog dialog = new(message, title, icon, owner);
+        dialog.ShowDialog();
+    }
+
+    public string? ShowFolderDialog(string description)
+    {
+        using FolderBrowserDialog dialog = new() { Description = description };
+        return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null;
     }
 }
