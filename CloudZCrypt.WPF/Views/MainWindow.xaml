@@ -2,13 +2,13 @@
     x:Class="CloudZCrypt.WPF.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:CloudZCrypt.WPF.Behaviors"
     Title="CloudZCrypt"
     Width="800"
     Height="510"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen">
-    <Window.Resources />
-
+    
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -16,20 +16,22 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-
         <!--  Main Content  -->
         <StackPanel Grid.Row="0">
             <TextBlock FontWeight="Bold" Text="Source Directory:" />
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="SelectSourceDirectoryButton"
-                    Click="SelectDirectory_Click"
+                    Command="{Binding SelectSourceDirectoryCommand}"
                     Content="📂"
-                    DockPanel.Dock="Right" />
+                    DockPanel.Dock="Right"
+                    IsEnabled="{Binding AreControlsEnabled}" />
                 <TextBox
                     x:Name="SourceDirectoryBox"
                     Padding="5"
-                    IsReadOnly="True" />
+                    IsReadOnly="True"
+                    IsEnabled="{Binding AreControlsEnabled}"
+                    Text="{Binding SourceDirectory}" />
             </DockPanel>
 
             <TextBlock
@@ -39,13 +41,16 @@
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="SelectDestinationDirectoryButton"
-                    Click="SelectDirectory_Click"
+                    Command="{Binding SelectDestinationDirectoryCommand}"
                     Content="📂"
-                    DockPanel.Dock="Right" />
+                    DockPanel.Dock="Right"
+                    IsEnabled="{Binding AreControlsEnabled}" />
                 <TextBox
                     x:Name="DestinationDirectoryBox"
                     Padding="5"
-                    IsReadOnly="True" />
+                    IsReadOnly="True"
+                    IsEnabled="{Binding AreControlsEnabled}"
+                    Text="{Binding DestinationDirectory}" />
             </DockPanel>
 
             <StackPanel
@@ -58,10 +63,11 @@
                     Width="200"
                     Margin="0,5,0,0"
                     Padding="5"
-                    HorizontalAlignment="Left" 
-                    SelectionChanged="AlgorithmComboBox_SelectionChanged"/>
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding AreControlsEnabled}"
+                    ItemsSource="{Binding AvailableAlgorithms}"
+                    SelectedItem="{Binding SelectedAlgorithm}" />
             </StackPanel>
-
 
             <TextBlock
                 Margin="0,20,0,0"
@@ -71,7 +77,10 @@
                 x:Name="PasswordBox"
                 Height="30"
                 Margin="0,5,0,0"
-                Padding="5" />
+                Padding="5"
+                behaviors:PasswordBoxBehavior.Attach="True"
+                behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
+                IsEnabled="{Binding AreControlsEnabled}" />
 
             <TextBlock
                 Margin="0,20,0,0"
@@ -81,8 +90,10 @@
                 x:Name="ConfirmPasswordBox"
                 Height="30"
                 Margin="0,5,0,0"
-                Padding="5" />
-
+                Padding="5"
+                behaviors:PasswordBoxBehavior.Attach="True"
+                behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
+                IsEnabled="{Binding AreControlsEnabled}" />
 
         </StackPanel>
 
@@ -98,26 +109,28 @@
                 x:Name="EncryptButton"
                 Grid.Column="1"
                 Margin="0,0,5,0"
-                Click="EncryptButton_Click"
-                Content="Encrypt" />
+                Command="{Binding EncryptCommand}"
+                Content="{Binding EncryptButtonText}" />
             <Button
                 x:Name="DecryptButton"
                 Grid.Column="2"
                 Margin="5,0,0,0"
-                Click="DecryptButton_Click"
-                Content="Decrypt" />
+                Command="{Binding DecryptCommand}"
+                Content="{Binding DecryptButtonText}" />
         </Grid>
+        
         <StackPanel Grid.Row="2">
             <TextBlock
                 x:Name="ProgressText"
                 HorizontalAlignment="Center"
                 FontWeight="SemiBold"
-                Visibility="Hidden" />
+                Text="{Binding ProgressText}"
+                Visibility="{Binding ProgressVisibility}" />
             <ProgressBar
                 x:Name="ProgressBar"
                 Margin="0,5,0,0"
-                Visibility="Hidden" />
-
+                Value="{Binding ProgressValue}"
+                Visibility="{Binding ProgressVisibility}" />
         </StackPanel>
 
     </Grid>

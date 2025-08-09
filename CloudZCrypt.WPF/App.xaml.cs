@@ -1,4 +1,6 @@
 ﻿using CloudZCrypt.Composition;
+using CloudZCrypt.WPF.Services;
+using CloudZCrypt.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
@@ -26,8 +28,18 @@ namespace CloudZCrypt.WPF
 
         private void ConfigureServices(IServiceCollection services)
         {
+            // Views
             services.AddSingleton<MainWindow>();
+
+            // ViewModels
+            services.AddSingleton<MainWindowViewModel>();
+
+            // Services
+            services.AddSingleton<IDialogService, DialogService>();
+
+            // Application services
             services.AddEncryptionServices();
+            services.AddStorageServices();
         }
     }
 
