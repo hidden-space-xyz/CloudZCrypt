@@ -1,17 +1,21 @@
 using CloudZCrypt.Application.Interfaces.Encryption;
+using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
 
 internal abstract class BaseEncryptionService : IEncryptionService
 {
-    protected const int SaltSize = 32;
-    protected const int Iterations = 100000;
     protected const int KeySize = 256;
-    protected const int NonceSize = 12; // 96-bit nonce for GCM/AEAD
-    protected const int TagSize = 16; // 128-bit authentication tag
-    protected const int BufferSize = 4096;
+    protected const int SaltSize = 32;
+    protected const int NonceSize = 12;
+    protected const int TagSize = 16;
+    protected const int BufferSize = 4 * 1024;
+    protected const int Argon2MemoryCost = 128 * 1024;
+    protected const int Argon2Iterations = 5;
+    protected const int Argon2Parallelism = 4;
 
     public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password)
     {
@@ -21,7 +25,7 @@ internal abstract class BaseEncryptionService : IEncryptionService
             byte[] salt = GenerateSalt();
             byte[] nonce = GenerateNonce();
 
-            // Generate key from password using PBKDF2
+            // Generate key from password using Argon2id
             byte[] key = DeriveKey(password, salt, KeySize);
 
             using FileStream sourceFile = File.OpenRead(sourceFilePath);
@@ -94,8 +98,43 @@ internal abstract class BaseEncryptionService : IEncryptionService
 
     protected static byte[] DeriveKey(string password, byte[] salt, int keySize)
     {
-        using Rfc2898DeriveBytes keyDerivation = new(password, salt, Iterations, HashAlgorithmName.SHA256);
-        return keyDerivation.GetBytes(keySize / 8);
+        // Create Argon2 generator
+        Argon2BytesGenerator argon2 = new();
+        argon2.Init(new Argon2Parameters.Builder(Argon2Parameters.Argon2id)
+            .WithSalt(salt)
+            .WithMemoryAsKB(Argon2MemoryCost)
+            .WithIterations(Argon2Iterations)
+            .WithParallelism(Argon2Parallelism)
+            .Build());
+
+        // Generate the key
+        byte[] key = new byte[keySize / 8];
+        char[]? passwordChars = null;
+
+        try
+        {
+            // Convert password to character array
+            passwordChars = password.ToCharArray();
+
+            // Generate the key
+            argon2.GenerateBytes(passwordChars, key);
+
+            return key;
+        }
+        catch (Exception ex)
+        {
+            // Cleanup in case of exception
+            if (key != null)
+                Array.Clear(key, 0, key.Length);
+
+            throw new CryptographicException("Error deriving key", ex);
+        }
+        finally
+        {
+            // Clean sensitive data from memory
+            if (passwordChars != null)
+                Array.Clear(passwordChars, 0, passwordChars.Length);
+        }
     }
 
     protected static async Task WriteSaltAsync(FileStream stream, byte[] salt)
