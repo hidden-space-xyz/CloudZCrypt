@@ -1,15 +1,18 @@
 ﻿using CloudZCrypt.Application.Interfaces.Encryption;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Paddings;
+using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Encryption.Algorithms
 {
     internal class AesEncryptionService : IEncryptionService
     {
-        private const int KeySize = 256; // Key size for AES (256 bits)
-        private const int BlockSize = 128; // Block size for AES (128 bits)
-        private const int IvSize = 16; // Initialization Vector (IV) size (128 bits / 16 bytes)
-        private const int SaltSize = 32; // Size of the salt for PBKDF2
-        private const int Iterations = 100000; // Number of iterations for PBKDF2
+        private const int KeySize = 256;
+        private const int IvSize = 16;
+        private const int SaltSize = 32;
+        private const int Iterations = 100000;
 
         /// <summary>
         /// Encrypts a file using AES-256 with a password
@@ -34,24 +37,37 @@ namespace CloudZCrypt.Infrastructure.Encryption.Algorithms
                 byte[] key = keyDerivation.GetBytes(KeySize / 8);
                 byte[] iv = keyDerivation.GetBytes(IvSize);
 
-                using Aes aes = Aes.Create();
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
-                aes.KeySize = KeySize;
-                aes.BlockSize = BlockSize;
-                aes.Key = key;
-                aes.IV = iv;
+                // Configure BouncyCastle AES engine
+                AesEngine aesEngine = new();
+                CbcBlockCipher cbcBlockCipher = new(aesEngine);
+                PaddedBufferedBlockCipher paddedBlockCipher = new(cbcBlockCipher, new Pkcs7Padding());
+                ParametersWithIV keyParameter = new(new KeyParameter(key), iv);
+                paddedBlockCipher.Init(true, keyParameter);
 
                 using FileStream sourceFile = File.OpenRead(sourceFilePath);
                 using FileStream destinationFile = File.Create(destinationFilePath);
 
                 // Write salt at the beginning of the file
-                await destinationFile.WriteAsync(salt, 0, salt.Length);
+                await destinationFile.WriteAsync(salt);
 
-                // Create crypto stream and encrypt
-                using CryptoStream cryptoStream = new(destinationFile, aes.CreateEncryptor(), CryptoStreamMode.Write);
-                await sourceFile.CopyToAsync(cryptoStream);
-                await cryptoStream.FlushFinalBlockAsync();
+                // Process the file in chunks
+                const int bufferSize = 4096;
+                byte[] inputBuffer = new byte[bufferSize];
+                byte[] outputBuffer = new byte[paddedBlockCipher.GetOutputSize(bufferSize)];
+
+                int bytesRead;
+                while ((bytesRead = await sourceFile.ReadAsync(inputBuffer)) > 0)
+                {
+                    int processed = paddedBlockCipher.ProcessBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+                    await destinationFile.WriteAsync(outputBuffer.AsMemory(0, processed));
+                }
+
+                // Process the final block
+                int finalBytes = paddedBlockCipher.DoFinal(outputBuffer, 0);
+                if (finalBytes > 0)
+                {
+                    await destinationFile.WriteAsync(outputBuffer.AsMemory(0, finalBytes));
+                }
 
                 return true;
             }
@@ -76,25 +92,40 @@ namespace CloudZCrypt.Infrastructure.Encryption.Algorithms
 
                 // Read the salt from the beginning of the file
                 byte[] salt = new byte[SaltSize];
-                await sourceFile.ReadAsync(salt, 0, salt.Length);
+                await sourceFile.ReadAsync(salt);
 
                 // Generate key and IV from password and salt
                 using Rfc2898DeriveBytes keyDerivation = new(password, salt, Iterations, HashAlgorithmName.SHA256);
                 byte[] key = keyDerivation.GetBytes(KeySize / 8);
                 byte[] iv = keyDerivation.GetBytes(IvSize);
 
-                using Aes aes = Aes.Create();
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
-                aes.KeySize = KeySize;
-                aes.BlockSize = BlockSize;
-                aes.Key = key;
-                aes.IV = iv;
+                // Configure BouncyCastle AES engine
+                AesEngine aesEngine = new();
+                CbcBlockCipher cbcBlockCipher = new(aesEngine);
+                PaddedBufferedBlockCipher paddedBlockCipher = new(cbcBlockCipher, new Pkcs7Padding());
+                ParametersWithIV keyParameter = new(new KeyParameter(key), iv);
+                paddedBlockCipher.Init(false, keyParameter);
 
                 using FileStream destinationFile = File.Create(destinationFilePath);
-                using CryptoStream cryptoStream = new(sourceFile, aes.CreateDecryptor(), CryptoStreamMode.Read);
 
-                await cryptoStream.CopyToAsync(destinationFile);
+                // Process the file in chunks
+                const int bufferSize = 4096;
+                byte[] inputBuffer = new byte[bufferSize];
+                byte[] outputBuffer = new byte[paddedBlockCipher.GetOutputSize(bufferSize)];
+
+                int bytesRead;
+                while ((bytesRead = await sourceFile.ReadAsync(inputBuffer)) > 0)
+                {
+                    int processed = paddedBlockCipher.ProcessBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+                    await destinationFile.WriteAsync(outputBuffer.AsMemory(0, processed));
+                }
+
+                // Process the final block
+                int finalBytes = paddedBlockCipher.DoFinal(outputBuffer, 0);
+                if (finalBytes > 0)
+                {
+                    await destinationFile.WriteAsync(outputBuffer.AsMemory(0, finalBytes));
+                }
 
                 return true;
             }
