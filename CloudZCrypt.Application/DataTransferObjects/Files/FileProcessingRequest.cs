@@ -1,6 +1,6 @@
 using CloudZCrypt.Application.Constants;
 
-namespace CloudZCrypt.Application.DataTransferObjects.FileProcessing;
+namespace CloudZCrypt.Application.DataTransferObjects.Files;
 
 public record FileProcessingRequest(
     string SourceDirectory,

@@ -1,4 +1,4 @@
-using CloudZCrypt.Application.DataTransferObjects.FileProcessing;
+using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.Interfaces.Encryption;
 
 namespace CloudZCrypt.Application.Interfaces.Files;

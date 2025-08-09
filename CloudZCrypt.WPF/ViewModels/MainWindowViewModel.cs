@@ -1,5 +1,5 @@
 using CloudZCrypt.Application.Constants;
-using CloudZCrypt.Application.DataTransferObjects.FileProcessing;
+using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.Interfaces.Encryption;
 using CloudZCrypt.Application.Interfaces.Files;
 using CloudZCrypt.WPF.Services;

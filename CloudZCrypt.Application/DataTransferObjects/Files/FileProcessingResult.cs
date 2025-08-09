@@ -1,4 +1,4 @@
-namespace CloudZCrypt.Application.DataTransferObjects.FileProcessing;
+namespace CloudZCrypt.Application.DataTransferObjects.Files;
 
 public record FileProcessingResult(
     bool IsSuccess,
