@@ -3,7 +3,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
-internal class ChaCha20EncryptionService : BaseEncryptionService
+public class ChaCha20EncryptionService : BaseEncryptionService
 {
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {

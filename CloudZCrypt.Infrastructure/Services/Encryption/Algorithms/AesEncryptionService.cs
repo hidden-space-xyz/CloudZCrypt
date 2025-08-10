@@ -4,7 +4,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
-internal class AesEncryptionService : BaseEncryptionService
+public class AesEncryptionService : BaseEncryptionService
 {
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {

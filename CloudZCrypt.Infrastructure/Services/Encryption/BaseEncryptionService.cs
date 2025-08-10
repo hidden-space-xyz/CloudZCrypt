@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
-internal abstract class BaseEncryptionService : IEncryptionService
+public abstract class BaseEncryptionService : IEncryptionService
 {
     protected const int KeySize = 256;
     protected const int SaltSize = 32;
