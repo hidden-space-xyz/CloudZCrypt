@@ -6,10 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CloudZCrypt.Application\CloudZCrypt.Application.csproj" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<InternalsVisibleTo Include="CloudZCrypt.Composition" />
 	</ItemGroup>
@@ -17,6 +13,10 @@
 	<ItemGroup>
 	  <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CloudZCrypt.Domain\CloudZCrypt.Domain.csproj" />
 	</ItemGroup>
 
 </Project>

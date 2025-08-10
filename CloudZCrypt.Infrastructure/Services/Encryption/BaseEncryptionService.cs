@@ -1,10 +1,10 @@
-using CloudZCrypt.Application.Interfaces.Encryption;
+using CloudZCrypt.Domain.Services.Interfaces;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 
-namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
 internal abstract class BaseEncryptionService : IEncryptionService
 {

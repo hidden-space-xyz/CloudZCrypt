@@ -1,9 +1,8 @@
 using CloudZCrypt.Application.DataTransferObjects.Files;
-using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Application.Interfaces.Storage;
+using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
-using CloudZCrypt.Domain.Entities;
-using CloudZCrypt.WPF.Services;
+using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
@@ -17,7 +16,7 @@ public partial class MainWindowViewModel : ObservableObject
     #region Private Fields
 
     private readonly IDialogService _dialogService;
-    private readonly IFileProcessingService _fileProcessingService;
+    private readonly EncryptFileUseCase _encryptFileUseCase;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -80,10 +79,10 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IEncryptionServiceFactory encryptionServiceFactory,
         IDialogService dialogService,
-        IFileProcessingService fileProcessingService)
+        EncryptFileUseCase encryptFileUseCase)
     {
         _dialogService = dialogService;
-        _fileProcessingService = fileProcessingService;
+        _encryptFileUseCase = encryptFileUseCase;
 
         AvailableAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         SelectedAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
@@ -190,7 +189,7 @@ public partial class MainWindowViewModel : ObservableObject
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
 
             FileProcessingResult result =
-                await _fileProcessingService.EncryptFilesAsync(request, progress, _cancellationTokenSource.Token);
+                await _encryptFileUseCase.EncryptFilesAsync(request, progress, _cancellationTokenSource.Token);
 
             ShowCompletionMessage(encryptOperation, result);
         }

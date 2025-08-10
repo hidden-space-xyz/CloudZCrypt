@@ -1,4 +1,4 @@
-﻿namespace CloudZCrypt.Application.Interfaces.Encryption;
+﻿namespace CloudZCrypt.Domain.Services.Interfaces;
 
 public interface IEncryptionService
 {

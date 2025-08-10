@@ -2,15 +2,15 @@
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
-internal class TwofishEncryptionService : BaseEncryptionService
+internal class AesEncryptionService : BaseEncryptionService
 {
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        // Configure BouncyCastle Twofish-GCM engine
-        TwofishEngine twofishEngine = new();
-        GcmBlockCipher gcmCipher = new(twofishEngine);
+        // Configure BouncyCastle AES-GCM engine
+        AesEngine aesEngine = new();
+        GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
         gcmCipher.Init(true, parameters);
 
@@ -19,9 +19,9 @@ internal class TwofishEncryptionService : BaseEncryptionService
 
     protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        // Configure BouncyCastle Twofish-GCM engine
-        TwofishEngine twofishEngine = new();
-        GcmBlockCipher gcmCipher = new(twofishEngine);
+        // Configure BouncyCastle AES-GCM engine
+        AesEngine aesEngine = new();
+        GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
         gcmCipher.Init(false, parameters);
 

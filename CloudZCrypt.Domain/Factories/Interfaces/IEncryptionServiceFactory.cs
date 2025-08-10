@@ -1,6 +1,7 @@
 ﻿using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Services.Interfaces;
 
-namespace CloudZCrypt.Application.Interfaces.Encryption;
+namespace CloudZCrypt.Domain.Factories.Interfaces;
 
 public interface IEncryptionServiceFactory
 {

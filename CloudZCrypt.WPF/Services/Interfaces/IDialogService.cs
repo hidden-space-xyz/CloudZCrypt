@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace CloudZCrypt.WPF.Services;
+namespace CloudZCrypt.WPF.Services.Interfaces;
 
 public interface IDialogService
 {

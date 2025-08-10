@@ -7,6 +7,14 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="CloudZCrypt.Application" />
+		<InternalsVisibleTo Include="CloudZCrypt.Composition" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Entities\" />
 	</ItemGroup>
 </Project>

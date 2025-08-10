@@ -1,8 +1,9 @@
-﻿using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Domain.Constants;
+﻿using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.Domain.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CloudZCrypt.Infrastructure.Encryption;
+namespace CloudZCrypt.Domain.Factories;
 
 internal class EncryptionServiceFactory(IServiceProvider serviceProvider) : IEncryptionServiceFactory
 {

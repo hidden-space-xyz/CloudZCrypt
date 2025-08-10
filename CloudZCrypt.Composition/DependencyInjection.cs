@@ -1,9 +1,9 @@
-﻿using CloudZCrypt.Application.Interfaces.Encryption;
-using CloudZCrypt.Application.Interfaces.Storage;
+﻿using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
-using CloudZCrypt.Infrastructure.Encryption;
-using CloudZCrypt.Infrastructure.Encryption.Algorithms;
-using CloudZCrypt.Infrastructure.Storage;
+using CloudZCrypt.Domain.Factories;
+using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -25,7 +25,14 @@ public static class DependencyInjection
 
     public static IServiceCollection AddStorageServices(this IServiceCollection services)
     {
-        services.AddScoped<IFileProcessingService, FileProcessingService>();
+
+
+        return services;
+    }
+
+    public static IServiceCollection AddUseCases(this IServiceCollection services)
+    {
+        services.AddScoped<EncryptFileUseCase>();
 
         return services;
     }

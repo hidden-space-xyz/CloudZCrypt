@@ -2,7 +2,7 @@
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
 internal class SerpentEncryptionService : BaseEncryptionService
 {

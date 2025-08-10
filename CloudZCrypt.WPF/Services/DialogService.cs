@@ -1,3 +1,4 @@
+using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.Views;
 using System.Windows;
 

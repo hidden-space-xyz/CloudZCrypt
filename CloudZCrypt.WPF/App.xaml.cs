@@ -1,5 +1,6 @@
 ﻿using CloudZCrypt.Composition;
 using CloudZCrypt.WPF.Services;
+using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
@@ -40,5 +41,6 @@ public partial class App : System.Windows.Application
         // Application services
         services.AddEncryptionServices();
         services.AddStorageServices();
+        services.AddUseCases();
     }
 }
