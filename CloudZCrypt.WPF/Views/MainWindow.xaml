@@ -5,7 +5,7 @@
     xmlns:behaviors="clr-namespace:CloudZCrypt.WPF.Behaviors"
     Title="CloudZCrypt"
     Width="800"
-    Height="510"
+    Height="530"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen">
 
@@ -61,9 +61,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel
-                    Grid.Column="0"
-                    Orientation="Vertical">
+                <StackPanel Grid.Column="0" Orientation="Vertical">
                     <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
                     <ComboBox
                         x:Name="AlgorithmComboBox"
@@ -76,9 +74,7 @@
                         SelectedItem="{Binding SelectedEncryptionAlgorithm}" />
                 </StackPanel>
 
-                <StackPanel
-                    Grid.Column="2"
-                    Orientation="Vertical">
+                <StackPanel Grid.Column="2" Orientation="Vertical">
                     <TextBlock FontWeight="Bold" Text="Key Derivation Algorithm:" />
                     <ComboBox
                         x:Name="KeyDerivationAlgorithmComboBox"
@@ -105,6 +101,25 @@
                 behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
                 IsEnabled="{Binding AreControlsEnabled}" />
 
+            <!--  Password Strength Indicator  -->
+            <StackPanel Margin="0,2,0,0" Visibility="{Binding PasswordStrengthVisibility}">
+                <!--  Strength Bar Container  -->
+                <ProgressBar
+                    Height="5"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{Binding PasswordStrengthColor}"
+                    Maximum="100"
+                    Minimum="0"
+                    Value="{Binding PasswordStrengthScore}" />
+
+                <!--  Strength Text  -->
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{Binding PasswordStrengthColor}"
+                    Text="{Binding PasswordStrengthText}" />
+            </StackPanel>
+
             <TextBlock
                 Margin="0,20,0,0"
                 FontWeight="Bold"
@@ -117,6 +132,24 @@
                 behaviors:PasswordBoxBehavior.Attach="True"
                 behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
                 IsEnabled="{Binding AreControlsEnabled}" />
+
+            <StackPanel Margin="0,2,0,0" Visibility="{Binding ConfirmPasswordStrengthVisibility}">
+                <!--  Strength Bar Container  -->
+                <ProgressBar
+                    Height="5"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{Binding ConfirmPasswordStrengthColor}"
+                    Maximum="100"
+                    Minimum="0"
+                    Value="{Binding ConfirmPasswordStrengthScore}" />
+
+                <!--  Strength Text  -->
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{Binding ConfirmPasswordStrengthColor}"
+                    Text="{Binding ConfirmPasswordStrengthText}" />
+            </StackPanel>
 
         </StackPanel>
 

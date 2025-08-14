@@ -1,4 +1,7 @@
 using CloudZCrypt.Application.DataTransferObjects.Files;
+using CloudZCrypt.Application.DataTransferObjects.Passwords;
+using CloudZCrypt.Application.Services;
+using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
 using CloudZCrypt.Domain.Factories.Interfaces;
@@ -8,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
@@ -16,8 +20,10 @@ public partial class MainWindowViewModel : ObservableObject
     #region Private Fields
 
     private readonly IDialogService _dialogService;
-    private readonly EncryptFileUseCase _encryptFileUseCase;
+    private readonly IPasswordService _passwordStrengthService;
 
+    private readonly EncryptFileUseCase _encryptFileUseCase;
+    
     private CancellationTokenSource? _cancellationTokenSource;
 
     #endregion
@@ -69,6 +75,32 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool _areControlsEnabled = true;
 
+    // Password strength properties
+    [ObservableProperty]
+    private double _passwordStrengthScore;
+
+    [ObservableProperty]
+    private string _passwordStrengthText = string.Empty;
+
+    [ObservableProperty]
+    private System.Windows.Media.Brush _passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
+
+    [ObservableProperty]
+    private Visibility _passwordStrengthVisibility = Visibility.Collapsed;
+
+    // Confirm Password strength properties
+    [ObservableProperty]
+    private double _confirmPasswordStrengthScore;
+
+    [ObservableProperty]
+    private string _confirmPasswordStrengthText = string.Empty;
+
+    [ObservableProperty]
+    private System.Windows.Media.Brush _confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
+
+    [ObservableProperty]
+    private Visibility _confirmPasswordStrengthVisibility = Visibility.Collapsed;
+
     #endregion
 
     #region Collections
@@ -81,11 +113,13 @@ public partial class MainWindowViewModel : ObservableObject
     #region Constructor
 
     public MainWindowViewModel(
-        IEncryptionServiceFactory encryptionServiceFactory,
         IDialogService dialogService,
+        IPasswordService passwordStrengthService,
         EncryptFileUseCase encryptFileUseCase)
     {
         _dialogService = dialogService;
+        _passwordStrengthService = passwordStrengthService;
+
         _encryptFileUseCase = encryptFileUseCase;
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
@@ -162,6 +196,16 @@ public partial class MainWindowViewModel : ObservableObject
         UpdateControlState();
         EncryptCommand.NotifyCanExecuteChanged();
         DecryptCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnPasswordChanged(string value)
+    {
+        UpdatePasswordStrength(value);
+    }
+
+    partial void OnConfirmPasswordChanged(string value)
+    {
+        UpdateConfirmPasswordStrength(value);
     }
 
     #endregion
@@ -323,6 +367,39 @@ public partial class MainWindowViewModel : ObservableObject
     {
         EncryptButtonText = "Encrypt";
         DecryptButtonText = "Decrypt";
+    }
+
+    private void UpdatePasswordStrength(string password)
+    {
+        PasswordStrengthResult result = _passwordStrengthService.EvaluatePasswordStrength(password);
+
+        PasswordStrengthScore = result.Score;
+        PasswordStrengthText = result.Description;
+        PasswordStrengthColor = GetStrengthColor(result.Strength);
+        PasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void UpdateConfirmPasswordStrength(string password)
+    {
+        PasswordStrengthResult result = _passwordStrengthService.EvaluatePasswordStrength(password);
+
+        ConfirmPasswordStrengthScore = result.Score;
+        ConfirmPasswordStrengthText = result.Description;
+        ConfirmPasswordStrengthColor = GetStrengthColor(result.Strength);
+        ConfirmPasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
+    {
+        return strength switch
+        {
+            PasswordStrength.VeryWeak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 53, 69)),   // Red
+            PasswordStrength.Weak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),       // Orange/Yellow
+            PasswordStrength.Fair => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),       // Orange/Yellow
+            PasswordStrength.Good => new SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)),       // Green
+            PasswordStrength.Strong => new SolidColorBrush(System.Windows.Media.Color.FromRgb(25, 135, 84)),     // Dark Green
+            _ => System.Windows.Media.Brushes.Transparent
+        };
     }
 
     #endregion
