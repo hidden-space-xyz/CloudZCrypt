@@ -1,10 +1,8 @@
 using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
-using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
-using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,7 +21,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IPasswordService _passwordStrengthService;
 
     private readonly EncryptFileUseCase _encryptFileUseCase;
-    
+
     private CancellationTokenSource? _cancellationTokenSource;
 
     #endregion
@@ -41,6 +39,12 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _confirmPassword = string.Empty;
+
+    [ObservableProperty]
+    private bool _isPasswordVisible = false;
+
+    [ObservableProperty]
+    private bool _isConfirmPasswordVisible = false;
 
     [ObservableProperty]
     private EncryptionAlgorithm _selectedEncryptionAlgorithm;
@@ -158,6 +162,36 @@ public partial class MainWindowViewModel : ObservableObject
         if (!string.IsNullOrEmpty(selectedPath))
         {
             DestinationDirectory = selectedPath;
+        }
+    }
+
+    [RelayCommand]
+    private void TogglePasswordVisibility()
+    {
+        IsPasswordVisible = !IsPasswordVisible;
+    }
+
+    [RelayCommand]
+    private void ToggleConfirmPasswordVisibility()
+    {
+        IsConfirmPasswordVisible = !IsConfirmPasswordVisible;
+    }
+
+    [RelayCommand]
+    private void GenerateStrongPassword()
+    {
+        string strongPassword = _passwordStrengthService.GenerateStrongPassword(128);
+        Password = strongPassword;
+        ConfirmPassword = strongPassword;
+
+        // Copy to clipboard
+        try
+        {
+            System.Windows.Clipboard.SetText(strongPassword);
+        }
+        catch
+        {
+            // Silently fail if clipboard access is not available
         }
     }
 

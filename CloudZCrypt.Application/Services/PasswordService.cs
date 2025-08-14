@@ -1,13 +1,13 @@
 ﻿using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Constants;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-
 namespace CloudZCrypt.Application.Services;
 
-internal partial class PasswordService : IPasswordService
+internal class PasswordService : IPasswordService
 {
     #region Strength Configuration Properties
     // Character class regexes
@@ -48,9 +48,10 @@ internal partial class PasswordService : IPasswordService
     };
 
     // Upper bound of entropy (in bits) that we map to 100 score.
-    private const double MaxEntropyBits = 120.0; 
+    private const double MaxEntropyBits = 120.0;
     #endregion
 
+    #region Public Methods
     public PasswordStrengthResult EvaluatePasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password))
@@ -105,9 +106,36 @@ internal partial class PasswordService : IPasswordService
         };
     }
 
-    #region Strength Calculation Methods
-    #region Entropy & Penalties (English algorithmic logic)
+    public string GenerateStrongPassword(int length = 128)
+    {
+        const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
+        string allChars = upperCase + lowerCase + digits + specialChars;
+
+        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        StringBuilder result = new(length);
+
+        // Ensure at least one character from each category
+        result.Append(GetRandomChar(upperCase, rng));
+        result.Append(GetRandomChar(lowerCase, rng));
+        result.Append(GetRandomChar(digits, rng));
+        result.Append(GetRandomChar(specialChars, rng));
+
+        // Fill the rest with random characters from all categories
+        for (int i = 4; i < length; i++)
+        {
+            result.Append(GetRandomChar(allChars, rng));
+        }
+
+        // Shuffle the password to ensure random distribution
+        return ShuffleString(result.ToString(), rng);
+    }
+    #endregion
+
+    #region Private Helper Methods
     private static int EstimatePoolSize(string password, out PasswordCompositionFlags flags)
     {
         bool hasUpper = UpperCaseRegex.IsMatch(password);
@@ -246,10 +274,6 @@ internal partial class PasswordService : IPasswordService
         return 0;
     }
 
-    #endregion
-
-    #region Common / Leet
-
     private static string NormalizeLeet(string input)
     {
         StringBuilder sb = new(input.Length);
@@ -262,10 +286,6 @@ internal partial class PasswordService : IPasswordService
         }
         return sb.ToString();
     }
-
-    #endregion
-
-    #region Strength Mapping & Description
 
     private static PasswordStrength GetStrengthFromScore(double score)
     {
@@ -293,7 +313,6 @@ internal partial class PasswordService : IPasswordService
         });
 
         sb.Append($" // Entropy: {entropy:0.0} bits");
-
 
         List<string> tips = [];
 
@@ -342,6 +361,26 @@ internal partial class PasswordService : IPasswordService
         return false;
     }
 
-    #endregion 
+    private static char GetRandomChar(string chars, RandomNumberGenerator rng)
+    {
+        byte[] randomBytes = new byte[4];
+        rng.GetBytes(randomBytes);
+        uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
+        return chars[(int)(randomValue % chars.Length)];
+    }
+
+    private static string ShuffleString(string input, RandomNumberGenerator rng)
+    {
+        char[] array = input.ToCharArray();
+        for (int i = array.Length - 1; i > 0; i--)
+        {
+            byte[] randomBytes = new byte[4];
+            rng.GetBytes(randomBytes);
+            uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
+            int j = (int)(randomValue % (i + 1));
+            (array[i], array[j]) = (array[j], array[i]);
+        }
+        return new string(array);
+    }
     #endregion
 }

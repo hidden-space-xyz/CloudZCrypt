@@ -1,4 +1,6 @@
-﻿using CloudZCrypt.Application.UseCases;
+﻿using CloudZCrypt.Application.Services;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
 using CloudZCrypt.Domain.Factories;
 using CloudZCrypt.Domain.Factories.Interfaces;
@@ -24,6 +26,8 @@ public static class DependencyInjection
         services.AddKeyedTransient<IEncryptionService, SerpentEncryptionService>(EncryptionAlgorithm.Serpent);
         services.AddKeyedTransient<IEncryptionService, ChaCha20EncryptionService>(EncryptionAlgorithm.ChaCha20);
         services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
+
+        services.AddSingleton<IPasswordService, PasswordService>();
 
         return services;
     }
