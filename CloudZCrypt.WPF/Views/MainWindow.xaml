@@ -72,8 +72,8 @@
                         Padding="5"
                         HorizontalAlignment="Left"
                         IsEnabled="{Binding AreControlsEnabled}"
-                        ItemsSource="{Binding AvailableAlgorithms}"
-                        SelectedItem="{Binding SelectedAlgorithm}" />
+                        ItemsSource="{Binding AvailableEncryptionAlgorithms}"
+                        SelectedItem="{Binding SelectedEncryptionAlgorithm}" />
                 </StackPanel>
 
                 <StackPanel
