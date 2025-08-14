@@ -1,23 +1,20 @@
+using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
-using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
-using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
-public abstract class BaseEncryptionService : IEncryptionService
+public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory) : IEncryptionService
 {
     protected const int KeySize = 256;
     protected const int SaltSize = 32;
     protected const int NonceSize = 12;
     protected const int TagSize = 16;
     protected const int BufferSize = 4 * 1024;
-    protected const int Argon2MemoryCost = 128 * 1024;
-    protected const int Argon2Iterations = 5;
-    protected const int Argon2Parallelism = 4;
 
-    public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password)
+    public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
         try
         {
@@ -25,8 +22,8 @@ public abstract class BaseEncryptionService : IEncryptionService
             byte[] salt = GenerateSalt();
             byte[] nonce = GenerateNonce();
 
-            // Generate key from password using Argon2id
-            byte[] key = DeriveKey(password, salt, KeySize);
+            // Generate key from password using the specified algorithm
+            byte[] key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
 
             using FileStream sourceFile = File.OpenRead(sourceFilePath);
             using FileStream destinationFile = File.Create(destinationFilePath);
@@ -46,7 +43,7 @@ public abstract class BaseEncryptionService : IEncryptionService
         }
     }
 
-    public async Task<bool> DecryptFileAsync(string sourceFilePath, string destinationFilePath, string password)
+    public async Task<bool> DecryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
         try
         {
@@ -56,8 +53,8 @@ public abstract class BaseEncryptionService : IEncryptionService
             byte[] salt = await ReadSaltAsync(sourceFile);
             byte[] nonce = await ReadNonceAsync(sourceFile);
 
-            // Generate key from password and salt
-            byte[] key = DeriveKey(password, salt, KeySize);
+            // Generate key from password and salt using the specified algorithm
+            byte[] key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
 
             using FileStream destinationFile = File.Create(destinationFilePath);
 
@@ -96,45 +93,10 @@ public abstract class BaseEncryptionService : IEncryptionService
         return nonce;
     }
 
-    protected static byte[] DeriveKey(string password, byte[] salt, int keySize)
+    protected byte[] DeriveKey(string password, byte[] salt, int keySize, KeyDerivationAlgorithm algorithm)
     {
-        // Create Argon2 generator
-        Argon2BytesGenerator argon2 = new();
-        argon2.Init(new Argon2Parameters.Builder(Argon2Parameters.Argon2id)
-            .WithSalt(salt)
-            .WithMemoryAsKB(Argon2MemoryCost)
-            .WithIterations(Argon2Iterations)
-            .WithParallelism(Argon2Parallelism)
-            .Build());
-
-        // Generate the key
-        byte[] key = new byte[keySize / 8];
-        char[]? passwordChars = null;
-
-        try
-        {
-            // Convert password to character array
-            passwordChars = password.ToCharArray();
-
-            // Generate the key
-            argon2.GenerateBytes(passwordChars, key);
-
-            return key;
-        }
-        catch (Exception ex)
-        {
-            // Cleanup in case of exception
-            if (key != null)
-                Array.Clear(key, 0, key.Length);
-
-            throw new CryptographicException("Error deriving key", ex);
-        }
-        finally
-        {
-            // Clean sensitive data from memory
-            if (passwordChars != null)
-                Array.Clear(passwordChars, 0, passwordChars.Length);
-        }
+        IKeyDerivationService keyDerivationService = keyDerivationServiceFactory.Create(algorithm);
+        return keyDerivationService.DeriveKey(password, salt, keySize);
     }
 
     protected static async Task WriteSaltAsync(FileStream stream, byte[] salt)

@@ -53,21 +53,44 @@
                     Text="{Binding DestinationDirectory}" />
             </DockPanel>
 
-            <StackPanel
-                Grid.Column="0"
-                Margin="0,20,0,0"
-                Orientation="Vertical">
-                <TextBlock FontWeight="Bold" Text="Algorithm:" />
-                <ComboBox
-                    x:Name="AlgorithmComboBox"
-                    Width="200"
-                    Margin="0,5,0,0"
-                    Padding="5"
-                    HorizontalAlignment="Left"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    ItemsSource="{Binding AvailableAlgorithms}"
-                    SelectedItem="{Binding SelectedAlgorithm}" />
-            </StackPanel>
+            <Grid Grid.Column="0" Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Vertical">
+                    <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
+                    <ComboBox
+                        x:Name="AlgorithmComboBox"
+                        Width="200"
+                        Margin="0,5,0,0"
+                        Padding="5"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding AreControlsEnabled}"
+                        ItemsSource="{Binding AvailableAlgorithms}"
+                        SelectedItem="{Binding SelectedAlgorithm}" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Vertical">
+                    <TextBlock FontWeight="Bold" Text="Key Derivation Algorithm:" />
+                    <ComboBox
+                        x:Name="KeyDerivationAlgorithmComboBox"
+                        Width="200"
+                        Margin="0,5,0,0"
+                        Padding="5"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding AreControlsEnabled}"
+                        ItemsSource="{Binding AvailableKeyDerivationAlgorithms}"
+                        SelectedItem="{Binding SelectedKeyDerivationAlgorithm}" />
+                </StackPanel>
+            </Grid>
 
             <TextBlock
                 Margin="0,20,0,0"

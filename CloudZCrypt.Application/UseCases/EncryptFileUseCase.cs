@@ -48,8 +48,8 @@ namespace CloudZCrypt.Application.UseCases
 
                 Task<bool> operation = request.EncryptOperation switch
                 {
-                    EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(file, destinationFilePath, request.Password),
-                    EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(file, destinationFilePath, request.Password),
+                    EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(file, destinationFilePath, request.Password, request.KeyDerivationAlgorithm),
+                    EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(file, destinationFilePath, request.Password, request.KeyDerivationAlgorithm),
                     _ => throw new NotSupportedException($"Unsupported operation: {request.EncryptOperation}")
                 };
 

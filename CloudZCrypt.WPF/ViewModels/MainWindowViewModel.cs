@@ -37,7 +37,10 @@ public partial class MainWindowViewModel : ObservableObject
     private string _confirmPassword = string.Empty;
 
     [ObservableProperty]
-    private EncryptionAlgorithm _selectedAlgorithm;
+    private EncryptionAlgorithm _selectedEncryptionAlgorithm;
+
+    [ObservableProperty]
+    private KeyDerivationAlgorithm _selectedKeyDerivationAlgorithm;
 
     [ObservableProperty]
     private bool _isProcessing;
@@ -70,7 +73,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     #region Collections
 
-    public ObservableCollection<EncryptionAlgorithm> AvailableAlgorithms { get; }
+    public ObservableCollection<EncryptionAlgorithm> AvailableEncryptionAlgorithms { get; }
+    public ObservableCollection<KeyDerivationAlgorithm> AvailableKeyDerivationAlgorithms { get; }
 
     #endregion
 
@@ -84,15 +88,18 @@ public partial class MainWindowViewModel : ObservableObject
         _dialogService = dialogService;
         _encryptFileUseCase = encryptFileUseCase;
 
-        AvailableAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
-        SelectedAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
+        AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
+        AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
+        SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
+        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.Argon2id; // Default KDF algorithm
 
 #if DEBUG
         SourceDirectory = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
         DestinationDirectory = @"D:\WorkSpace\EncryptionTest\Result";
         Password = "TestPassword123";
         ConfirmPassword = "TestPassword123";
-        SelectedAlgorithm = EncryptionAlgorithm.Aes;
+        SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes;
+        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2; // For faster testing
 #endif
     }
 
@@ -184,7 +191,8 @@ public partial class MainWindowViewModel : ObservableObject
                 DestinationDirectory,
                 Password,
                 encryptOperation,
-                SelectedAlgorithm);
+                SelectedEncryptionAlgorithm,
+                SelectedKeyDerivationAlgorithm);
 
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
 

@@ -40,7 +40,6 @@ public partial class App : System.Windows.Application
 
         // Application services
         services.AddEncryptionServices();
-        services.AddStorageServices();
         services.AddUseCases();
     }
 }

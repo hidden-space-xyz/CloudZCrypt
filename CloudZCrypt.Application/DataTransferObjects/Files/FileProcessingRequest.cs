@@ -7,4 +7,5 @@ public record FileProcessingRequest(
     string DestinationDirectory,
     string Password,
     EncryptOperation EncryptOperation,
-    EncryptionAlgorithm EncryptionAlgorithm);
+    EncryptionAlgorithm EncryptionAlgorithm,
+    KeyDerivationAlgorithm KeyDerivationAlgorithm);

@@ -1,10 +1,11 @@
-﻿using Org.BouncyCastle.Crypto.Engines;
+﻿using CloudZCrypt.Domain.Factories.Interfaces;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
-public class CamelliaEncryptionService : BaseEncryptionService
+public class CamelliaEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory) : BaseEncryptionService(keyDerivationServiceFactory)
 {
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
