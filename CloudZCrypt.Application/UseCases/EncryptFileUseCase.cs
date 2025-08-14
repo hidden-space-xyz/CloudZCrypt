@@ -28,6 +28,13 @@ namespace CloudZCrypt.Application.UseCases
             long totalBytes = files.Sum(f => new FileInfo(f).Length);
             long processedBytes = 0;
 
+            progress?.Report(new FileProcessingStatus(
+                ProcessedFiles: 0,
+                TotalFiles: files.Length,
+                ProcessedBytes: processedBytes,
+                TotalBytes: totalBytes,
+                Elapsed: stopwatch.Elapsed));
+
             for (int i = 0; i < files.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
