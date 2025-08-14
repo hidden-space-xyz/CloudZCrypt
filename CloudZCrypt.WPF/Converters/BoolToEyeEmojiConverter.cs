@@ -11,7 +11,7 @@ public class BoolToEyeEmojiConverter : IValueConverter
     {
         if (value is bool isVisible)
         {
-            return isVisible ? "🙈" : "👁️";
+            return isVisible ? "🚫" : "👁️";
         }
 
         return "👁️";

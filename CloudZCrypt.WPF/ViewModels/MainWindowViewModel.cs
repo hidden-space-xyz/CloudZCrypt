@@ -90,7 +90,7 @@ public partial class MainWindowViewModel : ObservableObject
     private System.Windows.Media.Brush _passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
 
     [ObservableProperty]
-    private Visibility _passwordStrengthVisibility = Visibility.Collapsed;
+    private Visibility _passwordStrengthVisibility = Visibility.Hidden;
 
     // Confirm Password strength properties
     [ObservableProperty]
@@ -103,7 +103,7 @@ public partial class MainWindowViewModel : ObservableObject
     private System.Windows.Media.Brush _confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
 
     [ObservableProperty]
-    private Visibility _confirmPasswordStrengthVisibility = Visibility.Collapsed;
+    private Visibility _confirmPasswordStrengthVisibility = Visibility.Hidden;
 
     #endregion
 
@@ -129,15 +129,11 @@ public partial class MainWindowViewModel : ObservableObject
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
         SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
-        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.Argon2id; // Default KDF algorithm
+        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2; // Default KDF algorithm
 
 #if DEBUG
         SourceDirectory = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
         DestinationDirectory = @"D:\WorkSpace\EncryptionTest\Result";
-        Password = "TestPassword123";
-        ConfirmPassword = "TestPassword123";
-        SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes;
-        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2; // For faster testing
 #endif
     }
 
@@ -410,7 +406,7 @@ public partial class MainWindowViewModel : ObservableObject
         PasswordStrengthScore = result.Score;
         PasswordStrengthText = result.Description;
         PasswordStrengthColor = GetStrengthColor(result.Strength);
-        PasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Collapsed : Visibility.Visible;
+        PasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Hidden : Visibility.Visible;
     }
 
     private void UpdateConfirmPasswordStrength(string password)
@@ -420,7 +416,7 @@ public partial class MainWindowViewModel : ObservableObject
         ConfirmPasswordStrengthScore = result.Score;
         ConfirmPasswordStrengthText = result.Description;
         ConfirmPasswordStrengthColor = GetStrengthColor(result.Strength);
-        ConfirmPasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Collapsed : Visibility.Visible;
+        ConfirmPasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Hidden : Visibility.Visible;
     }
 
     private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)

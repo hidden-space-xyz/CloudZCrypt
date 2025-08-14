@@ -9,7 +9,6 @@ namespace CloudZCrypt.Application.Services;
 
 internal class PasswordService : IPasswordService
 {
-    #region Strength Configuration Properties
     // Character class regexes
     private static readonly Regex UpperCaseRegex = new(@"[A-Z]");
     private static readonly Regex LowerCaseRegex = new(@"[a-z]");
@@ -49,7 +48,9 @@ internal class PasswordService : IPasswordService
 
     // Upper bound of entropy (in bits) that we map to 100 score.
     private const double MaxEntropyBits = 120.0;
-    #endregion
+
+    // Character set used for strong password generation
+    private const string PasswordGenerationAvailableCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
 
     #region Public Methods
     public PasswordStrengthResult EvaluatePasswordStrength(string password)
@@ -108,30 +109,16 @@ internal class PasswordService : IPasswordService
 
     public string GenerateStrongPassword(int length = 128)
     {
-        const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
-        const string digits = "0123456789";
-        const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-        string allChars = upperCase + lowerCase + digits + specialChars;
-
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-        StringBuilder result = new(length);
-
-        // Ensure at least one character from each category
-        result.Append(GetRandomChar(upperCase, rng));
-        result.Append(GetRandomChar(lowerCase, rng));
-        result.Append(GetRandomChar(digits, rng));
-        result.Append(GetRandomChar(specialChars, rng));
-
-        // Fill the rest with random characters from all categories
-        for (int i = 4; i < length; i++)
+        StringBuilder password = new(length);
+        using (var rng = RandomNumberGenerator.Create())
         {
-            result.Append(GetRandomChar(allChars, rng));
-        }
+            byte[] data = new byte[length];
+            rng.GetBytes(data);
 
-        // Shuffle the password to ensure random distribution
-        return ShuffleString(result.ToString(), rng);
+            for (int i = 0; i < length; i++)
+                password.Append(PasswordGenerationAvailableCharacters[data[i] % PasswordGenerationAvailableCharacters.Length]);
+        }
+        return password.ToString();
     }
     #endregion
 
@@ -359,28 +346,6 @@ internal class PasswordService : IPasswordService
                 return true;
         }
         return false;
-    }
-
-    private static char GetRandomChar(string chars, RandomNumberGenerator rng)
-    {
-        byte[] randomBytes = new byte[4];
-        rng.GetBytes(randomBytes);
-        uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
-        return chars[(int)(randomValue % chars.Length)];
-    }
-
-    private static string ShuffleString(string input, RandomNumberGenerator rng)
-    {
-        char[] array = input.ToCharArray();
-        for (int i = array.Length - 1; i > 0; i--)
-        {
-            byte[] randomBytes = new byte[4];
-            rng.GetBytes(randomBytes);
-            uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
-            int j = (int)(randomValue % (i + 1));
-            (array[i], array[j]) = (array[j], array[i]);
-        }
-        return new string(array);
     }
     #endregion
 }
