@@ -1,6 +1,6 @@
 using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Queries.Handlers;
@@ -14,22 +14,22 @@ public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IQ
     {
         try
         {
-            PasswordCompositionOptions options = PasswordCompositionOptions.None;
+            PasswordGenerationOptions options = PasswordGenerationOptions.None;
 
             if (request.IncludeUppercase)
-                options |= PasswordCompositionOptions.IncludeUppercase;
+                options |= PasswordGenerationOptions.IncludeUppercase;
 
             if (request.IncludeLowercase)
-                options |= PasswordCompositionOptions.IncludeLowercase;
+                options |= PasswordGenerationOptions.IncludeLowercase;
 
             if (request.IncludeNumbers)
-                options |= PasswordCompositionOptions.IncludeNumbers;
+                options |= PasswordGenerationOptions.IncludeNumbers;
 
             if (request.IncludeSpecialCharacters)
-                options |= PasswordCompositionOptions.IncludeSpecialCharacters;
+                options |= PasswordGenerationOptions.IncludeSpecialCharacters;
 
             if (request.ExcludeSimilarCharacters)
-                options |= PasswordCompositionOptions.ExcludeSimilarCharacters;
+                options |= PasswordGenerationOptions.ExcludeSimilarCharacters;
 
             string password = await Task.Run(() => passwordService.GeneratePassword(request.Length, options), cancellationToken);
 

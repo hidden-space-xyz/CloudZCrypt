@@ -1,8 +1,8 @@
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Files;
+using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Domain.Constants;
-using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -142,11 +142,11 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task GenerateStrongPassword()
     {
-        PasswordCompositionOptions passwordCompositionOptions =
-            PasswordCompositionOptions.IncludeLowercase
-            | PasswordCompositionOptions.IncludeUppercase
-            | PasswordCompositionOptions.IncludeNumbers
-            | PasswordCompositionOptions.IncludeSpecialCharacters;
+        PasswordGenerationOptions passwordCompositionOptions =
+            PasswordGenerationOptions.IncludeLowercase
+            | PasswordGenerationOptions.IncludeUppercase
+            | PasswordGenerationOptions.IncludeNumbers
+            | PasswordGenerationOptions.IncludeSpecialCharacters;
 
         Result<string> result = await _passwordApplicationService.GeneratePasswordAsync(128, passwordCompositionOptions);
 

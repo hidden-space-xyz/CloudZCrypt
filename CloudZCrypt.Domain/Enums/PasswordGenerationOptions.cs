@@ -1,10 +1,10 @@
-namespace CloudZCrypt.Domain.DataTransferObjects.Passwords;
+namespace CloudZCrypt.Domain.Enums;
 
 /// <summary>
-/// Flags for password composition options
+/// Domain enum for password generation options
 /// </summary>
 [Flags]
-public enum PasswordCompositionOptions
+public enum PasswordGenerationOptions
 {
     None = 0,
     IncludeUppercase = 1,

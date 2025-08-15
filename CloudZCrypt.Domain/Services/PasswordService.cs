@@ -1,6 +1,6 @@
-﻿using CloudZCrypt.Domain.Constants;
-using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.ValueObjects;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -56,22 +56,20 @@ namespace CloudZCrypt.Domain.Services
         private const string SpecialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
         private const string SimilarChars = "il1Lo0O";
 
-        public PasswordStrengthResult AnalyzePasswordStrength(string password)
+        public PasswordStrengthAnalysis AnalyzePasswordStrength(string password)
         {
             if (string.IsNullOrEmpty(password))
             {
-                return new PasswordStrengthResult
-                {
-                    Strength = PasswordStrength.VeryWeak,
-                    Description = "Empty password. Please enter a password.",
-                    Score = 0
-                };
+                return new PasswordStrengthAnalysis(
+                    PasswordStrength.VeryWeak,
+                    "Empty password. Please enter a password.",
+                    0);
             }
 
             string trimmed = password.Trim();
 
             // Character set size estimation
-            int poolSize = EstimatePoolSize(trimmed, out PasswordCompositionFlags compositionFlags);
+            int poolSize = EstimatePoolSize(trimmed, out PasswordComposition compositionFlags);
 
             // Base entropy estimation: length * log2(poolSize)
             double baseEntropy = poolSize > 1
@@ -102,40 +100,35 @@ namespace CloudZCrypt.Domain.Services
             PasswordStrength strength = GetStrengthFromScore(score);
             string description = BuildDescription(strength, score, entropy, compositionFlags, trimmed);
 
-            return new PasswordStrengthResult
-            {
-                Strength = strength,
-                Description = description,
-                Score = Math.Round(score, 2)
-            };
+            return new PasswordStrengthAnalysis(strength, description, Math.Round(score, 2));
         }
 
-        public string GeneratePassword(int length, PasswordCompositionOptions options)
+        public string GeneratePassword(int length, PasswordGenerationOptions options)
         {
             if (length <= 0)
                 throw new ArgumentException("Password length must be greater than 0", nameof(length));
 
-            if (options == PasswordCompositionOptions.None)
+            if (options == PasswordGenerationOptions.None)
                 throw new ArgumentException("At least one character type must be selected", nameof(options));
 
             // Build character set based on options
             StringBuilder charSet = new();
 
-            if (options.HasFlag(PasswordCompositionOptions.IncludeUppercase))
+            if (options.HasFlag(PasswordGenerationOptions.IncludeUppercase))
                 charSet.Append(UppercaseChars);
 
-            if (options.HasFlag(PasswordCompositionOptions.IncludeLowercase))
+            if (options.HasFlag(PasswordGenerationOptions.IncludeLowercase))
                 charSet.Append(LowercaseChars);
 
-            if (options.HasFlag(PasswordCompositionOptions.IncludeNumbers))
+            if (options.HasFlag(PasswordGenerationOptions.IncludeNumbers))
                 charSet.Append(NumberChars);
 
-            if (options.HasFlag(PasswordCompositionOptions.IncludeSpecialCharacters))
+            if (options.HasFlag(PasswordGenerationOptions.IncludeSpecialCharacters))
                 charSet.Append(SpecialChars);
 
             string availableChars = charSet.ToString();
 
-            if (options.HasFlag(PasswordCompositionOptions.ExcludeSimilarCharacters))
+            if (options.HasFlag(PasswordGenerationOptions.ExcludeSimilarCharacters))
             {
                 availableChars = new string(availableChars.Where(c => !SimilarChars.Contains(c)).ToArray());
             }
@@ -158,7 +151,7 @@ namespace CloudZCrypt.Domain.Services
             return password.ToString();
         }
 
-        private static int EstimatePoolSize(string password, out PasswordCompositionFlags flags)
+        private static int EstimatePoolSize(string password, out PasswordComposition flags)
         {
             bool hasUpper = UpperCaseRegex.IsMatch(password);
             bool hasLower = LowerCaseRegex.IsMatch(password);
@@ -179,14 +172,7 @@ namespace CloudZCrypt.Domain.Services
             // Add a small pool increment for other Unicode characters (very rough)
             if (hasOther) size += 50;
 
-            flags = new PasswordCompositionFlags
-            {
-                HasLower = hasLower,
-                HasUpper = hasUpper,
-                HasDigit = hasDigit,
-                HasSpecial = hasSpecial,
-                HasOther = hasOther
-            };
+            flags = new PasswordComposition(hasUpper, hasLower, hasDigit, hasSpecial, hasOther);
 
             return size;
         }
@@ -258,26 +244,14 @@ namespace CloudZCrypt.Domain.Services
 
         private static double PatternPenalty(string password)
         {
-            string lower = password.ToLowerInvariant();
             double penalty = 0;
 
-            foreach (string p in CommonSubstrings)
-            {
-                if (lower.Contains(p))
-                {
-                    penalty += 6;
-                }
-            }
+            string lower = password.ToLowerInvariant();
+            penalty = CommonSubstrings.Where(lower.Contains).Sum(p => 6);
 
             // Leet normalized check
             string canon = NormalizeLeet(lower);
-            foreach (string p in CommonSubstrings)
-            {
-                if (canon.Contains(p))
-                {
-                    penalty += 6;
-                }
-            }
+            penalty += CommonSubstrings.Where(canon.Contains).Sum(p => 6);
 
             return penalty;
         }
@@ -288,7 +262,7 @@ namespace CloudZCrypt.Domain.Services
             return YearRegex.Matches(password).Count * 4.0;
         }
 
-        private static double HomogeneousClassPenalty(PasswordCompositionFlags flags, string password)
+        private static double HomogeneousClassPenalty(PasswordComposition flags, string password)
         {
             // If password uses only one class, strong penalty
             if (flags.CategoryCount <= 1) return Math.Min(20, password.Length * 2);
@@ -321,7 +295,7 @@ namespace CloudZCrypt.Domain.Services
             };
         }
 
-        private static string BuildDescription(PasswordStrength strength, double score, double entropy, PasswordCompositionFlags flags, string password)
+        private static string BuildDescription(PasswordStrength strength, double score, double entropy, PasswordComposition flags, string password)
         {
             StringBuilder sb = new();
             sb.Append(strength switch

@@ -1,6 +1,6 @@
 using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Queries.Handlers;
@@ -14,7 +14,13 @@ public class AnalyzePasswordStrengthQueryHandler(IPasswordService passwordServic
     {
         try
         {
-            PasswordStrengthResult result = await Task.Run(() => passwordService.AnalyzePasswordStrength(request.Password), cancellationToken);
+            Domain.ValueObjects.PasswordStrengthAnalysis domainResult = await Task.Run(() => passwordService.AnalyzePasswordStrength(request.Password), cancellationToken);
+
+            // Map domain value object to application DTO
+            PasswordStrengthResult result = new(
+                domainResult.Strength,
+                domainResult.Description,
+                domainResult.Score);
 
             return Result<PasswordStrengthResult>.Success(result);
         }

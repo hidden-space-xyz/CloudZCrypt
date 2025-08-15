@@ -1,7 +1,8 @@
 ﻿using CloudZCrypt.Application.Common.Models;
+using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Queries;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+using CloudZCrypt.Domain.Enums;
 using MediatR;
 
 namespace CloudZCrypt.Application.Services;
@@ -13,17 +14,17 @@ internal class PasswordApplicationService(IMediator mediator) : IPasswordApplica
     /// </summary>
     public async Task<Result<string>> GeneratePasswordAsync(
         int length,
-        PasswordCompositionOptions passwordCompositionOptions,
+        PasswordGenerationOptions passwordCompositionOptions,
         CancellationToken cancellationToken = default)
     {
         GeneratePasswordQuery query = new()
         {
             Length = length,
-            IncludeUppercase = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.IncludeUppercase),
-            IncludeLowercase = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.IncludeLowercase),
-            IncludeNumbers = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.IncludeNumbers),
-            IncludeSpecialCharacters = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.IncludeSpecialCharacters),
-            ExcludeSimilarCharacters = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.ExcludeSimilarCharacters)
+            IncludeUppercase = passwordCompositionOptions.HasFlag(PasswordGenerationOptions.IncludeUppercase),
+            IncludeLowercase = passwordCompositionOptions.HasFlag(PasswordGenerationOptions.IncludeLowercase),
+            IncludeNumbers = passwordCompositionOptions.HasFlag(PasswordGenerationOptions.IncludeNumbers),
+            IncludeSpecialCharacters = passwordCompositionOptions.HasFlag(PasswordGenerationOptions.IncludeSpecialCharacters),
+            ExcludeSimilarCharacters = passwordCompositionOptions.HasFlag(PasswordGenerationOptions.ExcludeSimilarCharacters)
         };
 
         return await mediator.Send(query, cancellationToken);

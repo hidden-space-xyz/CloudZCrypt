@@ -1,7 +1,7 @@
 ﻿using CloudZCrypt.Application.Common.Behaviors;
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;

@@ -2,7 +2,7 @@ using CloudZCrypt.Application.Commands;
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Enums;
 using MediatR;
 
 namespace CloudZCrypt.Application.Services;

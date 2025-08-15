@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Files;
-using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Application.Services.Interfaces
 {

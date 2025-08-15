@@ -1,4 +1,4 @@
-namespace CloudZCrypt.Domain.Constants;
+namespace CloudZCrypt.Domain.Enums;
 
 public enum KeyDerivationAlgorithm
 {

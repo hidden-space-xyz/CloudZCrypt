@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Domain.Constants;
+﻿using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Domain.Services.Interfaces;
 

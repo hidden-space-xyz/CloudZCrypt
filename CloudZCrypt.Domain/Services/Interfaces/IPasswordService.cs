@@ -1,10 +1,11 @@
-﻿using CloudZCrypt.Domain.DataTransferObjects.Passwords;
+﻿using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.ValueObjects;
 
 namespace CloudZCrypt.Domain.Services.Interfaces
 {
     public interface IPasswordService
     {
-        PasswordStrengthResult AnalyzePasswordStrength(string password);
-        string GeneratePassword(int length, PasswordCompositionOptions options);
+        PasswordStrengthAnalysis AnalyzePasswordStrength(string password);
+        string GeneratePassword(int length, PasswordGenerationOptions options);
     }
 }
