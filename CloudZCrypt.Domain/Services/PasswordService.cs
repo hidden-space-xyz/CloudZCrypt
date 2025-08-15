@@ -265,9 +265,7 @@ namespace CloudZCrypt.Domain.Services
         private static double HomogeneousClassPenalty(PasswordComposition flags, string password)
         {
             // If password uses only one class, strong penalty
-            if (flags.CategoryCount <= 1) return Math.Min(20, password.Length * 2);
-            if (flags.CategoryCount == 2 && password.Length < 10) return 10;
-            return 0;
+            return flags.CategoryCount <= 1 ? Math.Min(20, password.Length * 2) : flags.CategoryCount == 2 && password.Length < 10 ? 10 : 0;
         }
 
         private static string NormalizeLeet(string input)

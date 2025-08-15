@@ -6,6 +6,6 @@ namespace CloudZCrypt.Domain.ValueObjects;
 /// Domain value object representing password strength analysis result
 /// </summary>
 public record PasswordStrengthAnalysis(
-    PasswordStrength Strength, 
-    string Description, 
+    PasswordStrength Strength,
+    string Description,
     double Score);

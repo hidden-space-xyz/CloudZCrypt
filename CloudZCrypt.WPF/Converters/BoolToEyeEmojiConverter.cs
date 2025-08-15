@@ -9,12 +9,7 @@ public class BoolToEyeEmojiConverter : IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is bool isVisible)
-        {
-            return isVisible ? "🚫" : "👁️";
-        }
-
-        return "👁️";
+        return value is bool isVisible ? isVisible ? "🚫" : "👁️" : "👁️";
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
