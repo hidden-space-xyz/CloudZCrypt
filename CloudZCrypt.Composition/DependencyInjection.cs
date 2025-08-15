@@ -1,20 +1,23 @@
-﻿using CloudZCrypt.Application.Services;
+﻿using CloudZCrypt.Application.Common.Behaviors;
+using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
 using CloudZCrypt.Domain.Factories;
 using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using CloudZCrypt.Infrastructure.Services.KeyDerivation;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 
 namespace CloudZCrypt.Composition;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddEncryptionServices(this IServiceCollection services)
+    public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
         services.AddKeyedTransient<IKeyDerivationService, Argon2idKeyDerivationService>(KeyDerivationAlgorithm.Argon2id);
@@ -27,14 +30,28 @@ public static class DependencyInjection
         services.AddKeyedTransient<IEncryptionService, ChaCha20EncryptionService>(EncryptionAlgorithm.ChaCha20);
         services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
 
-        services.AddSingleton<IPasswordService, PasswordService>();
+        services.AddScoped<IPasswordService, PasswordService>();
 
         return services;
     }
 
-    public static IServiceCollection AddUseCases(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<EncryptFileUseCase>();
+        Assembly applicationAssembly = typeof(Application.Common.Abstractions.ICommand).Assembly;
+
+        // Add MediatR
+        services.AddMediatR(config =>
+        {
+            config.RegisterServicesFromAssembly(applicationAssembly);
+            config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+
+        // Add FluentValidation
+        services.AddValidatorsFromAssembly(applicationAssembly);
+
+        // Add Application Services
+        services.AddScoped<IFileEncryptionApplicationService, FileEncryptionApplicationService>();
+        services.AddScoped<IPasswordApplicationService, PasswordApplicationService>();
 
         return services;
     }

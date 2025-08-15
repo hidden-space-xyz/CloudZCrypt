@@ -1,7 +1,7 @@
+using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Application.UseCases;
 using CloudZCrypt.Domain.Constants;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,9 +18,8 @@ public partial class MainWindowViewModel : ObservableObject
     #region Private Fields
 
     private readonly IDialogService _dialogService;
-    private readonly IPasswordService _passwordStrengthService;
-
-    private readonly EncryptFileUseCase _encryptFileUseCase;
+    private readonly IFileEncryptionApplicationService _fileEncryptionApplicationService;
+    private readonly IPasswordApplicationService _passwordApplicationService;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -118,13 +117,12 @@ public partial class MainWindowViewModel : ObservableObject
 
     public MainWindowViewModel(
         IDialogService dialogService,
-        IPasswordService passwordStrengthService,
-        EncryptFileUseCase encryptFileUseCase)
+        IFileEncryptionApplicationService fileEncryptionService,
+        IPasswordApplicationService passwordApplicationService)
     {
         _dialogService = dialogService;
-        _passwordStrengthService = passwordStrengthService;
-
-        _encryptFileUseCase = encryptFileUseCase;
+        _fileEncryptionApplicationService = fileEncryptionService;
+        _passwordApplicationService = passwordApplicationService;
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
@@ -140,6 +138,38 @@ public partial class MainWindowViewModel : ObservableObject
     #endregion
 
     #region Commands
+
+    [RelayCommand]
+    private async Task GenerateStrongPassword()
+    {
+        PasswordCompositionOptions passwordCompositionOptions =
+            PasswordCompositionOptions.IncludeLowercase
+            | PasswordCompositionOptions.IncludeUppercase
+            | PasswordCompositionOptions.IncludeNumbers
+            | PasswordCompositionOptions.IncludeSpecialCharacters;
+
+        Result<string> result = await _passwordApplicationService.GeneratePasswordAsync(128, passwordCompositionOptions);
+
+        if (result.IsSuccess)
+        {
+            Password = result.Value;
+            ConfirmPassword = result.Value;
+
+            // Copy to clipboard
+            try
+            {
+                System.Windows.Clipboard.SetText(result.Value);
+            }
+            catch
+            {
+                // Silently fail if clipboard access is not available
+            }
+        }
+        else
+        {
+            _dialogService.ShowMessage($"Failed to generate password: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+        }
+    }
 
     [RelayCommand]
     private void SelectSourceDirectory()
@@ -171,24 +201,6 @@ public partial class MainWindowViewModel : ObservableObject
     private void ToggleConfirmPasswordVisibility()
     {
         IsConfirmPasswordVisible = !IsConfirmPasswordVisible;
-    }
-
-    [RelayCommand]
-    private void GenerateStrongPassword()
-    {
-        string strongPassword = _passwordStrengthService.GenerateStrongPassword(128);
-        Password = strongPassword;
-        ConfirmPassword = strongPassword;
-
-        // Copy to clipboard
-        try
-        {
-            System.Windows.Clipboard.SetText(strongPassword);
-        }
-        catch
-        {
-            // Silently fail if clipboard access is not available
-        }
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteEncrypt))]
@@ -246,7 +258,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (IsProcessing)
         {
-            _cancellationTokenSource?.CancelAsync();
+            _cancellationTokenSource?.Cancel();
             return;
         }
 
@@ -260,20 +272,34 @@ public partial class MainWindowViewModel : ObservableObject
 
         try
         {
-            FileProcessingRequest request = new(
-                SourceDirectory,
-                DestinationDirectory,
-                Password,
-                encryptOperation,
-                SelectedEncryptionAlgorithm,
-                SelectedKeyDerivationAlgorithm);
-
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
 
-            FileProcessingResult result =
-                await _encryptFileUseCase.EncryptFilesAsync(request, progress, _cancellationTokenSource.Token);
+            Result<FileProcessingResult> result = encryptOperation == EncryptOperation.Encrypt
+                ? await _fileEncryptionApplicationService.EncryptFilesAsync(
+                    SourceDirectory,
+                    DestinationDirectory,
+                    Password,
+                    SelectedEncryptionAlgorithm,
+                    SelectedKeyDerivationAlgorithm,
+                    progress,
+                    _cancellationTokenSource.Token)
+                : await _fileEncryptionApplicationService.DecryptFilesAsync(
+                    SourceDirectory,
+                    DestinationDirectory,
+                    Password,
+                    SelectedEncryptionAlgorithm,
+                    SelectedKeyDerivationAlgorithm,
+                    progress,
+                    _cancellationTokenSource.Token);
 
-            ShowCompletionMessage(encryptOperation, result);
+            if (result.IsSuccess)
+            {
+                ShowCompletionMessage(encryptOperation, result.Value);
+            }
+            else
+            {
+                _dialogService.ShowMessage($"Operation failed: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -287,7 +313,6 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IsProcessing = false;
             _cancellationTokenSource?.Dispose();
-
             ResetButtonStates();
         }
     }
@@ -363,7 +388,6 @@ public partial class MainWindowViewModel : ObservableObject
             return false;
         }
 
-
         return true;
     }
 
@@ -399,24 +423,50 @@ public partial class MainWindowViewModel : ObservableObject
         DecryptButtonText = "Decrypt";
     }
 
-    private void UpdatePasswordStrength(string password)
+    private async void UpdatePasswordStrength(string password)
     {
-        PasswordStrengthResult result = _passwordStrengthService.EvaluatePasswordStrength(password);
+        if (string.IsNullOrEmpty(password))
+        {
+            PasswordStrengthVisibility = Visibility.Hidden;
+            return;
+        }
 
-        PasswordStrengthScore = result.Score;
-        PasswordStrengthText = result.Description;
-        PasswordStrengthColor = GetStrengthColor(result.Strength);
-        PasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Hidden : Visibility.Visible;
+        Application.Common.Models.Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+
+        if (result.IsSuccess)
+        {
+            PasswordStrengthScore = result.Value.Score;
+            PasswordStrengthText = result.Value.Description;
+            PasswordStrengthColor = GetStrengthColor(result.Value.Strength);
+            PasswordStrengthVisibility = Visibility.Visible;
+        }
+        else
+        {
+            PasswordStrengthVisibility = Visibility.Hidden;
+        }
     }
 
-    private void UpdateConfirmPasswordStrength(string password)
+    private async void UpdateConfirmPasswordStrength(string password)
     {
-        PasswordStrengthResult result = _passwordStrengthService.EvaluatePasswordStrength(password);
+        if (string.IsNullOrEmpty(password))
+        {
+            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+            return;
+        }
 
-        ConfirmPasswordStrengthScore = result.Score;
-        ConfirmPasswordStrengthText = result.Description;
-        ConfirmPasswordStrengthColor = GetStrengthColor(result.Strength);
-        ConfirmPasswordStrengthVisibility = string.IsNullOrEmpty(password) ? Visibility.Hidden : Visibility.Visible;
+        Application.Common.Models.Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+
+        if (result.IsSuccess)
+        {
+            ConfirmPasswordStrengthScore = result.Value.Score;
+            ConfirmPasswordStrengthText = result.Value.Description;
+            ConfirmPasswordStrengthColor = GetStrengthColor(result.Value.Strength);
+            ConfirmPasswordStrengthVisibility = Visibility.Visible;
+        }
+        else
+        {
+            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+        }
     }
 
     private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)

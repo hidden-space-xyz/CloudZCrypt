@@ -39,7 +39,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDialogService, DialogService>();
 
         // Application services
-        services.AddEncryptionServices();
-        services.AddUseCases();
+        services.AddDomainServices();
+        services.AddApplicationServices();
     }
 }
