@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Constants;
 
-namespace CloudZCrypt.Application.DataTransferObjects.Passwords
+namespace CloudZCrypt.Domain.DataTransferObjects.Passwords
 {
     public class PasswordStrengthResult
     {

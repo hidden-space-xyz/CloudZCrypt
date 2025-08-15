@@ -1,16 +1,16 @@
 using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Application.DataTransferObjects.Passwords;
+using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 using CloudZCrypt.Domain.Services.Interfaces;
 
-namespace CloudZCrypt.Application.Commands.Handlers;
+namespace CloudZCrypt.Application.Queries.Handlers;
 
 /// <summary>
 /// Handler for the GeneratePasswordQuery
 /// </summary>
-public class GeneratePasswordCommandHandler(IPasswordService passwordService) : ICommandHandler<GeneratePasswordCommand, Result<string>>
+public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IQueryHandler<GeneratePasswordQuery, Result<string>>
 {
-    public async Task<Result<string>> Handle(GeneratePasswordCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(GeneratePasswordQuery request, CancellationToken cancellationToken)
     {
         try
         {

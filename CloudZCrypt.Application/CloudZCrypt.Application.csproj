@@ -9,6 +9,10 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="CloudZCrypt.Composition" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Queries\GeneratePasswordQuery.cs" />
+	</ItemGroup>
 	
   <ItemGroup>
     <ProjectReference Include="..\CloudZCrypt.Domain\CloudZCrypt.Domain.csproj" />

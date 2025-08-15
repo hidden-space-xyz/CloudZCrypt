@@ -1,12 +1,12 @@
 using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
 
-namespace CloudZCrypt.Application.Commands;
+namespace CloudZCrypt.Application.Queries;
 
 /// <summary>
 /// Query to generate a password
 /// </summary>
-public record GeneratePasswordCommand : ICommand<Result<string>>
+public record GeneratePasswordQuery : IQuery<Result<string>>
 {
     public int Length { get; init; } = 16;
     public bool IncludeUppercase { get; init; } = true;

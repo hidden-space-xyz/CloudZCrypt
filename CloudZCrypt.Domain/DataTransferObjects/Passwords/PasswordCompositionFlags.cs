@@ -1,4 +1,4 @@
-﻿namespace CloudZCrypt.Application.DataTransferObjects.Passwords;
+﻿namespace CloudZCrypt.Domain.DataTransferObjects.Passwords;
 
 
 public record PasswordCompositionFlags

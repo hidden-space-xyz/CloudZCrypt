@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Application.DataTransferObjects.Passwords;
+﻿using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 
 namespace CloudZCrypt.Domain.Services.Interfaces
 {

@@ -1,8 +1,7 @@
-﻿using CloudZCrypt.Application.Commands;
-using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Application.DataTransferObjects.Passwords;
+﻿using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Queries;
 using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 using MediatR;
 
 namespace CloudZCrypt.Application.Services;
@@ -17,7 +16,7 @@ internal class PasswordApplicationService(IMediator mediator) : IPasswordApplica
         PasswordCompositionOptions passwordCompositionOptions,
         CancellationToken cancellationToken = default)
     {
-        GeneratePasswordCommand query = new()
+        GeneratePasswordQuery query = new()
         {
             Length = length,
             IncludeUppercase = passwordCompositionOptions.HasFlag(PasswordCompositionOptions.IncludeUppercase),

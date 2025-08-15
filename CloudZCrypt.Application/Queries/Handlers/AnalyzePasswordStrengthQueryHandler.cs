@@ -1,6 +1,6 @@
 using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Application.DataTransferObjects.Passwords;
+using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Queries.Handlers;

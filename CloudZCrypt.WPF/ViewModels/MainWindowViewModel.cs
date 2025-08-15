@@ -1,8 +1,8 @@
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Files;
-using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -423,7 +423,7 @@ public partial class MainWindowViewModel : ObservableObject
         DecryptButtonText = "Decrypt";
     }
 
-    private async void UpdatePasswordStrength(string password)
+    private async Task UpdatePasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password))
         {
@@ -431,7 +431,7 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        Application.Common.Models.Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+        Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
 
         if (result.IsSuccess)
         {
@@ -446,7 +446,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    private async void UpdateConfirmPasswordStrength(string password)
+    private async Task UpdateConfirmPasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password))
         {
@@ -454,7 +454,7 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        Application.Common.Models.Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+        Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
 
         if (result.IsSuccess)
         {

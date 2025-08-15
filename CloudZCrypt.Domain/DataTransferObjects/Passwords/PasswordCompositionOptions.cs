@@ -1,4 +1,4 @@
-namespace CloudZCrypt.Application.DataTransferObjects.Passwords;
+namespace CloudZCrypt.Domain.DataTransferObjects.Passwords;
 
 /// <summary>
 /// Flags for password composition options

@@ -1,18 +1,18 @@
 using FluentValidation;
 
-namespace CloudZCrypt.Application.Commands.Validators;
+namespace CloudZCrypt.Application.Queries.Validators;
 
 /// <summary>
 /// Validator for the GeneratePasswordQuery
 /// </summary>
-public class GeneratePasswordQueryValidator : AbstractValidator<GeneratePasswordCommand>
+public class GeneratePasswordQueryValidator : AbstractValidator<GeneratePasswordQuery>
 {
     public GeneratePasswordQueryValidator()
     {
         RuleFor(x => x.Length)
             .GreaterThan(0)
             .WithMessage("Password length must be greater than 0")
-            .LessThanOrEqualTo(1000)
+            .LessThanOrEqualTo(512)
             .WithMessage("Password length must be 1000 characters or less");
 
         RuleFor(x => x)

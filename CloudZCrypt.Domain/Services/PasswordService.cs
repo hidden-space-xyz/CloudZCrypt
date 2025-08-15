@@ -1,5 +1,5 @@
-﻿using CloudZCrypt.Application.DataTransferObjects.Passwords;
-using CloudZCrypt.Domain.Constants;
+﻿using CloudZCrypt.Domain.Constants;
+using CloudZCrypt.Domain.DataTransferObjects.Passwords;
 using CloudZCrypt.Domain.Services.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
