@@ -136,10 +136,9 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        if (minimumSuccessRate is < 0 or > 1)
-            throw new ArgumentOutOfRangeException(nameof(minimumSuccessRate), "Success rate must be between 0 and 1");
-
-        return result.SuccessRate >= minimumSuccessRate;
+        return minimumSuccessRate is < 0 or > 1
+            ? throw new ArgumentOutOfRangeException(nameof(minimumSuccessRate), "Success rate must be between 0 and 1")
+            : result.SuccessRate >= minimumSuccessRate;
     }
 
     public IEnumerable<string> AnalyzeResult(FileProcessingResult result)
