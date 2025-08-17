@@ -20,21 +20,30 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
+        // Factories
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
+        services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
+        services.AddSingleton<IFileProcessingResultFactory, FileProcessingResultFactory>();
+        services.AddSingleton<IFileProcessingStatusFactory, FileProcessingStatusFactory>();
+
+        // Key Derivation Services
         services.AddKeyedTransient<IKeyDerivationService, Argon2idKeyDerivationService>(KeyDerivationAlgorithm.Argon2id);
         services.AddKeyedTransient<IKeyDerivationService, PBKDF2KeyDerivationService>(KeyDerivationAlgorithm.PBKDF2);
 
-        services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
+        // Encryption Services
         services.AddKeyedTransient<IEncryptionService, AesEncryptionService>(EncryptionAlgorithm.Aes);
         services.AddKeyedTransient<IEncryptionService, TwofishEncryptionService>(EncryptionAlgorithm.Twofish);
         services.AddKeyedTransient<IEncryptionService, SerpentEncryptionService>(EncryptionAlgorithm.Serpent);
         services.AddKeyedTransient<IEncryptionService, ChaCha20EncryptionService>(EncryptionAlgorithm.ChaCha20);
         services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
 
+        // Domain Services
         services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<IFileProcessingDomainService, FileProcessingDomainService>();
 
-        // Virtual File System Services
+        // Infrastructure Services (following Clean Architecture - registered here but implementations in Infrastructure)
         services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddScoped<IFileOperationsService, FileOperationsService>();
 
         return services;
     }
@@ -43,10 +52,13 @@ public static class DependencyInjection
     {
         Assembly applicationAssembly = typeof(Application.Common.Abstractions.ICommand).Assembly;
 
-        // Add MediatR
+        // Add MediatR with pipeline behaviors (logging behaviors removed)
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(applicationAssembly);
+            // Order is important: UnhandledException -> Performance -> Validation -> Handler
+            config.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
+            config.AddOpenBehavior(typeof(PerformanceBehavior<,>));
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 

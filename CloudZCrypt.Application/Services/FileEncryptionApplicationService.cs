@@ -33,8 +33,8 @@ internal class FileEncryptionApplicationService(IMediator mediator) : IFileEncry
             EncryptionAlgorithm = encryptionAlgorithm,
             KeyDerivationAlgorithm = keyDerivationAlgorithm,
             EncryptOperation = EncryptOperation.Encrypt,
-            Progress = progress,
-            CancellationToken = cancellationToken
+            Progress = progress
+            // CancellationToken is passed directly to mediator
         };
 
         return await mediator.Send(command, cancellationToken);
@@ -60,8 +60,8 @@ internal class FileEncryptionApplicationService(IMediator mediator) : IFileEncry
             EncryptionAlgorithm = encryptionAlgorithm,
             KeyDerivationAlgorithm = keyDerivationAlgorithm,
             EncryptOperation = EncryptOperation.Decrypt,
-            Progress = progress,
-            CancellationToken = cancellationToken
+            Progress = progress
+            // CancellationToken is passed directly to mediator
         };
 
         return await mediator.Send(command, cancellationToken);

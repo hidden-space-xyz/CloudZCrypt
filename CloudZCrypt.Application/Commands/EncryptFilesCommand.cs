@@ -7,6 +7,7 @@ namespace CloudZCrypt.Application.Commands;
 
 /// <summary>
 /// Command to encrypt files
+/// Following CQRS principles, contains only the data needed for the operation
 /// </summary>
 public record EncryptFilesCommand : ICommand<Result<FileProcessingResult>>
 {
@@ -17,5 +18,4 @@ public record EncryptFilesCommand : ICommand<Result<FileProcessingResult>>
     public required KeyDerivationAlgorithm KeyDerivationAlgorithm { get; init; }
     public EncryptOperation EncryptOperation { get; init; } = EncryptOperation.Encrypt;
     public IProgress<FileProcessingStatus>? Progress { get; init; }
-    public CancellationToken CancellationToken { get; init; } = default;
 }

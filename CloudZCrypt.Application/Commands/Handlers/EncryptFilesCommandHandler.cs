@@ -9,48 +9,56 @@ using System.Diagnostics;
 namespace CloudZCrypt.Application.Commands.Handlers;
 
 /// <summary>
-/// Handler for the EncryptFilesCommand
+/// Handler for the EncryptFilesCommand following CQRS pattern
+/// Uses factories to create domain objects following DDD principles
+/// Uses abstractions for file operations to maintain Clean Architecture
 /// </summary>
-public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServiceFactory) : ICommandHandler<EncryptFilesCommand, Result<FileProcessingResult>>
+public class EncryptFilesCommandHandler(
+    IEncryptionServiceFactory encryptionServiceFactory,
+    IFileProcessingResultFactory fileProcessingResultFactory,
+    IFileProcessingStatusFactory fileProcessingStatusFactory,
+    IFileProcessingDomainService fileProcessingDomainService,
+    IFileOperationsService fileOperationsService) : ICommandHandler<EncryptFilesCommand, Result<FileProcessingResult>>
 {
     public async Task<Result<FileProcessingResult>> Handle(EncryptFilesCommand request, CancellationToken cancellationToken)
     {
         try
         {
+            // Use domain service for validation
+            (bool canProceed, IEnumerable<string> validationErrors) = await fileProcessingDomainService
+                .ValidateProcessingOperationAsync(request.SourceDirectory, request.DestinationDirectory, cancellationToken);
+
+            if (!canProceed)
+            {
+                return Result<FileProcessingResult>.Failure(validationErrors.ToArray());
+            }
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             List<string> errors = [];
 
-            string[] files = Directory.GetFiles(request.SourceDirectory, "*.*", SearchOption.AllDirectories);
+            string[] files = await fileOperationsService.GetFilesAsync(request.SourceDirectory, "*.*", cancellationToken);
             if (files.Length == 0)
             {
-                // Create domain value object first, then map to DTO
-                Domain.ValueObjects.FileProcessing.FileProcessingResult emptyDomainResult = new(
-                    isSuccess: false,
-                    elapsedTime: stopwatch.Elapsed,
-                    totalBytes: 0,
-                    processedFiles: 0,
-                    totalFiles: 0,
-                    errors: ["No files found in the source directory."]);
+                stopwatch.Stop();
+                // Use factory to create empty result
+                Domain.ValueObjects.FileProcessing.FileProcessingResult emptyDomainResult =
+                    fileProcessingResultFactory.CreateEmpty(stopwatch.Elapsed);
 
                 return Result<FileProcessingResult>.Success(FileProcessingResult.FromDomain(emptyDomainResult));
             }
 
-            long totalBytes = files.Sum(f => new FileInfo(f).Length);
+            long totalBytes = files.Sum(f => fileOperationsService.GetFileSize(f));
             long processedBytes = 0;
 
-            // Create domain value object for progress reporting
-            Domain.ValueObjects.FileProcessing.FileProcessingStatus initialStatus = new(
-                processedFiles: 0,
-                totalFiles: files.Length,
-                processedBytes: processedBytes,
-                totalBytes: totalBytes,
-                elapsed: stopwatch.Elapsed);
+            // Use factory to create initial status
+            Domain.ValueObjects.FileProcessing.FileProcessingStatus initialStatus =
+                fileProcessingStatusFactory.CreateInitial(files.Length, totalBytes);
 
             // Report initial progress
             request.Progress?.Report(FileProcessingStatus.FromDomain(initialStatus));
 
             // Create destination directory if it doesn't exist
-            Directory.CreateDirectory(request.DestinationDirectory);
+            await fileOperationsService.CreateDirectoryAsync(request.DestinationDirectory, cancellationToken);
 
             IEncryptionService encryptionService = encryptionServiceFactory.Create(request.EncryptionAlgorithm);
 
@@ -59,18 +67,18 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
                 cancellationToken.ThrowIfCancellationRequested();
 
                 string file = files[i];
-                string relativePath = Path.GetRelativePath(request.SourceDirectory, file);
+                string relativePath = fileOperationsService.GetRelativePath(request.SourceDirectory, file);
 
                 // For Cryptomator-style encryption, add .encrypted extension when encrypting
                 string destinationFilePath = request.EncryptOperation == EncryptOperation.Encrypt
-                    ? Path.Combine(request.DestinationDirectory, relativePath + ".encrypted")
-                    : Path.Combine(request.DestinationDirectory, relativePath.Replace(".encrypted", ""));
+                    ? fileOperationsService.CombinePath(request.DestinationDirectory, relativePath + ".encrypted")
+                    : fileOperationsService.CombinePath(request.DestinationDirectory, relativePath.Replace(".encrypted", ""));
 
                 // Ensure destination directory exists
-                string? destinationDir = Path.GetDirectoryName(destinationFilePath);
+                string? destinationDir = fileOperationsService.GetDirectoryName(destinationFilePath);
                 if (!string.IsNullOrEmpty(destinationDir))
                 {
-                    Directory.CreateDirectory(destinationDir);
+                    await fileOperationsService.CreateDirectoryAsync(destinationDir, cancellationToken);
                 }
 
                 bool operationResult = await ExecuteFileOperation(
@@ -84,15 +92,16 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
                     errors.Add($"Failed to process file: {file}");
                 }
 
-                processedBytes += new FileInfo(file).Length;
+                processedBytes += fileOperationsService.GetFileSize(file);
 
-                // Create domain value object for progress reporting
-                Domain.ValueObjects.FileProcessing.FileProcessingStatus progressStatus = new(
-                    processedFiles: i + 1,
-                    totalFiles: files.Length,
-                    processedBytes: processedBytes,
-                    totalBytes: totalBytes,
-                    elapsed: stopwatch.Elapsed);
+                // Use factory to create progress status
+                Domain.ValueObjects.FileProcessing.FileProcessingStatus progressStatus =
+                    fileProcessingStatusFactory.CreateInProgress(
+                        processedFiles: i + 1,
+                        totalFiles: files.Length,
+                        processedBytes: processedBytes,
+                        totalBytes: totalBytes,
+                        elapsed: stopwatch.Elapsed);
 
                 // Report progress
                 request.Progress?.Report(FileProcessingStatus.FromDomain(progressStatus));
@@ -100,20 +109,38 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
 
             stopwatch.Stop();
 
-            // Create domain value object for final result
-            Domain.ValueObjects.FileProcessing.FileProcessingResult domainResult = new(
-                isSuccess: errors.Count == 0,
-                elapsedTime: stopwatch.Elapsed,
-                totalBytes: totalBytes,
-                processedFiles: files.Length - errors.Count,
-                totalFiles: files.Length,
-                errors: errors);
+            // Use factory to create final result based on success/failure
+            Domain.ValueObjects.FileProcessing.FileProcessingResult domainResult = errors.Count == 0
+                ? fileProcessingResultFactory.CreateSuccess(
+                    elapsedTime: stopwatch.Elapsed,
+                    totalBytes: totalBytes,
+                    processedFiles: files.Length,
+                    totalFiles: files.Length)
+                : fileProcessingResultFactory.CreatePartialSuccess(
+                    elapsedTime: stopwatch.Elapsed,
+                    totalBytes: totalBytes,
+                    processedFiles: files.Length - errors.Count,
+                    totalFiles: files.Length,
+                    errors: errors);
 
             return Result<FileProcessingResult>.Success(FileProcessingResult.FromDomain(domainResult));
         }
         catch (OperationCanceledException)
         {
-            return Result<FileProcessingResult>.Failure("Operation was cancelled");
+            // Handle cancellation properly using factory
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            stopwatch.Stop();
+
+            // For cancelled operations, we might not know the exact progress
+            Domain.ValueObjects.FileProcessing.FileProcessingResult cancelledResult =
+                fileProcessingResultFactory.CreateCancelled(
+                    elapsedTime: stopwatch.Elapsed,
+                    processedFiles: 0, // We don't track this in cancellation case
+                    totalFiles: 0,
+                    processedBytes: 0,
+                    totalBytes: 0);
+
+            return Result<FileProcessingResult>.Success(FileProcessingResult.FromDomain(cancelledResult));
         }
         catch (Exception ex)
         {

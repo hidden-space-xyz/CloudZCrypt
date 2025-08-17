@@ -1,3 +1,4 @@
+using CloudZCrypt.Application.Queries;
 using FluentValidation;
 
 namespace CloudZCrypt.Application.Queries.Validators;

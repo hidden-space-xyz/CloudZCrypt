@@ -2,6 +2,14 @@ namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 /// <summary>
 /// Domain value object representing the result of a file processing operation
+/// Immutable and encapsulates all validation logic following DDD principles
+/// 
+/// Architectural Notes:
+/// - This is a Domain Value Object (DDD) - immutable and side-effect free
+/// - Contains domain logic for validation and computed properties
+/// - Should be created through IFileProcessingResultFactory for consistency
+/// - Used by Command Handlers (CQRS) and converted to DTOs at Application boundaries
+/// - Contains rich domain behavior while maintaining immutability
 /// </summary>
 public sealed record FileProcessingResult
 {
@@ -20,20 +28,7 @@ public sealed record FileProcessingResult
         int totalFiles,
         IEnumerable<string> errors)
     {
-        if (elapsedTime < TimeSpan.Zero)
-            throw new ArgumentException("Elapsed time cannot be negative", nameof(elapsedTime));
-
-        if (totalBytes < 0)
-            throw new ArgumentException("Total bytes cannot be negative", nameof(totalBytes));
-
-        if (processedFiles < 0)
-            throw new ArgumentException("Processed files cannot be negative", nameof(processedFiles));
-
-        if (totalFiles < 0)
-            throw new ArgumentException("Total files cannot be negative", nameof(totalFiles));
-
-        if (processedFiles > totalFiles)
-            throw new ArgumentException("Processed files cannot exceed total files", nameof(processedFiles));
+        ValidateInputs(elapsedTime, totalBytes, processedFiles, totalFiles);
 
         IsSuccess = isSuccess;
         ElapsedTime = elapsedTime;
@@ -67,4 +62,37 @@ public sealed record FileProcessingResult
     /// Gets the success rate (0.0 to 1.0)
     /// </summary>
     public double SuccessRate => TotalFiles == 0 ? 0.0 : (double)ProcessedFiles / TotalFiles;
+
+    /// <summary>
+    /// Indicates whether this was a partial success (some files processed, some failed)
+    /// </summary>
+    public bool IsPartialSuccess => ProcessedFiles > 0 && ProcessedFiles < TotalFiles;
+
+    /// <summary>
+    /// Gets the average processing speed in bytes per second
+    /// </summary>
+    public double BytesPerSecond => ElapsedTime.TotalSeconds > 0 ? TotalBytes / ElapsedTime.TotalSeconds : 0;
+
+    /// <summary>
+    /// Gets the average files per second processing rate
+    /// </summary>
+    public double FilesPerSecond => ElapsedTime.TotalSeconds > 0 ? ProcessedFiles / ElapsedTime.TotalSeconds : 0;
+
+    private static void ValidateInputs(TimeSpan elapsedTime, long totalBytes, int processedFiles, int totalFiles)
+    {
+        if (elapsedTime < TimeSpan.Zero)
+            throw new ArgumentException("Elapsed time cannot be negative", nameof(elapsedTime));
+
+        if (totalBytes < 0)
+            throw new ArgumentException("Total bytes cannot be negative", nameof(totalBytes));
+
+        if (processedFiles < 0)
+            throw new ArgumentException("Processed files cannot be negative", nameof(processedFiles));
+
+        if (totalFiles < 0)
+            throw new ArgumentException("Total files cannot be negative", nameof(totalFiles));
+
+        if (processedFiles > totalFiles)
+            throw new ArgumentException("Processed files cannot exceed total files", nameof(processedFiles));
+    }
 }
