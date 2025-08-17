@@ -326,7 +326,15 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool CanExecuteMountUnmount()
     {
-        return !IsProcessing && !string.IsNullOrWhiteSpace(EncryptedVaultPath) && !string.IsNullOrWhiteSpace(Password);
+        // Allow unmounting even without password, but require password for mounting
+        if (IsVaultMounted)
+        {
+            return !IsProcessing; // Can always unmount if not processing
+        }
+        else
+        {
+            return !IsProcessing && !string.IsNullOrWhiteSpace(EncryptedVaultPath) && !string.IsNullOrWhiteSpace(Password);
+        }
     }
 
     #endregion
@@ -360,6 +368,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     partial void OnSelectedMountPointChanged(MountPoint value)
     {
         UpdateVaultMountStatus();
+    }
+
+    partial void OnIsVaultMountedChanged(bool value)
+    {
+        MountUnmountVaultCommand.NotifyCanExecuteChanged();
     }
 
     #endregion

@@ -6,302 +6,354 @@
     xmlns:converters="clr-namespace:CloudZCrypt.WPF.Converters"
     Title="CloudZCrypt - Cryptomator-style Encryption"
     Width="800"
-    Height="600"
+    Height="650"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <!--  Tab Control  -->
+        <TabControl Name="MainTabControl">
 
-        <!--  Vault Configuration  -->
-        <StackPanel Grid.Row="0">
-            <TextBlock
-                FontSize="16"
-                FontWeight="Bold"
-                Text="Vault Configuration" />
-            <Separator Margin="0,5,0,10" />
+            <!--  Create Vault Tab  -->
+            <TabItem Name="CreateVaultTab" Header="New Vault">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-            <TextBlock FontWeight="Bold" Text="Source Directory (for vault creation):" />
-            <DockPanel Margin="0,5,0,0">
-                <Button
-                    Name="SelectSourceDirectoryButton"
-                    Command="{Binding SelectSourceDirectoryCommand}"
-                    Content="📂"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}" />
-                <TextBox
-                    x:Name="SourceDirectoryBox"
-                    Padding="5"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    IsReadOnly="True"
-                    Text="{Binding SourceDirectory}" />
-            </DockPanel>
+                    <!--  Vault Creation Content  -->
+                    <ScrollViewer
+                        Grid.Row="0"
+                        Padding="10"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,0,0,10"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="Vault Configuration" />
 
-            <TextBlock
-                Margin="0,20,0,0"
-                FontWeight="Bold"
-                Text="Encrypted Vault Directory:" />
-            <DockPanel Margin="0,5,0,0">
-                <Button
-                    Name="SelectEncryptedVaultButton"
-                    Command="{Binding SelectEncryptedVaultPathCommand}"
-                    Content="📂"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}" />
-                <TextBox
-                    x:Name="EncryptedVaultBox"
-                    Padding="5"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    IsReadOnly="True"
-                    Text="{Binding EncryptedVaultPath}" />
-            </DockPanel>
+                            <!--  Source Directory  -->
+                            <TextBlock FontWeight="Bold" Text="Source Directory (for vault creation):" />
+                            <DockPanel Margin="0,5,0,20">
+                                <Button
+                                    Name="SelectSourceDirectoryButton"
+                                    Command="{Binding SelectSourceDirectoryCommand}"
+                                    Content="📂"
+                                    DockPanel.Dock="Right"
+                                    IsEnabled="{Binding AreControlsEnabled}" />
+                                <TextBox
+                                    x:Name="SourceDirectoryBox"
+                                    Padding="5"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    IsReadOnly="True"
+                                    Text="{Binding SourceDirectory}" />
+                            </DockPanel>
 
-            <Grid Grid.Column="0" Margin="0,20,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Vertical">
-                    <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
-                    <ComboBox
-                        x:Name="AlgorithmComboBox"
-                        Width="200"
-                        Margin="0,5,0,0"
-                        Padding="5"
-                        HorizontalAlignment="Left"
-                        IsEnabled="{Binding AreControlsEnabled}"
-                        ItemsSource="{Binding AvailableEncryptionAlgorithms}"
-                        SelectedItem="{Binding SelectedEncryptionAlgorithm}" />
-                </StackPanel>
+                            <!--  Encrypted Vault Directory  -->
+                            <TextBlock FontWeight="Bold" Text="Encrypted Vault Directory:" />
+                            <DockPanel Margin="0,5,0,20">
+                                <Button
+                                    Name="SelectEncryptedVaultButton"
+                                    Command="{Binding SelectEncryptedVaultPathCommand}"
+                                    Content="📂"
+                                    DockPanel.Dock="Right"
+                                    IsEnabled="{Binding AreControlsEnabled}" />
+                                <TextBox
+                                    x:Name="EncryptedVaultBox"
+                                    Padding="5"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    IsReadOnly="True"
+                                    Text="{Binding EncryptedVaultPath}" />
+                            </DockPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Vertical">
-                    <TextBlock FontWeight="Bold" Text="Key Derivation Algorithm:" />
-                    <ComboBox
-                        x:Name="KeyDerivationAlgorithmComboBox"
-                        Width="200"
-                        Margin="0,5,0,0"
-                        Padding="5"
-                        HorizontalAlignment="Left"
-                        IsEnabled="{Binding AreControlsEnabled}"
-                        ItemsSource="{Binding AvailableKeyDerivationAlgorithms}"
-                        SelectedItem="{Binding SelectedKeyDerivationAlgorithm}" />
-                </StackPanel>
-            </Grid>
+                            <!--  Encryption Settings  -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-            <TextBlock
-                Margin="0,20,0,0"
-                FontWeight="Bold"
-                Text="Vault Password:" />
-            <DockPanel Margin="0,5,0,0">
-                <Button
-                    Name="GeneratePasswordButton"
-                    Command="{Binding GenerateStrongPasswordCommand}"
-                    Content="🔄"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    ToolTip="Generate strong password (128 chars)" />
-                <Button
-                    Name="TogglePasswordVisibilityButton"
-                    Command="{Binding TogglePasswordVisibilityCommand}"
-                    Content="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    ToolTip="Toggle password visibility" />
-                <PasswordBox
-                    x:Name="PasswordBox"
-                    Height="30"
-                    Padding="5"
-                    behaviors:PasswordBoxBehavior.Attach="True"
-                    behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
-                    DockPanel.Dock="Top"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
-                <TextBox
-                    x:Name="PasswordTextBox"
-                    Height="30"
-                    Padding="5"
-                    DockPanel.Dock="Top"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    Text="{Binding Password, Mode=TwoWay}"
-                    Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
-            </DockPanel>
+                                <StackPanel Grid.Column="0" Orientation="Vertical">
+                                    <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
+                                    <ComboBox
+                                        x:Name="AlgorithmComboBox"
+                                        Width="200"
+                                        Margin="0,5,0,0"
+                                        Padding="5"
+                                        HorizontalAlignment="Left"
+                                        IsEnabled="{Binding AreControlsEnabled}"
+                                        ItemsSource="{Binding AvailableEncryptionAlgorithms}"
+                                        SelectedItem="{Binding SelectedEncryptionAlgorithm}" />
+                                </StackPanel>
 
-            <!--  Password Strength Indicator  -->
-            <StackPanel Margin="0,2,0,0" Visibility="{Binding PasswordStrengthVisibility}">
-                <ProgressBar
-                    Height="5"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Foreground="{Binding PasswordStrengthColor}"
-                    Maximum="100"
-                    Minimum="0"
-                    Value="{Binding PasswordStrengthScore}" />
-                <TextBlock
-                    FontSize="11"
-                    Foreground="{Binding PasswordStrengthColor}"
-                    Text="{Binding PasswordStrengthText}" />
-            </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Vertical">
+                                    <TextBlock FontWeight="Bold" Text="Key Derivation Algorithm:" />
+                                    <ComboBox
+                                        x:Name="KeyDerivationAlgorithmComboBox"
+                                        Width="200"
+                                        Margin="0,5,0,0"
+                                        Padding="5"
+                                        HorizontalAlignment="Left"
+                                        IsEnabled="{Binding AreControlsEnabled}"
+                                        ItemsSource="{Binding AvailableKeyDerivationAlgorithms}"
+                                        SelectedItem="{Binding SelectedKeyDerivationAlgorithm}" />
+                                </StackPanel>
+                            </Grid>
 
-            <TextBlock
-                Margin="0,20,0,0"
-                FontWeight="Bold"
-                Text="Confirm Password:" />
-            <DockPanel Margin="0,5,0,0">
-                <Button
-                    Name="ToggleConfirmPasswordVisibilityButton"
-                    Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
-                    Content="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    ToolTip="Toggle password visibility" />
-                <PasswordBox
-                    x:Name="ConfirmPasswordBox"
-                    Height="30"
-                    Padding="5"
-                    behaviors:PasswordBoxBehavior.Attach="True"
-                    behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
-                    DockPanel.Dock="Top"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
-                <TextBox
-                    x:Name="ConfirmPasswordTextBox"
-                    Height="30"
-                    Padding="5"
-                    DockPanel.Dock="Top"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    Text="{Binding ConfirmPassword, Mode=TwoWay}"
-                    Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
-            </DockPanel>
+                            <!--  Password Section  -->
+                            <TextBlock FontWeight="Bold" Text="Vault Password:" />
+                            <DockPanel Margin="0,5,0,0">
+                                <Button
+                                    Name="GeneratePasswordButton"
+                                    Command="{Binding GenerateStrongPasswordCommand}"
+                                    Content="🔄"
+                                    DockPanel.Dock="Right"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ToolTip="Generate strong password (128 chars)" />
+                                <Button
+                                    Name="TogglePasswordVisibilityButton"
+                                    Command="{Binding TogglePasswordVisibilityCommand}"
+                                    Content="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
+                                    DockPanel.Dock="Right"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ToolTip="Toggle password visibility" />
+                                <PasswordBox
+                                    x:Name="PasswordBox"
+                                    Height="30"
+                                    Padding="5"
+                                    behaviors:PasswordBoxBehavior.Attach="True"
+                                    behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
+                                    DockPanel.Dock="Top"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
+                                <TextBox
+                                    x:Name="PasswordTextBox"
+                                    Height="30"
+                                    Padding="5"
+                                    DockPanel.Dock="Top"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    Text="{Binding Password, Mode=TwoWay}"
+                                    Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
+                            </DockPanel>
 
-            <StackPanel Margin="0,2,0,0" Visibility="{Binding ConfirmPasswordStrengthVisibility}">
-                <ProgressBar
-                    Height="5"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Foreground="{Binding ConfirmPasswordStrengthColor}"
-                    Maximum="100"
-                    Minimum="0"
-                    Value="{Binding ConfirmPasswordStrengthScore}" />
-                <TextBlock
-                    FontSize="11"
-                    Foreground="{Binding ConfirmPasswordStrengthColor}"
-                    Text="{Binding ConfirmPasswordStrengthText}" />
-            </StackPanel>
+                            <!--  Password Strength Indicator  -->
+                            <StackPanel Margin="0,2,0,10" Visibility="{Binding PasswordStrengthVisibility}">
+                                <ProgressBar
+                                    Height="5"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Foreground="{Binding PasswordStrengthColor}"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Value="{Binding PasswordStrengthScore}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{Binding PasswordStrengthColor}"
+                                    Text="{Binding PasswordStrengthText}" />
+                            </StackPanel>
 
-        </StackPanel>
+                            <!--  Confirm Password  -->
+                            <TextBlock FontWeight="Bold" Text="Confirm Password:" />
+                            <DockPanel Margin="0,5,0,0">
+                                <Button
+                                    Name="ToggleConfirmPasswordVisibilityButton"
+                                    Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
+                                    Content="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
+                                    DockPanel.Dock="Right"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ToolTip="Toggle password visibility" />
+                                <PasswordBox
+                                    x:Name="ConfirmPasswordBox"
+                                    Height="30"
+                                    Padding="5"
+                                    behaviors:PasswordBoxBehavior.Attach="True"
+                                    behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
+                                    DockPanel.Dock="Top"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
+                                <TextBox
+                                    x:Name="ConfirmPasswordTextBox"
+                                    Height="30"
+                                    Padding="5"
+                                    DockPanel.Dock="Top"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    Text="{Binding ConfirmPassword, Mode=TwoWay}"
+                                    Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
+                            </DockPanel>
 
-        <!--  Virtual File System Controls  -->
-        <StackPanel Grid.Row="1" Margin="0,20,0,0">
-            <TextBlock
-                FontSize="16"
-                FontWeight="Bold"
-                Text="Virtual Drive Mounting" />
-            <TextBlock
-                Margin="0,2,0,10"
-                FontSize="12"
-                Foreground="Gray"
-                Text="Mount encrypted vault as virtual drive for transparent access" />
-            <Separator Margin="0,0,0,10" />
+                            <!--  Confirm Password Strength Indicator  -->
+                            <StackPanel Margin="0,2,0,10" Visibility="{Binding ConfirmPasswordStrengthVisibility}">
+                                <ProgressBar
+                                    Height="5"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Foreground="{Binding ConfirmPasswordStrengthColor}"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Value="{Binding ConfirmPasswordStrengthScore}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{Binding ConfirmPasswordStrengthColor}"
+                                    Text="{Binding ConfirmPasswordStrengthText}" />
+                            </StackPanel>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Row="1">
+                                <TextBlock
+                                    x:Name="ProgressText"
+                                    HorizontalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{Binding ProgressText}" />
+                                <ProgressBar
+                                    x:Name="ProgressBar"
+                                    Height="4"
+                                    Visibility="{Binding ProgressVisibility}"
+                                    Value="{Binding ProgressValue}" />
+                            </StackPanel>
 
-                <StackPanel Grid.Column="0" Orientation="Vertical">
-                    <TextBlock FontWeight="Bold" Text="Drive Letter:" />
-                    <ComboBox
-                        x:Name="MountPointComboBox"
-                        Width="60"
-                        Margin="0,5,0,0"
-                        Padding="5"
-                        IsEnabled="{Binding AreControlsEnabled}"
-                        ItemsSource="{Binding AvailableMountPoints}"
-                        SelectedItem="{Binding SelectedMountPoint, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Converter={x:Static converters:MountPointToDriveStringConverter.Instance}}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
+                            <!--  Create Vault Button  -->
+                            <Button
+                                x:Name="CreateVaultButton"
+                                Margin="0,20,0,0"
+                                Padding="20,10"
+                                HorizontalAlignment="Center"
+                                Command="{Binding CreateVaultCommand}"
+                                Content="{Binding EncryptButtonText}"
+                                FontSize="14"
+                                FontWeight="SemiBold" />
 
-                <StackPanel
-                    Grid.Column="1"
-                    Margin="20,0,0,0"
-                    VerticalAlignment="Center">
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="Gray"
-                        Text="Available drive letters for mounting" />
-                    <TextBlock
-                        FontSize="12"
-                        FontWeight="Bold"
-                        Foreground="{Binding MountStatusColor}"
-                        Text="{Binding CurrentMountStatus}"
-                        Visibility="{Binding MountStatusVisibility}" />
-                </StackPanel>
+                            <!--  Progress Bar (only for Create Vault tab)  -->
 
-                <Button
-                    x:Name="OpenMountPointButton"
-                    Grid.Column="2"
-                    Command="{Binding OpenMountPointCommand}"
-                    Content="📁 Open Drive"
-                    IsEnabled="{Binding IsVaultMounted}"
-                    ToolTip="Open mounted drive in Explorer" />
-            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
 
-        </StackPanel>
+            <!--  Mount Vault Tab  -->
+            <TabItem Name="MountVaultTab" Header="Manage Vault">
+                <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock
+                            Margin="0,0,0,5"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Text="Virtual Drive Mounting" />
+                        <TextBlock
+                            Margin="0,0,0,20"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="Mount encrypted vault as virtual drive for transparent access" />
 
-        <!--  Action Buttons  -->
-        <Grid Grid.Row="2" Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+                        <!--  Encrypted Vault Directory for Mounting  -->
+                        <TextBlock FontWeight="Bold" Text="Encrypted Vault Directory:" />
+                        <DockPanel Margin="0,5,0,20">
+                            <Button
+                                Name="SelectEncryptedVaultButtonMount"
+                                Command="{Binding SelectEncryptedVaultPathCommand}"
+                                Content="📂"
+                                DockPanel.Dock="Right"
+                                IsEnabled="{Binding AreControlsEnabled}" />
+                            <TextBox
+                                x:Name="EncryptedVaultBoxMount"
+                                Padding="5"
+                                IsEnabled="{Binding AreControlsEnabled}"
+                                IsReadOnly="True"
+                                Text="{Binding EncryptedVaultPath}" />
+                        </DockPanel>
 
-            <Button
-                x:Name="CreateVaultButton"
-                Grid.Column="1"
-                Margin="0,0,10,0"
-                Padding="15,8"
-                Command="{Binding CreateVaultCommand}"
-                Content="{Binding EncryptButtonText}"
-                FontWeight="SemiBold" />
-            <Button
-                x:Name="MountUnmountButton"
-                Grid.Column="2"
-                Padding="15,8"
-                Command="{Binding MountUnmountVaultCommand}"
-                Content="{Binding MountButtonText}"
-                FontWeight="SemiBold" />
-        </Grid>
+                        <!--  Password for Mounting  -->
+                        <TextBlock FontWeight="Bold" Text="Vault Password:" />
+                        <DockPanel Margin="0,5,0,20">
+                            <Button
+                                Name="TogglePasswordVisibilityButtonMount"
+                                Command="{Binding TogglePasswordVisibilityCommand}"
+                                Content="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
+                                DockPanel.Dock="Right"
+                                IsEnabled="{Binding AreControlsEnabled}"
+                                ToolTip="Toggle password visibility" />
+                            <PasswordBox
+                                x:Name="PasswordBoxMount"
+                                Height="30"
+                                Padding="5"
+                                behaviors:PasswordBoxBehavior.Attach="True"
+                                behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
+                                DockPanel.Dock="Top"
+                                IsEnabled="{Binding AreControlsEnabled}"
+                                Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
+                            <TextBox
+                                x:Name="PasswordTextBoxMount"
+                                Height="30"
+                                Padding="5"
+                                DockPanel.Dock="Top"
+                                IsEnabled="{Binding AreControlsEnabled}"
+                                Text="{Binding Password, Mode=TwoWay}"
+                                Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
+                        </DockPanel>
 
-        <!--  Progress Bar  -->
-        <StackPanel Grid.Row="3" Margin="0,20,0,0">
-            <TextBlock
-                x:Name="ProgressText"
-                HorizontalAlignment="Center"
-                FontWeight="SemiBold"
-                Text="{Binding ProgressText}"
-                Visibility="{Binding ProgressVisibility}" />
-            <ProgressBar
-                x:Name="ProgressBar"
-                Height="20"
-                Margin="0,10,0,0"
-                Visibility="{Binding ProgressVisibility}"
-                Value="{Binding ProgressValue}" />
-        </StackPanel>
+                        <!--  Drive Letter Selection  -->
+                        <Grid Margin="0,0,0,30">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Vertical">
+                                <TextBlock FontWeight="Bold" Text="Drive Letter:" />
+                                <ComboBox
+                                    x:Name="MountPointComboBox"
+                                    Width="65"
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Left"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ItemsSource="{Binding AvailableMountPoints}"
+                                    SelectedItem="{Binding SelectedMountPoint, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={x:Static converters:MountPointToDriveStringConverter.Instance}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="Gray"
+                                    Text="Available drive letters for mounting" />
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="Bold"
+                                    Foreground="{Binding MountStatusColor}"
+                                    Text="{Binding CurrentMountStatus}"
+                                    Visibility="{Binding MountStatusVisibility}" />
+                            </StackPanel>
+
+                            <Button
+                                x:Name="OpenMountPointButton"
+                                Grid.Column="2"
+                                Command="{Binding OpenMountPointCommand}"
+                                Content="📁 Open Drive"
+                                IsEnabled="{Binding IsVaultMounted}"
+                                ToolTip="Open mounted drive in Explorer" />
+                        </Grid>
+
+                        <!--  Mount/Unmount Button  -->
+                        <Button
+                            x:Name="MountUnmountButton"
+                            Padding="20,10"
+                            HorizontalAlignment="Center"
+                            Command="{Binding MountUnmountVaultCommand}"
+                            Content="{Binding MountButtonText}"
+                            FontSize="14"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
 
     </Grid>
 </Window>
