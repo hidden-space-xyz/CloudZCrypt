@@ -56,7 +56,11 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
 
                 string file = files[i];
                 string relativePath = Path.GetRelativePath(request.SourceDirectory, file);
-                string destinationFilePath = Path.Combine(request.DestinationDirectory, relativePath);
+                
+                // For Cryptomator-style encryption, add .encrypted extension when encrypting
+                string destinationFilePath = request.EncryptOperation == EncryptOperation.Encrypt 
+                    ? Path.Combine(request.DestinationDirectory, relativePath + ".encrypted")
+                    : Path.Combine(request.DestinationDirectory, relativePath.Replace(".encrypted", ""));
 
                 // Ensure destination directory exists
                 string? destinationDir = Path.GetDirectoryName(destinationFilePath);

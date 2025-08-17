@@ -3,6 +3,8 @@ using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.Extensions;
+using CloudZCrypt.Domain.Models;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,13 +15,14 @@ using System.Windows.Media;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     #region Private Fields
 
     private readonly IDialogService _dialogService;
     private readonly IFileEncryptionApplicationService _fileEncryptionApplicationService;
     private readonly IPasswordApplicationService _passwordApplicationService;
+    private readonly IVirtualFileSystemApplicationService _virtualFileSystemService;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -29,9 +32,6 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _sourceDirectory = string.Empty;
-
-    [ObservableProperty]
-    private string _destinationDirectory = string.Empty;
 
     [ObservableProperty]
     private string _password = string.Empty;
@@ -64,19 +64,32 @@ public partial class MainWindowViewModel : ObservableObject
     private Visibility _progressVisibility = Visibility.Hidden;
 
     [ObservableProperty]
-    private string _encryptButtonText = "Encrypt";
-
-    [ObservableProperty]
-    private string _decryptButtonText = "Decrypt";
-
-    [ObservableProperty]
-    private bool _canEncrypt = true;
-
-    [ObservableProperty]
-    private bool _canDecrypt = true;
+    private string _encryptButtonText = "Create Vault";
 
     [ObservableProperty]
     private bool _areControlsEnabled = true;
+
+    // Virtual File System Properties
+    [ObservableProperty]
+    private MountPoint _selectedMountPoint = MountPoint.Z;
+
+    [ObservableProperty]
+    private string _encryptedVaultPath = string.Empty;
+
+    [ObservableProperty]
+    private bool _isVaultMounted = false;
+
+    [ObservableProperty]
+    private string _mountButtonText = "Mount Vault";
+
+    [ObservableProperty]
+    private string _currentMountStatus = string.Empty;
+
+    [ObservableProperty]
+    private SolidColorBrush _mountStatusColor = new(Colors.Gray);
+
+    [ObservableProperty]
+    private Visibility _mountStatusVisibility = Visibility.Collapsed;
 
     // Password strength properties
     [ObservableProperty]
@@ -110,6 +123,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<EncryptionAlgorithm> AvailableEncryptionAlgorithms { get; }
     public ObservableCollection<KeyDerivationAlgorithm> AvailableKeyDerivationAlgorithms { get; }
+    public ObservableCollection<MountPoint> AvailableMountPoints { get; }
 
     #endregion
 
@@ -118,21 +132,27 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IDialogService dialogService,
         IFileEncryptionApplicationService fileEncryptionService,
-        IPasswordApplicationService passwordApplicationService)
+        IPasswordApplicationService passwordApplicationService,
+        IVirtualFileSystemApplicationService virtualFileSystemService)
     {
         _dialogService = dialogService;
         _fileEncryptionApplicationService = fileEncryptionService;
         _passwordApplicationService = passwordApplicationService;
+        _virtualFileSystemService = virtualFileSystemService;
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
+        AvailableMountPoints = new ObservableCollection<MountPoint>(Enum.GetValues<MountPoint>());
         SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
         SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2; // Default KDF algorithm
+        SelectedMountPoint = MountPoint.Z; // Default mount point
 
 #if DEBUG
         SourceDirectory = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
-        DestinationDirectory = @"D:\WorkSpace\EncryptionTest\Result";
+        EncryptedVaultPath = @"D:\WorkSpace\EncryptionTest\Vault";
 #endif
+
+        UpdateVaultMountStatus();
     }
 
     #endregion
@@ -182,12 +202,12 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SelectDestinationDirectory()
+    private void SelectEncryptedVaultPath()
     {
-        string? selectedPath = _dialogService.ShowFolderDialog("Select destination directory");
+        string? selectedPath = _dialogService.ShowFolderDialog("Select encrypted vault directory");
         if (!string.IsNullOrEmpty(selectedPath))
         {
-            DestinationDirectory = selectedPath;
+            EncryptedVaultPath = selectedPath;
         }
     }
 
@@ -203,30 +223,98 @@ public partial class MainWindowViewModel : ObservableObject
         IsConfirmPasswordVisible = !IsConfirmPasswordVisible;
     }
 
-    [RelayCommand(CanExecute = nameof(CanExecuteEncrypt))]
-    private async Task EncryptAsync()
+    [RelayCommand(CanExecute = nameof(CanExecuteCreateVault))]
+    private async Task CreateVaultAsync()
     {
-        await ProcessFilesAsync(EncryptOperation.Encrypt);
+        if (!AreCreateVaultInputsValid())
+            return;
+
+        IsProcessing = true;
+        EncryptButtonText = "Creating Vault...";
+
+        try
+        {
+            Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            // Create the vault directory
+            Directory.CreateDirectory(EncryptedVaultPath);
+
+            Result<FileProcessingResult> result = await _fileEncryptionApplicationService.EncryptFilesAsync(
+                SourceDirectory,
+                EncryptedVaultPath,
+                Password,
+                SelectedEncryptionAlgorithm,
+                SelectedKeyDerivationAlgorithm,
+                progress,
+                _cancellationTokenSource.Token);
+
+            if (result.IsSuccess)
+            {
+                _dialogService.ShowMessage(
+                    $"Vault created successfully!\nFiles encrypted from: {SourceDirectory}\nVault location: {EncryptedVaultPath}",
+                    "Success",
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                _dialogService.ShowMessage($"Failed to create vault: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowMessage($"Error creating vault: {ex.Message}", "Error", MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsProcessing = false;
+            EncryptButtonText = "Create Vault";
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+        }
     }
 
-    [RelayCommand(CanExecute = nameof(CanExecuteDecrypt))]
-    private async Task DecryptAsync()
+    [RelayCommand(CanExecute = nameof(CanExecuteMountUnmount))]
+    private async Task MountUnmountVaultAsync()
     {
-        await ProcessFilesAsync(EncryptOperation.Decrypt);
+        if (IsVaultMounted)
+        {
+            await UnmountVaultAsync();
+        }
+        else
+        {
+            await MountVaultAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenMountPoint()
+    {
+        if (IsVaultMounted && Directory.Exists(SelectedMountPoint.ToDriveString()))
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("explorer.exe", SelectedMountPoint.ToDriveString());
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Failed to open mount point: {ex.Message}", "Error", MessageBoxImage.Error);
+            }
+        }
     }
 
     #endregion
 
     #region Command CanExecute Methods
 
-    private bool CanExecuteEncrypt()
+    private bool CanExecuteCreateVault()
     {
-        return !IsProcessing || CanEncrypt;
+        return !IsProcessing;
     }
 
-    private bool CanExecuteDecrypt()
+    private bool CanExecuteMountUnmount()
     {
-        return !IsProcessing || CanDecrypt;
+        return !IsProcessing && !string.IsNullOrWhiteSpace(EncryptedVaultPath) && !string.IsNullOrWhiteSpace(Password);
     }
 
     #endregion
@@ -236,13 +324,14 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnIsProcessingChanged(bool value)
     {
         UpdateControlState();
-        EncryptCommand.NotifyCanExecuteChanged();
-        DecryptCommand.NotifyCanExecuteChanged();
+        CreateVaultCommand.NotifyCanExecuteChanged();
+        MountUnmountVaultCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnPasswordChanged(string value)
     {
         UpdatePasswordStrength(value);
+        MountUnmountVaultCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnConfirmPasswordChanged(string value)
@@ -250,70 +339,174 @@ public partial class MainWindowViewModel : ObservableObject
         UpdateConfirmPasswordStrength(value);
     }
 
+    partial void OnEncryptedVaultPathChanged(string value)
+    {
+        MountUnmountVaultCommand.NotifyCanExecuteChanged();
+        UpdateVaultMountStatus();
+    }
+
+    partial void OnSelectedMountPointChanged(MountPoint value)
+    {
+        UpdateVaultMountStatus();
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    /// Emergency cleanup method called on application shutdown
+    /// </summary>
+    public async Task EmergencyCleanupAsync()
+    {
+        try
+        {
+            if (IsVaultMounted)
+            {
+                await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
+            }
+        }
+        catch
+        {
+            // Silently fail during emergency cleanup
+        }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Dispose();
+    }
+
     #endregion
 
     #region Private Methods
 
-    private async Task ProcessFilesAsync(EncryptOperation encryptOperation)
+    private async Task MountVaultAsync()
     {
-        if (IsProcessing)
-        {
-            _cancellationTokenSource?.Cancel();
-            return;
-        }
-
-        if (!AreInputsValid())
+        if (!AreMountInputsValid())
             return;
 
         IsProcessing = true;
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        UpdateButtonStates(encryptOperation);
+        MountButtonText = "Mounting...";
+        UpdateMountStatus("Mounting...", System.Windows.Media.Colors.Orange);
 
         try
         {
-            Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
-
-            Result<FileProcessingResult> result = encryptOperation == EncryptOperation.Encrypt
-                ? await _fileEncryptionApplicationService.EncryptFilesAsync(
-                    SourceDirectory,
-                    DestinationDirectory,
-                    Password,
-                    SelectedEncryptionAlgorithm,
-                    SelectedKeyDerivationAlgorithm,
-                    progress,
-                    _cancellationTokenSource.Token)
-                : await _fileEncryptionApplicationService.DecryptFilesAsync(
-                    SourceDirectory,
-                    DestinationDirectory,
-                    Password,
-                    SelectedEncryptionAlgorithm,
-                    SelectedKeyDerivationAlgorithm,
-                    progress,
-                    _cancellationTokenSource.Token);
+            var result = await _virtualFileSystemService.MountVolumeAsync(
+                EncryptedVaultPath,
+                SelectedMountPoint.ToDriveString(),
+                Password,
+                SelectedEncryptionAlgorithm,
+                SelectedKeyDerivationAlgorithm);
 
             if (result.IsSuccess)
             {
-                ShowCompletionMessage(encryptOperation, result.Value);
+                IsVaultMounted = true;
+                MountButtonText = "Unmount Vault";
+                UpdateMountStatus($"Mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Green);
+                
+                _dialogService.ShowMessage(
+                    $"Vault mounted successfully at {SelectedMountPoint.ToDriveString()}",
+                    "Success",
+                    MessageBoxImage.Information);
             }
             else
             {
-                _dialogService.ShowMessage($"Operation failed: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+                UpdateMountStatus("Mount failed", System.Windows.Media.Colors.Red);
+                _dialogService.ShowMessage($"Failed to mount vault: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
             }
-        }
-        catch (OperationCanceledException)
-        {
-            _dialogService.ShowMessage("Operation cancelled by user.", "Information", MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxImage.Error);
+            UpdateMountStatus("Mount error", System.Windows.Media.Colors.Red);
+            _dialogService.ShowMessage($"Error mounting vault: {ex.Message}", "Error", MessageBoxImage.Error);
         }
         finally
         {
             IsProcessing = false;
-            _cancellationTokenSource?.Dispose();
-            ResetButtonStates();
+            if (!IsVaultMounted)
+            {
+                MountButtonText = "Mount Vault";
+                UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+            }
+        }
+    }
+
+    private async Task UnmountVaultAsync()
+    {
+        IsProcessing = true;
+        MountButtonText = "Unmounting...";
+        UpdateMountStatus("Unmounting...", System.Windows.Media.Colors.Orange);
+
+        try
+        {
+            var result = await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
+
+            if (result.IsSuccess)
+            {
+                IsVaultMounted = false;
+                MountButtonText = "Mount Vault";
+                UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+                
+                _dialogService.ShowMessage(
+                    $"Vault unmounted successfully",
+                    "Success",
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Red);
+                _dialogService.ShowMessage($"Failed to unmount vault: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Red);
+            _dialogService.ShowMessage($"Error unmounting vault: {ex.Message}", "Error", MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsProcessing = false;
+            if (IsVaultMounted)
+                MountButtonText = "Unmount Vault";
+        }
+    }
+
+    private void UpdateMountStatus(string status, System.Windows.Media.Color color)
+    {
+        CurrentMountStatus = status;
+        MountStatusColor = new SolidColorBrush(color);
+        MountStatusVisibility = Visibility.Visible;
+    }
+
+    private void UpdateVaultMountStatus()
+    {
+        // Check if current mount point is already mounted
+        var mountPointString = SelectedMountPoint.ToDriveString();
+        var isMounted = Directory.Exists(mountPointString) && !IsDirectoryEmpty(mountPointString);
+
+        IsVaultMounted = isMounted;
+        MountButtonText = IsVaultMounted ? "Unmount Vault" : "Mount Vault";
+
+        if (IsVaultMounted)
+        {
+            UpdateMountStatus($"Mounted at {mountPointString}", System.Windows.Media.Colors.Green);
+        }
+        else
+        {
+            UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+        }
+    }
+
+    private static bool IsDirectoryEmpty(string path)
+    {
+        try
+        {
+            return !Directory.EnumerateFileSystemEntries(path).Any();
+        }
+        catch
+        {
+            return true;
         }
     }
 
@@ -329,35 +522,10 @@ public partial class MainWindowViewModel : ObservableObject
         ProgressText = $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
     }
 
-    private void ShowCompletionMessage(EncryptOperation encryptOperation, FileProcessingResult result)
-    {
-        string operation = encryptOperation == EncryptOperation.Encrypt ? "Encryption" : "Decryption";
-
-        if (!result.IsSuccess && result.Errors.Count > 0)
-        {
-            string errorFiles = string.Join("\n", result.Errors);
-            _dialogService.ShowMessage(
-                $"{operation} completed with {result.Errors.Count} errors.\nFailed files:\n{errorFiles}",
-                "Warning",
-                MessageBoxImage.Warning);
-        }
-        else
-        {
-            double speedMBps = result.TotalBytes > 0 && result.ElapsedTime.TotalSeconds > 0
-                ? result.TotalBytes / (1024.0 * 1024.0) / result.ElapsedTime.TotalSeconds
-                : 0;
-
-            _dialogService.ShowMessage(
-                $"{operation} completed successfully.\nTime: {result.ElapsedTime:hh\\:mm\\:ss}\nSpeed: {speedMBps:F2} MB/s",
-                "Success",
-                MessageBoxImage.Information);
-        }
-    }
-
-    private bool AreInputsValid()
+    private bool AreCreateVaultInputsValid()
     {
         if (string.IsNullOrWhiteSpace(SourceDirectory) ||
-            string.IsNullOrWhiteSpace(DestinationDirectory) ||
+            string.IsNullOrWhiteSpace(EncryptedVaultPath) ||
             string.IsNullOrWhiteSpace(Password))
         {
             _dialogService.ShowMessage("Please complete all fields.", "Error", MessageBoxImage.Error);
@@ -370,21 +538,27 @@ public partial class MainWindowViewModel : ObservableObject
             return false;
         }
 
-        if (Path.GetFullPath(SourceDirectory).Equals(Path.GetFullPath(DestinationDirectory), StringComparison.OrdinalIgnoreCase))
-        {
-            _dialogService.ShowMessage("Source and destination directories cannot be the same.", "Error", MessageBoxImage.Error);
-            return false;
-        }
-
-        if (DestinationDirectory.StartsWith(SourceDirectory, StringComparison.OrdinalIgnoreCase))
-        {
-            _dialogService.ShowMessage("Destination directory cannot be inside the source directory.", "Error", MessageBoxImage.Error);
-            return false;
-        }
-
         if (!Directory.Exists(SourceDirectory))
         {
             _dialogService.ShowMessage("Source directory does not exist.", "Error", MessageBoxImage.Error);
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool AreMountInputsValid()
+    {
+        if (string.IsNullOrWhiteSpace(EncryptedVaultPath) ||
+            string.IsNullOrWhiteSpace(Password))
+        {
+            _dialogService.ShowMessage("Please complete all fields.", "Error", MessageBoxImage.Error);
+            return false;
+        }
+
+        if (!Directory.Exists(EncryptedVaultPath))
+        {
+            _dialogService.ShowMessage("Encrypted vault directory does not exist.", "Error", MessageBoxImage.Error);
             return false;
         }
 
@@ -401,26 +575,6 @@ public partial class MainWindowViewModel : ObservableObject
             ProgressValue = 0;
             ProgressText = string.Empty;
         }
-    }
-
-    private void UpdateButtonStates(EncryptOperation encryptOperation)
-    {
-        if (encryptOperation == EncryptOperation.Encrypt)
-        {
-            EncryptButtonText = "Encrypt";
-            DecryptButtonText = "Cancel";
-        }
-        else
-        {
-            EncryptButtonText = "Cancel";
-            DecryptButtonText = "Decrypt";
-        }
-    }
-
-    private void ResetButtonStates()
-    {
-        EncryptButtonText = "Encrypt";
-        DecryptButtonText = "Decrypt";
     }
 
     private async Task UpdatePasswordStrength(string password)

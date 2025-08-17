@@ -4,10 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="clr-namespace:CloudZCrypt.WPF.Behaviors"
     xmlns:converters="clr-namespace:CloudZCrypt.WPF.Converters"
-    Title="CloudZCrypt"
-    Width="700"
-    Height="560"
-    ResizeMode="NoResize"
+    Title="CloudZCrypt - Cryptomator-style Encryption"
+    Width="800"
+    Height="600"
+    ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">
@@ -15,11 +15,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  Main Content  -->
+        <!--  Vault Configuration  -->
         <StackPanel Grid.Row="0">
-            <TextBlock FontWeight="Bold" Text="Source Directory:" />
+            <TextBlock FontSize="16" FontWeight="Bold" Text="Vault Configuration" />
+            <Separator Margin="0,5,0,10" />
+
+            <TextBlock FontWeight="Bold" Text="Source Directory (for vault creation):" />
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="SelectSourceDirectoryButton"
@@ -38,20 +42,20 @@
             <TextBlock
                 Margin="0,20,0,0"
                 FontWeight="Bold"
-                Text="Destination Directory:" />
+                Text="Encrypted Vault Directory:" />
             <DockPanel Margin="0,5,0,0">
                 <Button
-                    Name="SelectDestinationDirectoryButton"
-                    Command="{Binding SelectDestinationDirectoryCommand}"
+                    Name="SelectEncryptedVaultButton"
+                    Command="{Binding SelectEncryptedVaultPathCommand}"
                     Content="📂"
                     DockPanel.Dock="Right"
                     IsEnabled="{Binding AreControlsEnabled}" />
                 <TextBox
-                    x:Name="DestinationDirectoryBox"
+                    x:Name="EncryptedVaultBox"
                     Padding="5"
                     IsEnabled="{Binding AreControlsEnabled}"
                     IsReadOnly="True"
-                    Text="{Binding DestinationDirectory}" />
+                    Text="{Binding EncryptedVaultPath}" />
             </DockPanel>
 
             <Grid Grid.Column="0" Margin="0,20,0,0">
@@ -60,7 +64,6 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Vertical">
                     <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
@@ -92,7 +95,7 @@
             <TextBlock
                 Margin="0,20,0,0"
                 FontWeight="Bold"
-                Text="Password:" />
+                Text="Vault Password:" />
             <DockPanel Margin="0,5,0,0">
                 <Button
                     Name="GeneratePasswordButton"
@@ -129,7 +132,6 @@
 
             <!--  Password Strength Indicator  -->
             <StackPanel Margin="0,2,0,0" Visibility="{Binding PasswordStrengthVisibility}">
-                <!--  Strength Bar Container  -->
                 <ProgressBar
                     Height="5"
                     Background="Transparent"
@@ -138,8 +140,6 @@
                     Maximum="100"
                     Minimum="0"
                     Value="{Binding PasswordStrengthScore}" />
-
-                <!--  Strength Text  -->
                 <TextBlock
                     FontSize="11"
                     Foreground="{Binding PasswordStrengthColor}"
@@ -151,13 +151,6 @@
                 FontWeight="Bold"
                 Text="Confirm Password:" />
             <DockPanel Margin="0,5,0,0">
-                <Button
-                    Name="GeneratePasswordButton2"
-                    Command="{Binding GenerateStrongPasswordCommand}"
-                    Content="🔄"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding AreControlsEnabled}"
-                    ToolTip="Generate strong password (128 chars)" />
                 <Button
                     Name="ToggleConfirmPasswordVisibilityButton"
                     Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
@@ -185,7 +178,6 @@
             </DockPanel>
 
             <StackPanel Margin="0,2,0,0" Visibility="{Binding ConfirmPasswordStrengthVisibility}">
-                <!--  Strength Bar Container  -->
                 <ProgressBar
                     Height="5"
                     Background="Transparent"
@@ -194,8 +186,6 @@
                     Maximum="100"
                     Minimum="0"
                     Value="{Binding ConfirmPasswordStrengthScore}" />
-
-                <!--  Strength Text  -->
                 <TextBlock
                     FontSize="11"
                     Foreground="{Binding ConfirmPasswordStrengthColor}"
@@ -204,8 +194,63 @@
 
         </StackPanel>
 
+        <!--  Virtual File System Controls  -->
+        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+            <TextBlock FontSize="16" FontWeight="Bold" Text="Virtual Drive Mounting" />
+            <TextBlock FontSize="12" Foreground="Gray" Text="Mount encrypted vault as virtual drive for transparent access" Margin="0,2,0,10"/>
+            <Separator Margin="0,0,0,10" />
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <TextBlock FontWeight="Bold" Text="Drive Letter:" />
+                    <ComboBox
+                        x:Name="MountPointComboBox"
+                        Width="60"
+                        Margin="0,5,0,0"
+                        Padding="5"
+                        IsEnabled="{Binding AreControlsEnabled}"
+                        ItemsSource="{Binding AvailableMountPoints}"
+                        SelectedItem="{Binding SelectedMountPoint, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={x:Static converters:MountPointToDriveStringConverter.Instance}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
+                    <TextBlock 
+                        Text="Available drive letters for mounting" 
+                        FontSize="11" 
+                        Foreground="Gray"/>
+                    <TextBlock 
+                        Text="{Binding CurrentMountStatus}" 
+                        FontSize="12" 
+                        FontWeight="Bold"
+                        Foreground="{Binding MountStatusColor}"
+                        Visibility="{Binding MountStatusVisibility}"/>
+                </StackPanel>
+
+                <Button
+                    x:Name="OpenMountPointButton"
+                    Grid.Column="2"
+                    Command="{Binding OpenMountPointCommand}"
+                    Content="📁 Open Drive"
+                    IsEnabled="{Binding IsVaultMounted}"
+                    ToolTip="Open mounted drive in Explorer" />
+            </Grid>
+
+        </StackPanel>
+
         <!--  Action Buttons  -->
-        <Grid Grid.Row="1" Margin="0,20,0,0">
+        <Grid Grid.Row="2" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -213,20 +258,24 @@
             </Grid.ColumnDefinitions>
 
             <Button
-                x:Name="EncryptButton"
+                x:Name="CreateVaultButton"
                 Grid.Column="1"
-                Margin="0,0,5,0"
-                Command="{Binding EncryptCommand}"
-                Content="{Binding EncryptButtonText}" />
+                Margin="0,0,10,0"
+                Padding="15,8"
+                Command="{Binding CreateVaultCommand}"
+                Content="{Binding EncryptButtonText}"
+                FontWeight="SemiBold" />
             <Button
-                x:Name="DecryptButton"
+                x:Name="MountUnmountButton"
                 Grid.Column="2"
-                Margin="5,0,0,0"
-                Command="{Binding DecryptCommand}"
-                Content="{Binding DecryptButtonText}" />
+                Padding="15,8"
+                Command="{Binding MountUnmountVaultCommand}"
+                Content="{Binding MountButtonText}"
+                FontWeight="SemiBold" />
         </Grid>
 
-        <StackPanel Grid.Row="2">
+        <!--  Progress Bar  -->
+        <StackPanel Grid.Row="3" Margin="0,20,0,0">
             <TextBlock
                 x:Name="ProgressText"
                 HorizontalAlignment="Center"
@@ -235,7 +284,8 @@
                 Visibility="{Binding ProgressVisibility}" />
             <ProgressBar
                 x:Name="ProgressBar"
-                Margin="0,5,0,0"
+                Height="20"
+                Margin="0,10,0,0"
                 Visibility="{Binding ProgressVisibility}"
                 Value="{Binding ProgressValue}" />
         </StackPanel>
