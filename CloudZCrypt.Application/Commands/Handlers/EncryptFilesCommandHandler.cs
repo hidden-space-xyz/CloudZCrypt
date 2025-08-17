@@ -31,24 +31,15 @@ public class EncryptFilesCommandHandler(
             string[] files = await fileOperationsService.GetFilesAsync(request.SourceDirectory, "*.*", cancellationToken);
             if (files.Length == 0)
             {
-                stopwatch.Stop();
-                FileProcessingResult emptyResult = new(
-                    isSuccess: false,
-                    elapsedTime: stopwatch.Elapsed,
-                    totalBytes: 0,
-                    processedFiles: 0,
-                    totalFiles: 0,
-                    errors: ["No files found in the source directory."]);
-
-                return Result<FileProcessingResult>.Success(emptyResult);
+                return Result<FileProcessingResult>.Success(CreateProcessingResult(
+                    false, stopwatch.Elapsed, 0, 0, 0, ["No files found in the source directory."]));
             }
 
             long totalBytes = files.Sum(f => fileOperationsService.GetFileSize(f));
             long processedBytes = 0;
 
             // Report initial status
-            FileProcessingStatus initialStatus = new(0, files.Length, 0, totalBytes, TimeSpan.Zero);
-            request.Progress?.Report(initialStatus);
+            request.Progress?.Report(new FileProcessingStatus(0, files.Length, 0, totalBytes, TimeSpan.Zero));
 
             await fileOperationsService.CreateDirectoryAsync(request.DestinationDirectory, cancellationToken);
 
@@ -85,50 +76,24 @@ public class EncryptFilesCommandHandler(
                 processedBytes += fileOperationsService.GetFileSize(file);
 
                 // Report progress
-                FileProcessingStatus progressStatus = new(
-                    processedFiles: i + 1,
-                    totalFiles: files.Length,
-                    processedBytes: processedBytes,
-                    totalBytes: totalBytes,
-                    elapsed: stopwatch.Elapsed);
-
-                request.Progress?.Report(progressStatus);
+                request.Progress?.Report(new FileProcessingStatus(
+                    i + 1, files.Length, processedBytes, totalBytes, stopwatch.Elapsed));
             }
 
             stopwatch.Stop();
 
-            FileProcessingResult domainResult = errors.Count == 0
-                ? new FileProcessingResult(
-                    isSuccess: true,
-                    elapsedTime: stopwatch.Elapsed,
-                    totalBytes: totalBytes,
-                    processedFiles: files.Length,
-                    totalFiles: files.Length,
-                    errors: Array.Empty<string>())
-                : new FileProcessingResult(
-                    isSuccess: files.Length - errors.Count > 0,
-                    elapsedTime: stopwatch.Elapsed,
-                    totalBytes: totalBytes,
-                    processedFiles: files.Length - errors.Count,
-                    totalFiles: files.Length,
-                    errors: errors);
-
-            return Result<FileProcessingResult>.Success(domainResult);
+            return Result<FileProcessingResult>.Success(CreateProcessingResult(
+                errors.Count == 0,
+                stopwatch.Elapsed,
+                totalBytes,
+                files.Length - errors.Count,
+                files.Length,
+                errors));
         }
         catch (OperationCanceledException)
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            stopwatch.Stop();
-
-            FileProcessingResult cancelledResult = new(
-                isSuccess: false,
-                elapsedTime: stopwatch.Elapsed,
-                totalBytes: 0,
-                processedFiles: 0,
-                totalFiles: 0,
-                errors: ["Operation was cancelled."]);
-
-            return Result<FileProcessingResult>.Success(cancelledResult);
+            return Result<FileProcessingResult>.Success(CreateProcessingResult(
+                false, TimeSpan.Zero, 0, 0, 0, ["Operation was cancelled."]));
         }
         catch (Exception ex)
         {
@@ -156,5 +121,22 @@ public class EncryptFilesCommandHandler(
                 request.KeyDerivationAlgorithm),
             _ => throw new NotSupportedException($"Unsupported operation: {request.EncryptOperation}")
         };
+    }
+
+    private static FileProcessingResult CreateProcessingResult(
+        bool isSuccess,
+        TimeSpan elapsedTime,
+        long totalBytes,
+        int processedFiles,
+        int totalFiles,
+        IEnumerable<string> errors)
+    {
+        return new FileProcessingResult(
+            isSuccess,
+            elapsedTime,
+            totalBytes,
+            processedFiles,
+            totalFiles,
+            errors);
     }
 }

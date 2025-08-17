@@ -17,14 +17,11 @@ public partial class App : System.Windows.Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
+        // Register cleanup events
+        RegisterCleanupEvents();
 
-        this.Exit += App_Exit;
-        this.SessionEnding += App_SessionEnding;
-        AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
-
-        this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        // Register exception handling
+        RegisterExceptionHandling();
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -37,55 +34,43 @@ public partial class App : System.Windows.Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-
         services.AddSingleton<MainWindow>();
-
-
         services.AddSingleton<MainWindowViewModel>();
-
-
         services.AddSingleton<IDialogService, DialogService>();
-
 
         services.AddDomainServices();
         services.AddApplicationServices();
     }
 
-    #region Cleanup Event Handlers
-
-    private async void App_Exit(object sender, ExitEventArgs e)
+    private void RegisterCleanupEvents()
     {
-        await PerformCleanup("Application Exit");
+        this.Exit += OnApplicationExit;
+        this.SessionEnding += OnApplicationExit;
+        AppDomain.CurrentDomain.ProcessExit += OnApplicationExit;
+    }
+
+    private void RegisterExceptionHandling()
+    {
+        this.DispatcherUnhandledException += OnUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+    }
+
+    private async void OnApplicationExit(object? sender, EventArgs e)
+    {
+        await PerformCleanupAsync();
         _serviceProvider?.Dispose();
     }
 
-    private async void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
+    private async void OnUnhandledException(object? sender, EventArgs e)
     {
-        await PerformCleanup("Session Ending");
-        _serviceProvider?.Dispose();
+        await PerformCleanupAsync();
+
+        // Let the application handle unhandled exceptions normally
+        if (e is System.Windows.Threading.DispatcherUnhandledExceptionEventArgs dispatcherArgs)
+            dispatcherArgs.Handled = false;
     }
 
-    private async void CurrentDomain_ProcessExit(object? sender, EventArgs e)
-    {
-        await PerformCleanup("Process Exit");
-        _serviceProvider?.Dispose();
-    }
-
-    private async void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
-    {
-        await PerformCleanup($"Unhandled Exception: {e.Exception.Message}");
-
-
-        e.Handled = false;
-    }
-
-    private async void CurrentDomain_UnhandledException(object? sender, UnhandledExceptionEventArgs e)
-    {
-        Exception? exception = e.ExceptionObject as Exception;
-        await PerformCleanup($"Unhandled Domain Exception: {exception?.Message ?? "Unknown"}");
-    }
-
-    private async Task PerformCleanup(string reason)
+    private async Task PerformCleanupAsync()
     {
         try
         {
@@ -97,9 +82,7 @@ public partial class App : System.Windows.Application
         }
         catch
         {
-
+            // Ignore cleanup errors during shutdown
         }
     }
-
-    #endregion
 }

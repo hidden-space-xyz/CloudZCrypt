@@ -11,30 +11,35 @@ public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IR
     {
         try
         {
-            PasswordGenerationOptions options = PasswordGenerationOptions.None;
-
-            if (request.IncludeUppercase)
-                options |= PasswordGenerationOptions.IncludeUppercase;
-
-            if (request.IncludeLowercase)
-                options |= PasswordGenerationOptions.IncludeLowercase;
-
-            if (request.IncludeNumbers)
-                options |= PasswordGenerationOptions.IncludeNumbers;
-
-            if (request.IncludeSpecialCharacters)
-                options |= PasswordGenerationOptions.IncludeSpecialCharacters;
-
-            if (request.ExcludeSimilarCharacters)
-                options |= PasswordGenerationOptions.ExcludeSimilarCharacters;
-
+            PasswordGenerationOptions options = BuildPasswordOptions(request);
             string password = await Task.Run(() => passwordService.GeneratePassword(request.Length, options), cancellationToken);
-
             return Result<string>.Success(password);
         }
         catch (Exception ex)
         {
             return Result<string>.Failure($"Failed to generate password: {ex.Message}");
         }
+    }
+
+    private static PasswordGenerationOptions BuildPasswordOptions(GeneratePasswordQuery request)
+    {
+        PasswordGenerationOptions options = PasswordGenerationOptions.None;
+
+        if (request.IncludeUppercase)
+            options |= PasswordGenerationOptions.IncludeUppercase;
+
+        if (request.IncludeLowercase)
+            options |= PasswordGenerationOptions.IncludeLowercase;
+
+        if (request.IncludeNumbers)
+            options |= PasswordGenerationOptions.IncludeNumbers;
+
+        if (request.IncludeSpecialCharacters)
+            options |= PasswordGenerationOptions.IncludeSpecialCharacters;
+
+        if (request.ExcludeSimilarCharacters)
+            options |= PasswordGenerationOptions.ExcludeSimilarCharacters;
+
+        return options;
     }
 }

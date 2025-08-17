@@ -8,16 +8,14 @@ public class DialogService : IDialogService
 {
     public void ShowMessage(string message, string title, MessageBoxImage icon)
     {
-
         Window? owner = System.Windows.Application.Current?.MainWindow;
-
         MessageDialog dialog = new(message, title, icon, owner);
         dialog.ShowDialog();
     }
 
     public string? ShowFolderDialog(string description)
     {
-        using FolderBrowserDialog dialog = new() { Description = description };
-        return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null;
+        using System.Windows.Forms.FolderBrowserDialog dialog = new() { Description = description };
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
     }
 }

@@ -27,6 +27,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private CancellationTokenSource? _cancellationTokenSource;
 
+    // Cached brushes to avoid recreation
+    private static readonly Dictionary<PasswordStrength, SolidColorBrush> _strengthColorCache = new()
+    {
+        [PasswordStrength.VeryWeak] = new(System.Windows.Media.Color.FromRgb(220, 53, 69)),
+        [PasswordStrength.Weak] = new(System.Windows.Media.Color.FromRgb(255, 193, 7)),
+        [PasswordStrength.Fair] = new(System.Windows.Media.Color.FromRgb(255, 193, 7)),
+        [PasswordStrength.Good] = new(System.Windows.Media.Color.FromRgb(40, 167, 69)),
+        [PasswordStrength.Strong] = new(System.Windows.Media.Color.FromRgb(25, 135, 84))
+    };
+
     #endregion
 
     #region Observable Properties
@@ -332,13 +342,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnPasswordChanged(string value)
     {
-        UpdatePasswordStrength(value);
+        _ = UpdatePasswordStrengthAsync(value, isConfirmField: false);
         MountUnmountVaultCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnConfirmPasswordChanged(string value)
     {
-        UpdateConfirmPasswordStrength(value);
+        _ = UpdatePasswordStrengthAsync(value, isConfirmField: true);
     }
 
     partial void OnEncryptedVaultPathChanged(string value)
@@ -521,6 +531,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool AreCreateVaultInputsValid()
     {
+        // Basic UI validation - let domain handle detailed validation
         if (string.IsNullOrWhiteSpace(SourceDirectory) ||
             string.IsNullOrWhiteSpace(EncryptedVaultPath) ||
             string.IsNullOrWhiteSpace(Password))
@@ -535,27 +546,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             return false;
         }
 
-        if (!Directory.Exists(SourceDirectory))
-        {
-            _dialogService.ShowMessage("Source directory does not exist.", "Error", MessageBoxImage.Error);
-            return false;
-        }
-
         return true;
     }
 
     private bool AreMountInputsValid()
     {
+        // Basic UI validation - let domain handle detailed validation
         if (string.IsNullOrWhiteSpace(EncryptedVaultPath) ||
             string.IsNullOrWhiteSpace(Password))
         {
             _dialogService.ShowMessage("Please complete all fields.", "Error", MessageBoxImage.Error);
-            return false;
-        }
-
-        if (!Directory.Exists(EncryptedVaultPath))
-        {
-            _dialogService.ShowMessage("Encrypted vault directory does not exist.", "Error", MessageBoxImage.Error);
             return false;
         }
 
@@ -574,11 +574,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task UpdatePasswordStrength(string password)
+    private async Task UpdatePasswordStrengthAsync(string password, bool isConfirmField)
     {
         if (string.IsNullOrEmpty(password))
         {
-            PasswordStrengthVisibility = Visibility.Hidden;
+            if (isConfirmField)
+                ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+            else
+                PasswordStrengthVisibility = Visibility.Hidden;
             return;
         }
 
@@ -587,52 +590,36 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         if (result.IsSuccess)
         {
-            PasswordStrengthScore = result.Value.Score;
-            PasswordStrengthText = result.Value.Description;
-            PasswordStrengthColor = GetStrengthColor(result.Value.Strength);
-            PasswordStrengthVisibility = Visibility.Visible;
+            PasswordStrengthResult strengthResult = result.Value;
+            System.Windows.Media.Brush strengthColor = GetStrengthColor(strengthResult.Strength);
+
+            if (isConfirmField)
+            {
+                ConfirmPasswordStrengthScore = strengthResult.Score;
+                ConfirmPasswordStrengthText = strengthResult.Description;
+                ConfirmPasswordStrengthColor = strengthColor;
+                ConfirmPasswordStrengthVisibility = Visibility.Visible;
+            }
+            else
+            {
+                PasswordStrengthScore = strengthResult.Score;
+                PasswordStrengthText = strengthResult.Description;
+                PasswordStrengthColor = strengthColor;
+                PasswordStrengthVisibility = Visibility.Visible;
+            }
         }
         else
         {
-            PasswordStrengthVisibility = Visibility.Hidden;
-        }
-    }
-
-    private async Task UpdateConfirmPasswordStrength(string password)
-    {
-        if (string.IsNullOrEmpty(password))
-        {
-            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
-            return;
-        }
-
-        AnalyzePasswordStrengthQuery query = new() { Password = password };
-        Result<PasswordStrengthResult> result = await _mediator.Send(query);
-
-        if (result.IsSuccess)
-        {
-            ConfirmPasswordStrengthScore = result.Value.Score;
-            ConfirmPasswordStrengthText = result.Value.Description;
-            ConfirmPasswordStrengthColor = GetStrengthColor(result.Value.Strength);
-            ConfirmPasswordStrengthVisibility = Visibility.Visible;
-        }
-        else
-        {
-            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+            if (isConfirmField)
+                ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+            else
+                PasswordStrengthVisibility = Visibility.Hidden;
         }
     }
 
     private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
     {
-        return strength switch
-        {
-            PasswordStrength.VeryWeak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 53, 69)),
-            PasswordStrength.Weak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),
-            PasswordStrength.Fair => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),
-            PasswordStrength.Good => new SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)),
-            PasswordStrength.Strong => new SolidColorBrush(System.Windows.Media.Color.FromRgb(25, 135, 84)),
-            _ => System.Windows.Media.Brushes.Transparent
-        };
+        return _strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
     }
 
     #endregion
