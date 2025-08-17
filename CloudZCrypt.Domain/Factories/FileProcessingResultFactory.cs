@@ -2,11 +2,6 @@ using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Domain.Factories;
-
-/// <summary>
-/// Factory implementation for creating FileProcessingResult instances
-/// Following Domain-Driven Design principles
-/// </summary>
 internal class FileProcessingResultFactory : IFileProcessingResultFactory
 {
     public FileProcessingResult CreateSuccess(
@@ -47,11 +42,11 @@ internal class FileProcessingResultFactory : IFileProcessingResultFactory
         int totalFiles,
         IEnumerable<string> errors)
     {
-        // Partial success is when some files were processed but others failed
+
         bool hasProcessedFiles = processedFiles > 0;
 
         return new FileProcessingResult(
-            isSuccess: hasProcessedFiles, // Success if at least some files were processed
+            isSuccess: hasProcessedFiles,
             elapsedTime: elapsedTime,
             totalBytes: totalBytes,
             processedFiles: processedFiles,

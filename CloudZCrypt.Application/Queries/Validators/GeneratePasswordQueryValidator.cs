@@ -2,10 +2,6 @@ using CloudZCrypt.Application.Queries;
 using FluentValidation;
 
 namespace CloudZCrypt.Application.Queries.Validators;
-
-/// <summary>
-/// Validator for the GeneratePasswordQuery
-/// </summary>
 public class GeneratePasswordQueryValidator : AbstractValidator<GeneratePasswordQuery>
 {
     public GeneratePasswordQueryValidator()

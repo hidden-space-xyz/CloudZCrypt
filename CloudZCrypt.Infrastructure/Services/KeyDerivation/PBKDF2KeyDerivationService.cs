@@ -8,7 +8,7 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 
 public class PBKDF2KeyDerivationService : IKeyDerivationService
 {
-    private const int Iterations = 100000; // 100k iterations - faster than Argon2id but still secure
+    private const int Iterations = 100000;
 
     public byte[] DeriveKey(string password, byte[] salt, int keySize)
     {
@@ -17,18 +17,18 @@ public class PBKDF2KeyDerivationService : IKeyDerivationService
 
         try
         {
-            // Convert password to UTF-8 bytes
+
             passwordBytes = Encoding.UTF8.GetBytes(password);
 
-            // Create PBKDF2 generator with SHA-256
+
             Pkcs5S2ParametersGenerator pbkdf2 = new();
             pbkdf2.Init(passwordBytes, salt, Iterations);
 
-            // Generate the key
+
             KeyParameter keyParam = (KeyParameter)pbkdf2.GenerateDerivedMacParameters(keySize);
             key = keyParam.GetKey();
 
-            // Return a copy of the key
+
             byte[] result = new byte[key.Length];
             Array.Copy(key, result, key.Length);
             return result;
@@ -39,7 +39,7 @@ public class PBKDF2KeyDerivationService : IKeyDerivationService
         }
         finally
         {
-            // Clean sensitive data from memory
+
             if (passwordBytes != null)
                 Array.Clear(passwordBytes, 0, passwordBytes.Length);
             if (key != null)

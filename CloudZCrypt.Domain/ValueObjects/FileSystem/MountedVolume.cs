@@ -1,8 +1,4 @@
 namespace CloudZCrypt.Domain.ValueObjects.FileSystem;
-
-/// <summary>
-/// Represents a mounted encrypted volume
-/// </summary>
 public sealed record MountedVolume
 {
     public required string MountPoint { get; init; }
@@ -31,14 +27,6 @@ public sealed record MountedVolume
         MountedAt = mountedAt;
         IsMounted = isMounted;
     }
-
-    /// <summary>
-    /// Gets the duration since the volume was mounted
-    /// </summary>
     public TimeSpan MountDuration => DateTime.UtcNow - MountedAt;
-
-    /// <summary>
-    /// Creates a new instance with updated mount status
-    /// </summary>
     public MountedVolume WithMountStatus(bool isMounted) => this with { IsMounted = isMounted };
 }

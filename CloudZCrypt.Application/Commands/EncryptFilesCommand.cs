@@ -4,11 +4,6 @@ using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Application.Commands;
-
-/// <summary>
-/// Command to encrypt files
-/// Following CQRS principles, contains only the data needed for the operation
-/// </summary>
 public record EncryptFilesCommand : ICommand<Result<FileProcessingResult>>
 {
     public required string SourceDirectory { get; init; }

@@ -7,13 +7,13 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 
 public class Argon2idKeyDerivationService : IKeyDerivationService
 {
-    private const int MemoryCost = 128 * 1024; // 128 MB
+    private const int MemoryCost = 128 * 1024;
     private const int Iterations = 5;
     private const int Parallelism = 4;
 
     public byte[] DeriveKey(string password, byte[] salt, int keySize)
     {
-        // Create Argon2 generator
+
         Argon2BytesGenerator argon2 = new();
         argon2.Init(new Argon2Parameters.Builder(Argon2Parameters.Argon2id)
             .WithSalt(salt)
@@ -22,23 +22,23 @@ public class Argon2idKeyDerivationService : IKeyDerivationService
             .WithParallelism(Parallelism)
             .Build());
 
-        // Generate the key
+
         byte[] key = new byte[keySize / 8];
         char[]? passwordChars = null;
 
         try
         {
-            // Convert password to character array
+
             passwordChars = password.ToCharArray();
 
-            // Generate the key
+
             argon2.GenerateBytes(passwordChars, key);
 
             return key;
         }
         catch (Exception ex)
         {
-            // Cleanup in case of exception
+
             if (key != null)
                 Array.Clear(key, 0, key.Length);
 
@@ -46,7 +46,7 @@ public class Argon2idKeyDerivationService : IKeyDerivationService
         }
         finally
         {
-            // Clean sensitive data from memory
+
             if (passwordChars != null)
                 Array.Clear(passwordChars, 0, passwordChars.Length);
         }

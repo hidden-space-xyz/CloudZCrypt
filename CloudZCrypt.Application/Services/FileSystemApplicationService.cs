@@ -5,10 +5,6 @@ using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileSystem;
 
 namespace CloudZCrypt.Application.Services;
-
-/// <summary>
-/// Application service for virtual file system operations
-/// </summary>
 internal class FileSystemApplicationService(IFileSystemService virtualFileSystemService) : IFileSystemApplicationService
 {
     public async Task<Result<bool>> MountVolumeAsync(
@@ -20,7 +16,7 @@ internal class FileSystemApplicationService(IFileSystemService virtualFileSystem
     {
         try
         {
-            // Validate inputs
+
             if (string.IsNullOrWhiteSpace(encryptedDirectoryPath))
                 return Result<bool>.Failure(["Encrypted directory path is required"]);
 
@@ -33,7 +29,7 @@ internal class FileSystemApplicationService(IFileSystemService virtualFileSystem
             if (!Directory.Exists(encryptedDirectoryPath))
                 return Result<bool>.Failure(["Encrypted directory does not exist"]);
 
-            // Check if mount point is already in use
+
             if (virtualFileSystemService.IsMounted(mountPoint))
                 return Result<bool>.Failure(["Mount point is already in use"]);
 
@@ -81,7 +77,7 @@ internal class FileSystemApplicationService(IFileSystemService virtualFileSystem
                 {
                     MountPoint = mp,
                     EncryptedDirectoryPath = "Unknown", // This would need to be tracked
-                    MountedAt = DateTime.UtcNow, // This would need to be tracked
+                    MountedAt = DateTime.UtcNow,
                     IsMounted = true
                 });
 

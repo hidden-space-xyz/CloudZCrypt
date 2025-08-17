@@ -1,8 +1,4 @@
 namespace CloudZCrypt.Domain.Enums;
-
-/// <summary>
-/// Domain enum for password generation options
-/// </summary>
 [Flags]
 public enum PasswordGenerationOptions
 {

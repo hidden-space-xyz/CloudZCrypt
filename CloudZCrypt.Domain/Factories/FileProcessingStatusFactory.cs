@@ -2,11 +2,6 @@ using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Domain.Factories;
-
-/// <summary>
-/// Factory implementation for creating FileProcessingStatus instances
-/// Following Domain-Driven Design principles
-/// </summary>
 internal class FileProcessingStatusFactory : IFileProcessingStatusFactory
 {
     public FileProcessingStatus CreateInProgress(

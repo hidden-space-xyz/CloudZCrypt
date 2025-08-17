@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.Domain.Factories.Interfaces;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -9,7 +9,7 @@ public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivation
 {
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        // Configure BouncyCastle Twofish-GCM engine
+
         TwofishEngine twofishEngine = new();
         GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
@@ -20,7 +20,7 @@ public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivation
 
     protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-        // Configure BouncyCastle Twofish-GCM engine
+
         TwofishEngine twofishEngine = new();
         GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);

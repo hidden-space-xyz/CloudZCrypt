@@ -3,10 +3,6 @@ using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
 
 namespace CloudZCrypt.Application.Queries;
-
-/// <summary>
-/// Query to analyze password strength
-/// </summary>
 public record AnalyzePasswordStrengthQuery : IQuery<Result<PasswordStrengthResult>>
 {
     public required string Password { get; init; }

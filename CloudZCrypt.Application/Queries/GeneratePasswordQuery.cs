@@ -2,10 +2,6 @@ using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
 
 namespace CloudZCrypt.Application.Queries;
-
-/// <summary>
-/// Query to generate a password
-/// </summary>
 public record GeneratePasswordQuery : IQuery<Result<string>>
 {
     public int Length { get; init; } = 16;

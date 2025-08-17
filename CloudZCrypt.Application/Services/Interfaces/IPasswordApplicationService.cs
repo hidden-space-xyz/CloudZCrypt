@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Application.Common.Models;
+using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Domain.Enums;
 

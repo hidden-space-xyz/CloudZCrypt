@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Composition;
+using CloudZCrypt.Composition;
 using CloudZCrypt.WPF.Services;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.ViewModels;
@@ -6,10 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
 namespace CloudZCrypt.WPF;
-
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : System.Windows.Application
 {
     private readonly ServiceProvider _serviceProvider;
@@ -21,12 +17,12 @@ public partial class App : System.Windows.Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
-        // Handle application exit events for cleanup
+
         this.Exit += App_Exit;
         this.SessionEnding += App_SessionEnding;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
-        // Handle unhandled exceptions for emergency cleanup
+
         this.DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
     }
@@ -41,16 +37,16 @@ public partial class App : System.Windows.Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Views
+
         services.AddSingleton<MainWindow>();
 
-        // ViewModels
+
         services.AddSingleton<MainWindowViewModel>();
 
-        // Services
+
         services.AddSingleton<IDialogService, DialogService>();
 
-        // Application services
+
         services.AddDomainServices();
         services.AddApplicationServices();
     }
@@ -79,7 +75,7 @@ public partial class App : System.Windows.Application
     {
         await PerformCleanup($"Unhandled Exception: {e.Exception.Message}");
 
-        // Allow the exception to continue and crash the app after cleanup
+
         e.Handled = false;
     }
 
@@ -101,7 +97,7 @@ public partial class App : System.Windows.Application
         }
         catch
         {
-            // Silently ignore cleanup errors during shutdown
+
         }
     }
 

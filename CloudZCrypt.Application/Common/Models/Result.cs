@@ -1,8 +1,4 @@
 namespace CloudZCrypt.Application.Common.Models;
-
-/// <summary>
-/// Represents the result of an operation
-/// </summary>
 public class Result
 {
     protected Result(bool isSuccess, string[] errors)
@@ -21,11 +17,6 @@ public class Result
 
     public static implicit operator Result(string error) => Failure(error);
 }
-
-/// <summary>
-/// Represents the result of an operation with a value
-/// </summary>
-/// <typeparam name="T">The value type</typeparam>
 public class Result<T> : Result
 {
     private readonly T? _value;

@@ -1,11 +1,6 @@
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Infrastructure.Services.FileSystem;
-
-/// <summary>
-/// Infrastructure implementation of file operations service
-/// Implements basic file operations abstracted from domain
-/// </summary>
 public class FileOperationsService : IFileOperationsService
 {
     public async Task<string[]> GetFilesAsync(string directoryPath, string searchPattern = "*.*", CancellationToken cancellationToken = default)

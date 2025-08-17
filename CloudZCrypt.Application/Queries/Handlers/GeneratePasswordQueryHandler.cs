@@ -4,10 +4,6 @@ using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Queries.Handlers;
-
-/// <summary>
-/// Handler for the GeneratePasswordQuery
-/// </summary>
 public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IQueryHandler<GeneratePasswordQuery, Result<string>>
 {
     public async Task<Result<string>> Handle(GeneratePasswordQuery request, CancellationToken cancellationToken)

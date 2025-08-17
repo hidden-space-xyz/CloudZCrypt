@@ -24,7 +24,7 @@ public class MountPointToDriveStringConverter : IValueConverter
             }
             catch
             {
-                return MountPoint.Z; // Default fallback
+                return MountPoint.Z;
             }
         }
         return MountPoint.Z;

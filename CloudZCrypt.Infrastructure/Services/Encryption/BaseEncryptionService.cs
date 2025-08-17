@@ -18,21 +18,21 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
     {
         try
         {
-            // Generate a random salt and nonce
+
             byte[] salt = GenerateSalt();
             byte[] nonce = GenerateNonce();
 
-            // Generate key from password using the specified algorithm
+
             byte[] key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
 
             using FileStream sourceFile = File.OpenRead(sourceFilePath);
             using FileStream destinationFile = File.Create(destinationFilePath);
 
-            // Write salt and nonce at the beginning of the file
+
             await WriteSaltAsync(destinationFile, salt);
             await WriteNonceAsync(destinationFile, nonce);
 
-            // Perform algorithm-specific encryption
+
             await EncryptStreamAsync(sourceFile, destinationFile, key, nonce);
 
             return true;
@@ -49,16 +49,16 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         {
             using FileStream sourceFile = File.OpenRead(sourceFilePath);
 
-            // Read the salt and nonce from the beginning of the file
+
             byte[] salt = await ReadSaltAsync(sourceFile);
             byte[] nonce = await ReadNonceAsync(sourceFile);
 
-            // Generate key from password and salt using the specified algorithm
+
             byte[] key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
 
             using FileStream destinationFile = File.Create(destinationFilePath);
 
-            // Perform algorithm-specific decryption
+
             await DecryptStreamAsync(sourceFile, destinationFile, key, nonce);
 
             return true;
@@ -138,7 +138,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
             }
         }
 
-        // Process the final block and get/verify the authentication tag
+
         int finalBytes = cipher.DoFinal(outputBuffer, 0);
         if (finalBytes > 0)
         {

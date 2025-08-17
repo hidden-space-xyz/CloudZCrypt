@@ -2,15 +2,9 @@ using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Domain.Services;
-
-/// <summary>
-/// Domain service implementation for file processing operations
-/// Contains complex business logic that doesn't belong to any single entity
-/// Following Domain-Driven Design principles
-/// </summary>
 internal class FileProcessingDomainService : IFileProcessingDomainService
 {
-    private const long DefaultBatchSizeLimit = 100 * 1024 * 1024; // 100MB
+    private const long DefaultBatchSizeLimit = 100 * 1024 * 1024;
     private const int MaxFilesPerBatch = 1000;
     private const double DefaultQualityThreshold = 0.95;
 
@@ -21,7 +15,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
     {
         List<string> errors = [];
 
-        // Validate source directory
+
         if (string.IsNullOrWhiteSpace(sourceDirectory))
         {
             errors.Add("Source directory cannot be empty.");
@@ -31,13 +25,13 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
             errors.Add($"Source directory does not exist: {sourceDirectory}");
         }
 
-        // Validate destination directory
+
         if (string.IsNullOrWhiteSpace(destinationDirectory))
         {
             errors.Add("Destination directory cannot be empty.");
         }
 
-        // Check if source and destination are the same
+
         if (!string.IsNullOrWhiteSpace(sourceDirectory) &&
             !string.IsNullOrWhiteSpace(destinationDirectory) &&
             Path.GetFullPath(sourceDirectory).Equals(Path.GetFullPath(destinationDirectory), StringComparison.OrdinalIgnoreCase))
@@ -45,7 +39,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
             errors.Add("Source and destination directories cannot be the same.");
         }
 
-        // Check available disk space
+
         if (!string.IsNullOrWhiteSpace(destinationDirectory))
         {
             try
@@ -55,7 +49,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
 
                 if (driveInfo.IsReady)
                 {
-                    // Estimate required space (source files + 10% buffer)
+
                     if (Directory.Exists(sourceDirectory))
                     {
                         string[] sourceFiles = Directory.GetFiles(sourceDirectory, "*.*", SearchOption.AllDirectories);
@@ -67,11 +61,11 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
                             }
                             catch
                             {
-                                return 0; // Skip files we can't access
+                                return 0;
                             }
                         });
 
-                        long requiredSpaceWithBuffer = (long)(requiredSpace * 1.1); // 10% buffer
+                        long requiredSpaceWithBuffer = (long)(requiredSpace * 1.1);
 
                         if (driveInfo.AvailableFreeSpace < requiredSpaceWithBuffer)
                         {
@@ -86,7 +80,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
             }
         }
 
-        await Task.CompletedTask; // For future async operations
+        await Task.CompletedTask;
 
         return (errors.Count == 0, errors);
     }
@@ -102,7 +96,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
                 }
                 catch
                 {
-                    return null; // Skip files we can't access
+                    return null;
                 }
             })
             .Where(fi => fi != null)
@@ -111,7 +105,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
         if (!fileInfos.Any())
             return 1;
 
-        // Sort by size to process larger files first
+
         List<FileInfo?> sortedFiles = fileInfos.OrderByDescending(fi => fi!.Length).ToList();
 
         long totalSize = 0;
@@ -125,8 +119,8 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
 
             long fileSize = fileInfo!.Length;
 
-            // Estimate memory usage (file size + processing overhead)
-            long estimatedMemoryUsage = (long)(fileSize * 1.5); // 50% overhead
+
+            long estimatedMemoryUsage = (long)(fileSize * 1.5);
 
             if (totalSize + estimatedMemoryUsage > memoryLimit)
                 break;
@@ -154,23 +148,23 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
 
         List<string> recommendations = [];
 
-        // Performance analysis
+
         if (result.ElapsedTime.TotalMinutes > 10 && result.TotalFiles > 100)
         {
             recommendations.Add("Consider processing files in smaller batches for large operations.");
         }
 
-        if (result.BytesPerSecond < 1024 * 1024) // Less than 1MB/s
+        if (result.BytesPerSecond < 1024 * 1024)
         {
             recommendations.Add("Processing speed is below optimal. Consider checking disk performance or reducing concurrent operations.");
         }
 
-        // Error analysis
+
         if (result.HasErrors)
         {
             double errorRate = 1.0 - result.SuccessRate;
 
-            if (errorRate > 0.1) // More than 10% failure
+            if (errorRate > 0.1)
             {
                 recommendations.Add($"High error rate detected ({errorRate:P1}). Review error messages and consider retrying failed files.");
             }
@@ -181,7 +175,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
             }
         }
 
-        // Success analysis
+
         if (result.IsSuccess && result.ProcessedFiles > 0)
         {
             recommendations.Add($"Successfully processed {result.ProcessedFiles} files in {result.ElapsedTime:hh\\:mm\\:ss}.");
@@ -192,7 +186,7 @@ internal class FileProcessingDomainService : IFileProcessingDomainService
             }
         }
 
-        // Partial success analysis
+
         if (result.IsPartialSuccess)
         {
             recommendations.Add("Operation completed with some errors. Consider retrying failed files.");

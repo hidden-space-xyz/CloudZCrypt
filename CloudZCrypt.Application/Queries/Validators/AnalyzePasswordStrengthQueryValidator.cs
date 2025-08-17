@@ -2,10 +2,6 @@ using CloudZCrypt.Application.Queries;
 using FluentValidation;
 
 namespace CloudZCrypt.Application.Queries.Validators;
-
-/// <summary>
-/// Validator for the AnalyzePasswordStrengthQuery
-/// </summary>
 public class AnalyzePasswordStrengthQueryValidator : AbstractValidator<AnalyzePasswordStrengthQuery>
 {
     public AnalyzePasswordStrengthQueryValidator()

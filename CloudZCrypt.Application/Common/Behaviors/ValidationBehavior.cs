@@ -3,12 +3,6 @@ using FluentValidation;
 using MediatR;
 
 namespace CloudZCrypt.Application.Common.Behaviors;
-
-/// <summary>
-/// Pipeline behavior for request validation
-/// </summary>
-/// <typeparam name="TRequest">The request type</typeparam>
-/// <typeparam name="TResponse">The response type</typeparam>
 public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {

@@ -1,8 +1,4 @@
 namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
-
-/// <summary>
-/// Domain value object representing the status of an ongoing file processing operation
-/// </summary>
 public sealed record FileProcessingStatus
 {
     public int ProcessedFiles { get; }
@@ -45,20 +41,8 @@ public sealed record FileProcessingStatus
         TotalBytes = totalBytes;
         Elapsed = elapsed;
     }
-
-    /// <summary>
-    /// Gets the file processing percentage (0.0 to 1.0)
-    /// </summary>
     public double FileProgressPercentage => TotalFiles == 0 ? 0.0 : (double)ProcessedFiles / TotalFiles;
-
-    /// <summary>
-    /// Gets the byte processing percentage (0.0 to 1.0)
-    /// </summary>
     public double ByteProgressPercentage => TotalBytes == 0 ? 0.0 : (double)ProcessedBytes / TotalBytes;
-
-    /// <summary>
-    /// Gets the estimated time remaining based on current progress
-    /// </summary>
     public TimeSpan? EstimatedTimeRemaining
     {
         get
@@ -72,14 +56,6 @@ public sealed record FileProcessingStatus
             return TimeSpan.FromMilliseconds(avgTimePerFile * remainingFiles);
         }
     }
-
-    /// <summary>
-    /// Gets the processing speed in files per second
-    /// </summary>
     public double FilesPerSecond => Elapsed.TotalSeconds == 0 ? 0 : ProcessedFiles / Elapsed.TotalSeconds;
-
-    /// <summary>
-    /// Gets the processing speed in bytes per second
-    /// </summary>
     public double BytesPerSecond => Elapsed.TotalSeconds == 0 ? 0 : ProcessedBytes / Elapsed.TotalSeconds;
 }

@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Application.Common.Models;
+using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Queries;
 using CloudZCrypt.Application.Services.Interfaces;
@@ -9,9 +9,6 @@ namespace CloudZCrypt.Application.Services;
 
 internal class PasswordApplicationService(IMediator mediator) : IPasswordApplicationService
 {
-    /// <summary>
-    /// Generates a password using CQRS query
-    /// </summary>
     public async Task<Result<string>> GeneratePasswordAsync(
         int length,
         PasswordGenerationOptions passwordCompositionOptions,
@@ -29,10 +26,6 @@ internal class PasswordApplicationService(IMediator mediator) : IPasswordApplica
 
         return await mediator.Send(query, cancellationToken);
     }
-
-    /// <summary>
-    /// Analyzes password strength using CQRS query
-    /// </summary>
     public async Task<Result<PasswordStrengthResult>> AnalyzePasswordStrengthAsync(
         string password,
         CancellationToken cancellationToken = default)

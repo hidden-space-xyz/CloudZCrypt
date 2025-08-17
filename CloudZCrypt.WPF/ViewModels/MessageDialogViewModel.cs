@@ -27,10 +27,10 @@ public class MessageDialogViewModel : ObservableObject
     {
         return icon switch
         {
-            MessageBoxImage.Information => ("\uE946", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible), // Info icon
-            MessageBoxImage.Warning => ("\uE7BA", new SolidColorBrush(MediaColor.FromRgb(255, 185, 0)), Visibility.Visible), // Warning icon
-            MessageBoxImage.Error => ("\uE783", new SolidColorBrush(MediaColor.FromRgb(232, 17, 35)), Visibility.Visible), // Error icon
-            MessageBoxImage.Question => ("\uE9CE", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible), // Question icon
+            MessageBoxImage.Information => ("\uE946", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible),
+            MessageBoxImage.Warning => ("\uE7BA", new SolidColorBrush(MediaColor.FromRgb(255, 185, 0)), Visibility.Visible),
+            MessageBoxImage.Error => ("\uE783", new SolidColorBrush(MediaColor.FromRgb(232, 17, 35)), Visibility.Visible),
+            MessageBoxImage.Question => ("\uE9CE", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible),
             _ => (string.Empty, MediaBrushes.Transparent, Visibility.Collapsed)
         };
     }

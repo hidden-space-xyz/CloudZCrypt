@@ -14,7 +14,7 @@ public partial class MessageDialog : Window
         if (owner != null)
             Owner = owner;
 
-        // Set focus to OK button
+
         Loaded += (s, e) => OkButton.Focus();
     }
 

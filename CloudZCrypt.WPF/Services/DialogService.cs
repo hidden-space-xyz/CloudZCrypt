@@ -8,7 +8,7 @@ public class DialogService : IDialogService
 {
     public void ShowMessage(string message, string title, MessageBoxImage icon)
     {
-        // Get the current active window as owner for proper centering
+
         Window? owner = System.Windows.Application.Current?.MainWindow;
 
         MessageDialog dialog = new(message, title, icon, owner);

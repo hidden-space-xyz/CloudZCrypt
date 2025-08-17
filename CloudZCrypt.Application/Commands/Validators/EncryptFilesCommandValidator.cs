@@ -2,10 +2,6 @@ using CloudZCrypt.Application.Commands;
 using FluentValidation;
 
 namespace CloudZCrypt.Application.Commands.Validators;
-
-/// <summary>
-/// Validator for the EncryptFilesCommand
-/// </summary>
 public class EncryptFilesCommandValidator : AbstractValidator<EncryptFilesCommand>
 {
     public EncryptFilesCommandValidator()

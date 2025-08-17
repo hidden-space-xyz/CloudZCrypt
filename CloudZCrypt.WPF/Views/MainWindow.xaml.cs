@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.WPF.ViewModels;
+using CloudZCrypt.WPF.ViewModels;
 using System.Windows;
 
 namespace CloudZCrypt.WPF;
@@ -13,7 +13,7 @@ public partial class MainWindow : Window
         _viewModel = viewModel;
         DataContext = viewModel;
 
-        // Handle window closing for cleanup
+
         this.Closing += MainWindow_Closing;
     }
 
@@ -21,12 +21,12 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Perform cleanup before closing
+
             await _viewModel.EmergencyCleanupAsync();
         }
         catch
         {
-            // Don't prevent closing if cleanup fails
+
         }
     }
 }

@@ -68,7 +68,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _areControlsEnabled = true;
 
-    // Virtual File System Properties
+
     [ObservableProperty]
     private MountPoint _selectedMountPoint = MountPoint.Z;
 
@@ -90,7 +90,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Visibility _mountStatusVisibility = Visibility.Collapsed;
 
-    // Password strength properties
+
     [ObservableProperty]
     private double _passwordStrengthScore;
 
@@ -103,7 +103,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Visibility _passwordStrengthVisibility = Visibility.Hidden;
 
-    // Confirm Password strength properties
+
     [ObservableProperty]
     private double _confirmPasswordStrengthScore;
 
@@ -142,9 +142,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
         AvailableMountPoints = new ObservableCollection<MountPoint>(Enum.GetValues<MountPoint>());
-        SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes; // Default algorithm
-        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2; // Default KDF algorithm
-        SelectedMountPoint = MountPoint.Z; // Default mount point
+        SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes;
+        SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2;
+        SelectedMountPoint = MountPoint.Z;
 
 #if DEBUG
         SourceDirectory = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
@@ -174,14 +174,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             Password = result.Value;
             ConfirmPassword = result.Value;
 
-            // Copy to clipboard
+
             try
             {
                 System.Windows.Clipboard.SetText(result.Value);
             }
             catch
             {
-                // Silently fail if clipboard access is not available
+
             }
         }
         else
@@ -236,7 +236,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // Create the vault directory
+
             Directory.CreateDirectory(EncryptedVaultPath);
 
             Result<FileProcessingResult> result = await _fileEncryptionApplicationService.EncryptFilesAsync(
@@ -352,10 +352,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     #endregion
 
     #region Public Methods
-
-    /// <summary>
-    /// Emergency cleanup method called on application shutdown
-    /// </summary>
     public async Task EmergencyCleanupAsync()
     {
         try
@@ -367,7 +363,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
         catch
         {
-            // Silently fail during emergency cleanup
+
         }
     }
 
@@ -480,7 +476,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void UpdateVaultMountStatus()
     {
-        // Check if current mount point is already mounted
+
         string mountPointString = SelectedMountPoint.ToDriveString();
         bool isMounted = Directory.Exists(mountPointString) && !IsDirectoryEmpty(mountPointString);
 
@@ -626,11 +622,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         return strength switch
         {
-            PasswordStrength.VeryWeak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 53, 69)),   // Red
-            PasswordStrength.Weak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),       // Orange/Yellow
-            PasswordStrength.Fair => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),       // Orange/Yellow
-            PasswordStrength.Good => new SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)),       // Green
-            PasswordStrength.Strong => new SolidColorBrush(System.Windows.Media.Color.FromRgb(25, 135, 84)),     // Dark Green
+            PasswordStrength.VeryWeak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 53, 69)),
+            PasswordStrength.Weak => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),
+            PasswordStrength.Fair => new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 193, 7)),
+            PasswordStrength.Good => new SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)),
+            PasswordStrength.Strong => new SolidColorBrush(System.Windows.Media.Color.FromRgb(25, 135, 84)),
             _ => System.Windows.Media.Brushes.Transparent
         };
     }

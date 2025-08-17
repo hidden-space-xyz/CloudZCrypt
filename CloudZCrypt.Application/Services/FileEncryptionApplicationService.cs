@@ -6,16 +6,8 @@ using CloudZCrypt.Domain.Enums;
 using MediatR;
 
 namespace CloudZCrypt.Application.Services;
-
-/// <summary>
-/// Application service that demonstrates CQRS pattern usage
-/// </summary>
 internal class FileEncryptionApplicationService(IMediator mediator) : IFileEncryptionApplicationService
 {
-
-    /// <summary>
-    /// Encrypts files using CQRS command
-    /// </summary>
     public async Task<Result<FileProcessingResult>> EncryptFilesAsync(
         string sourceDirectory,
         string destinationDirectory,
@@ -34,15 +26,11 @@ internal class FileEncryptionApplicationService(IMediator mediator) : IFileEncry
             KeyDerivationAlgorithm = keyDerivationAlgorithm,
             EncryptOperation = EncryptOperation.Encrypt,
             Progress = progress
-            // CancellationToken is passed directly to mediator
+
         };
 
         return await mediator.Send(command, cancellationToken);
     }
-
-    /// <summary>
-    /// Decrypts files using CQRS command
-    /// </summary>
     public async Task<Result<FileProcessingResult>> DecryptFilesAsync(
         string sourceDirectory,
         string destinationDirectory,
@@ -61,7 +49,7 @@ internal class FileEncryptionApplicationService(IMediator mediator) : IFileEncry
             KeyDerivationAlgorithm = keyDerivationAlgorithm,
             EncryptOperation = EncryptOperation.Decrypt,
             Progress = progress
-            // CancellationToken is passed directly to mediator
+
         };
 
         return await mediator.Send(command, cancellationToken);
