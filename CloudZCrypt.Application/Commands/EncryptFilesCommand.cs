@@ -1,10 +1,11 @@
-using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using MediatR;
 
 namespace CloudZCrypt.Application.Commands;
-public record EncryptFilesCommand : ICommand<Result<FileProcessingResult>>
+
+public record EncryptFilesCommand : IRequest<Result<FileProcessingResult>>
 {
     public required string SourceDirectory { get; init; }
     public required string DestinationDirectory { get; init; }

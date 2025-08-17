@@ -1,6 +1,4 @@
 using CloudZCrypt.Application.Common.Behaviors;
-using CloudZCrypt.Application.Services;
-using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories;
 using CloudZCrypt.Domain.Factories.Interfaces;
@@ -19,28 +17,26 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
-
+        // Factory services
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
         services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
-        services.AddSingleton<IFileProcessingResultFactory, FileProcessingResultFactory>();
-        services.AddSingleton<IFileProcessingStatusFactory, FileProcessingStatusFactory>();
 
-
+        // Key derivation services
         services.AddKeyedTransient<IKeyDerivationService, Argon2idKeyDerivationService>(KeyDerivationAlgorithm.Argon2id);
         services.AddKeyedTransient<IKeyDerivationService, PBKDF2KeyDerivationService>(KeyDerivationAlgorithm.PBKDF2);
 
-
+        // Encryption services
         services.AddKeyedTransient<IEncryptionService, AesEncryptionService>(EncryptionAlgorithm.Aes);
         services.AddKeyedTransient<IEncryptionService, TwofishEncryptionService>(EncryptionAlgorithm.Twofish);
         services.AddKeyedTransient<IEncryptionService, SerpentEncryptionService>(EncryptionAlgorithm.Serpent);
         services.AddKeyedTransient<IEncryptionService, ChaCha20EncryptionService>(EncryptionAlgorithm.ChaCha20);
         services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
 
-
+        // Domain services
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IFileProcessingDomainService, FileProcessingDomainService>();
 
-
+        // Infrastructure services
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddScoped<IFileOperationsService, FileOperationsService>();
 
@@ -49,25 +45,18 @@ public static class DependencyInjection
 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        Assembly applicationAssembly = typeof(Application.Common.Abstractions.ICommand).Assembly;
+        Assembly applicationAssembly = typeof(Application.Commands.EncryptFilesCommand).Assembly;
 
-
+        // MediatR configuration
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(applicationAssembly);
-
             config.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
-            config.AddOpenBehavior(typeof(PerformanceBehavior<,>));
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
-
+        // Validators
         services.AddValidatorsFromAssembly(applicationAssembly);
-
-
-        services.AddScoped<IFileEncryptionApplicationService, FileEncryptionApplicationService>();
-        services.AddScoped<IPasswordApplicationService, PasswordApplicationService>();
-        services.AddScoped<IFileSystemApplicationService, FileSystemApplicationService>();
 
         return services;
     }

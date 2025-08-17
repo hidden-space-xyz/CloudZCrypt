@@ -1,10 +1,11 @@
-using CloudZCrypt.Application.Common.Abstractions;
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
+using MediatR;
 
 namespace CloudZCrypt.Application.Queries.Handlers;
-public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IQueryHandler<GeneratePasswordQuery, Result<string>>
+
+public class GeneratePasswordQueryHandler(IPasswordService passwordService) : IRequestHandler<GeneratePasswordQuery, Result<string>>
 {
     public async Task<Result<string>> Handle(GeneratePasswordQuery request, CancellationToken cancellationToken)
     {

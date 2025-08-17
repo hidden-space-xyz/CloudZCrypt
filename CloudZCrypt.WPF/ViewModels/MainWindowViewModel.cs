@@ -1,12 +1,15 @@
+using CloudZCrypt.Application.Commands;
 using CloudZCrypt.Application.Common.Models;
-using CloudZCrypt.Application.DataTransferObjects.Files;
 using CloudZCrypt.Application.DataTransferObjects.Passwords;
-using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.Queries;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Extensions;
+using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MediatR;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
@@ -19,9 +22,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     #region Private Fields
 
     private readonly IDialogService _dialogService;
-    private readonly IFileEncryptionApplicationService _fileEncryptionApplicationService;
-    private readonly IPasswordApplicationService _passwordApplicationService;
-    private readonly IFileSystemApplicationService _virtualFileSystemService;
+    private readonly IMediator _mediator;
+    private readonly IFileSystemService _fileSystemService;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -68,7 +70,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _areControlsEnabled = true;
 
-
     [ObservableProperty]
     private MountPoint _selectedMountPoint = MountPoint.Z;
 
@@ -90,7 +91,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Visibility _mountStatusVisibility = Visibility.Collapsed;
 
-
     [ObservableProperty]
     private double _passwordStrengthScore;
 
@@ -102,7 +102,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private Visibility _passwordStrengthVisibility = Visibility.Hidden;
-
 
     [ObservableProperty]
     private double _confirmPasswordStrengthScore;
@@ -130,14 +129,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public MainWindowViewModel(
         IDialogService dialogService,
-        IFileEncryptionApplicationService fileEncryptionService,
-        IPasswordApplicationService passwordApplicationService,
-        IFileSystemApplicationService virtualFileSystemService)
+        IMediator mediator,
+        IFileSystemService fileSystemService)
     {
         _dialogService = dialogService;
-        _fileEncryptionApplicationService = fileEncryptionService;
-        _passwordApplicationService = passwordApplicationService;
-        _virtualFileSystemService = virtualFileSystemService;
+        _mediator = mediator;
+        _fileSystemService = fileSystemService;
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
@@ -161,19 +158,22 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task GenerateStrongPassword()
     {
-        PasswordGenerationOptions passwordCompositionOptions =
-            PasswordGenerationOptions.IncludeLowercase
-            | PasswordGenerationOptions.IncludeUppercase
-            | PasswordGenerationOptions.IncludeNumbers
-            | PasswordGenerationOptions.IncludeSpecialCharacters;
+        GeneratePasswordQuery query = new()
+        {
+            Length = 128,
+            IncludeUppercase = true,
+            IncludeLowercase = true,
+            IncludeNumbers = true,
+            IncludeSpecialCharacters = true,
+            ExcludeSimilarCharacters = false
+        };
 
-        Result<string> result = await _passwordApplicationService.GeneratePasswordAsync(128, passwordCompositionOptions);
+        Result<string> result = await _mediator.Send(query);
 
         if (result.IsSuccess)
         {
             Password = result.Value;
             ConfirmPassword = result.Value;
-
 
             try
             {
@@ -181,7 +181,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
             catch
             {
-
+                // Ignore clipboard errors
             }
         }
         else
@@ -236,17 +236,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
             _cancellationTokenSource = new CancellationTokenSource();
 
-
             Directory.CreateDirectory(EncryptedVaultPath);
 
-            Result<FileProcessingResult> result = await _fileEncryptionApplicationService.EncryptFilesAsync(
-                SourceDirectory,
-                EncryptedVaultPath,
-                Password,
-                SelectedEncryptionAlgorithm,
-                SelectedKeyDerivationAlgorithm,
-                progress,
-                _cancellationTokenSource.Token);
+            EncryptFilesCommand command = new()
+            {
+                SourceDirectory = SourceDirectory,
+                DestinationDirectory = EncryptedVaultPath,
+                Password = Password,
+                EncryptionAlgorithm = SelectedEncryptionAlgorithm,
+                KeyDerivationAlgorithm = SelectedKeyDerivationAlgorithm,
+                EncryptOperation = EncryptOperation.Encrypt,
+                Progress = progress
+            };
+
+            Result<FileProcessingResult> result = await _mediator.Send(command, _cancellationTokenSource.Token);
 
             if (result.IsSuccess)
             {
@@ -358,12 +361,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             if (IsVaultMounted)
             {
-                await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
+                await _fileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
             }
         }
         catch
         {
-
+            // Ignore cleanup errors
         }
     }
 
@@ -387,14 +390,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         try
         {
-            Result<bool> result = await _virtualFileSystemService.MountVolumeAsync(
+            bool result = await _fileSystemService.MountVolumeAsync(
                 EncryptedVaultPath,
                 SelectedMountPoint.ToDriveString(),
                 Password,
                 SelectedEncryptionAlgorithm,
                 SelectedKeyDerivationAlgorithm);
 
-            if (result.IsSuccess)
+            if (result)
             {
                 IsVaultMounted = true;
                 MountButtonText = "Unmount Vault";
@@ -408,7 +411,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             else
             {
                 UpdateMountStatus("Mount failed", System.Windows.Media.Colors.Red);
-                _dialogService.ShowMessage($"Failed to mount vault: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+                _dialogService.ShowMessage("Failed to mount vault", "Error", MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
@@ -435,23 +438,23 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         try
         {
-            Result<bool> result = await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
+            bool result = await _fileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
 
-            if (result.IsSuccess)
+            if (result)
             {
                 IsVaultMounted = false;
                 MountButtonText = "Mount Vault";
                 UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
 
                 _dialogService.ShowMessage(
-                    $"Vault unmounted successfully",
+                    "Vault unmounted successfully",
                     "Success",
                     MessageBoxImage.Information);
             }
             else
             {
                 UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Red);
-                _dialogService.ShowMessage($"Failed to unmount vault: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+                _dialogService.ShowMessage("Failed to unmount vault", "Error", MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
@@ -476,7 +479,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void UpdateVaultMountStatus()
     {
-
         string mountPointString = SelectedMountPoint.ToDriveString();
         bool isMounted = Directory.Exists(mountPointString) && !IsDirectoryEmpty(mountPointString);
 
@@ -580,7 +582,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             return;
         }
 
-        Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+        AnalyzePasswordStrengthQuery query = new() { Password = password };
+        Result<PasswordStrengthResult> result = await _mediator.Send(query);
 
         if (result.IsSuccess)
         {
@@ -603,7 +606,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             return;
         }
 
-        Result<PasswordStrengthResult> result = await _passwordApplicationService.AnalyzePasswordStrengthAsync(password);
+        AnalyzePasswordStrengthQuery query = new() { Password = password };
+        Result<PasswordStrengthResult> result = await _mediator.Send(query);
 
         if (result.IsSuccess)
         {
