@@ -20,7 +20,10 @@
 
         <!--  Vault Configuration  -->
         <StackPanel Grid.Row="0">
-            <TextBlock FontSize="16" FontWeight="Bold" Text="Vault Configuration" />
+            <TextBlock
+                FontSize="16"
+                FontWeight="Bold"
+                Text="Vault Configuration" />
             <Separator Margin="0,5,0,10" />
 
             <TextBlock FontWeight="Bold" Text="Source Directory (for vault creation):" />
@@ -196,8 +199,15 @@
 
         <!--  Virtual File System Controls  -->
         <StackPanel Grid.Row="1" Margin="0,20,0,0">
-            <TextBlock FontSize="16" FontWeight="Bold" Text="Virtual Drive Mounting" />
-            <TextBlock FontSize="12" Foreground="Gray" Text="Mount encrypted vault as virtual drive for transparent access" Margin="0,2,0,10"/>
+            <TextBlock
+                FontSize="16"
+                FontWeight="Bold"
+                Text="Virtual Drive Mounting" />
+            <TextBlock
+                Margin="0,2,0,10"
+                FontSize="12"
+                Foreground="Gray"
+                Text="Mount encrypted vault as virtual drive for transparent access" />
             <Separator Margin="0,0,0,10" />
 
             <Grid>
@@ -225,17 +235,20 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
-                    <TextBlock 
-                        Text="Available drive letters for mounting" 
-                        FontSize="11" 
-                        Foreground="Gray"/>
-                    <TextBlock 
-                        Text="{Binding CurrentMountStatus}" 
-                        FontSize="12" 
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="20,0,0,0"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="Gray"
+                        Text="Available drive letters for mounting" />
+                    <TextBlock
+                        FontSize="12"
                         FontWeight="Bold"
                         Foreground="{Binding MountStatusColor}"
-                        Visibility="{Binding MountStatusVisibility}"/>
+                        Text="{Binding CurrentMountStatus}"
+                        Visibility="{Binding MountStatusVisibility}" />
                 </StackPanel>
 
                 <Button

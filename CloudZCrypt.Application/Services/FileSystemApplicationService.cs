@@ -1,23 +1,16 @@
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Models;
 using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.ValueObjects.FileSystem;
 
 namespace CloudZCrypt.Application.Services;
 
 /// <summary>
 /// Application service for virtual file system operations
 /// </summary>
-internal class VirtualFileSystemApplicationService : IVirtualFileSystemApplicationService
+internal class FileSystemApplicationService(IFileSystemService virtualFileSystemService) : IFileSystemApplicationService
 {
-    private readonly IVirtualFileSystemService _virtualFileSystemService;
-
-    public VirtualFileSystemApplicationService(IVirtualFileSystemService virtualFileSystemService)
-    {
-        _virtualFileSystemService = virtualFileSystemService;
-    }
-
     public async Task<Result<bool>> MountVolumeAsync(
         string encryptedDirectoryPath,
         string mountPoint,
@@ -41,20 +34,17 @@ internal class VirtualFileSystemApplicationService : IVirtualFileSystemApplicati
                 return Result<bool>.Failure(["Encrypted directory does not exist"]);
 
             // Check if mount point is already in use
-            if (_virtualFileSystemService.IsMounted(mountPoint))
+            if (virtualFileSystemService.IsMounted(mountPoint))
                 return Result<bool>.Failure(["Mount point is already in use"]);
 
-            var success = await _virtualFileSystemService.MountVolumeAsync(
+            bool success = await virtualFileSystemService.MountVolumeAsync(
                 encryptedDirectoryPath,
                 mountPoint,
                 password,
                 encryptionAlgorithm,
                 keyDerivationAlgorithm);
 
-            if (!success)
-                return Result<bool>.Failure(["Failed to mount volume"]);
-
-            return Result<bool>.Success(true);
+            return !success ? Result<bool>.Failure(["Failed to mount volume"]) : Result<bool>.Success(true);
         }
         catch (Exception ex)
         {
@@ -69,15 +59,12 @@ internal class VirtualFileSystemApplicationService : IVirtualFileSystemApplicati
             if (string.IsNullOrWhiteSpace(mountPoint))
                 return Result<bool>.Failure(["Mount point is required"]);
 
-            if (!_virtualFileSystemService.IsMounted(mountPoint))
+            if (!virtualFileSystemService.IsMounted(mountPoint))
                 return Result<bool>.Failure(["Mount point is not mounted"]);
 
-            var success = await _virtualFileSystemService.UnmountVolumeAsync(mountPoint);
+            bool success = await virtualFileSystemService.UnmountVolumeAsync(mountPoint);
 
-            if (!success)
-                return Result<bool>.Failure(["Failed to unmount volume"]);
-
-            return Result<bool>.Success(true);
+            return !success ? Result<bool>.Failure(["Failed to unmount volume"]) : Result<bool>.Success(true);
         }
         catch (Exception ex)
         {
@@ -89,7 +76,7 @@ internal class VirtualFileSystemApplicationService : IVirtualFileSystemApplicati
     {
         try
         {
-            var mountedVolumes = _virtualFileSystemService.GetMountedVolumes()
+            IEnumerable<MountedVolume> mountedVolumes = virtualFileSystemService.GetMountedVolumes()
                 .Select(mp => new MountedVolume
                 {
                     MountPoint = mp,
@@ -113,7 +100,7 @@ internal class VirtualFileSystemApplicationService : IVirtualFileSystemApplicati
             if (string.IsNullOrWhiteSpace(mountPoint))
                 return Result<bool>.Failure(["Mount point is required"]);
 
-            var isAvailable = !_virtualFileSystemService.IsMounted(mountPoint);
+            bool isAvailable = !virtualFileSystemService.IsMounted(mountPoint);
             return Result<bool>.Success(isAvailable);
         }
         catch (Exception ex)

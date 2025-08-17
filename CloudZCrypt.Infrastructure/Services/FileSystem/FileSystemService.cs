@@ -1,38 +1,20 @@
+using CloudZCrypt.Domain.Entities.FileSystem;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Models;
 using CloudZCrypt.Domain.Services.Interfaces;
-using Microsoft.Extensions.Logging;
+using CloudZCrypt.Domain.ValueObjects.FileSystem;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
 
-namespace CloudZCrypt.Infrastructure.Services.VirtualFileSystem;
+namespace CloudZCrypt.Infrastructure.Services.FileSystem;
 
 /// <summary>
 /// Virtual file system implementation using Windows Subst command and on-demand decryption
 /// This provides a more reliable mounting experience than complex virtual file system libraries
 /// </summary>
-public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDisposable
+public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactory) : IFileSystemService, IDisposable
 {
-    private readonly IEncryptionServiceFactory _encryptionServiceFactory;
     private readonly ConcurrentDictionary<string, VolumeInfo> _mountedVolumes = new();
-
-    private record VolumeInfo(
-        string EncryptedDirectory,
-        string TempDirectory,
-        DateTime MountedAt,
-        FileSystemWatcher? Watcher,
-        IEncryptionService EncryptionService,
-        string Password,
-        KeyDerivationAlgorithm KeyDerivationAlgorithm);
-
-    public WinFspVirtualFileSystemService(
-        IEncryptionServiceFactory encryptionServiceFactory)
-    {
-        _encryptionServiceFactory = encryptionServiceFactory;
-    }
 
     public async Task<bool> MountVolumeAsync(
         string encryptedDirectoryPath,
@@ -53,19 +35,19 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
                 return false;
             }
 
-            var encryptionService = _encryptionServiceFactory.Create(encryptionAlgorithm);
+            IEncryptionService encryptionService = encryptionServiceFactory.Create(encryptionAlgorithm);
 
             // Create a temporary directory for decrypted content
-            var tempDir = CreateTemporaryMountDirectory(mountPoint);
-            
+            string tempDir = CreateTemporaryMountDirectory(mountPoint);
+
             // Decrypt all files initially
             await DecryptVaultToDirectory(encryptedDirectoryPath, tempDir, password, encryptionService, keyDerivationAlgorithm);
 
             // Create file system watcher for real-time changes
-            var watcher = CreateFileSystemWatcher(tempDir, encryptedDirectoryPath, password, encryptionService, keyDerivationAlgorithm);
+            FileSystemWatcher watcher = CreateFileSystemWatcher(tempDir, encryptedDirectoryPath, password, encryptionService, keyDerivationAlgorithm);
 
             // Mount as network drive using subst command
-            var success = await MountAsNetworkDrive(mountPoint, tempDir);
+            bool success = await MountAsNetworkDrive(mountPoint, tempDir);
             if (!success)
             {
                 watcher?.Dispose();
@@ -73,15 +55,19 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
                 return false;
             }
 
-            // Store volume information
-            var volumeInfo = new VolumeInfo(
+            // Create volume configuration value object
+            VolumeConfiguration configuration = new(
                 encryptedDirectoryPath,
                 tempDir,
-                DateTime.UtcNow,
-                watcher,
-                encryptionService,
                 password,
                 keyDerivationAlgorithm);
+
+            // Store volume information as entity
+            VolumeInfo volumeInfo = new(
+                configuration,
+                DateTime.UtcNow,
+                encryptionService,
+                watcher);
 
             _mountedVolumes[mountPoint] = volumeInfo;
 
@@ -97,7 +83,7 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     {
         try
         {
-            if (!_mountedVolumes.TryRemove(mountPoint, out var volumeInfo))
+            if (!_mountedVolumes.TryRemove(mountPoint, out VolumeInfo? volumeInfo))
             {
                 // Try to unmount even if not tracked (for cleanup scenarios)
                 await UnmountNetworkDrive(mountPoint);
@@ -106,17 +92,24 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
             }
 
             // Stop file system watcher
-            volumeInfo.Watcher?.Dispose();
+            volumeInfo.DisableWatcher();
 
             // Sync any remaining changes back to encrypted vault
-            await SyncChangesToVault(volumeInfo.TempDirectory, volumeInfo.EncryptedDirectory, 
-                volumeInfo.Password, volumeInfo.EncryptionService, volumeInfo.KeyDerivationAlgorithm);
+            await SyncChangesToVault(
+                volumeInfo.Configuration.TempDirectory,
+                volumeInfo.Configuration.EncryptedDirectory,
+                volumeInfo.Configuration.Password,
+                volumeInfo.EncryptionService,
+                volumeInfo.Configuration.KeyDerivationAlgorithm);
 
             // Unmount the drive
             await UnmountNetworkDrive(mountPoint);
 
             // Clean up temporary directory
-            await CleanupTemporaryDirectory(volumeInfo.TempDirectory);
+            await CleanupTemporaryDirectory(volumeInfo.Configuration.TempDirectory);
+
+            // Dispose resources
+            volumeInfo.Dispose();
 
             return true;
         }
@@ -148,8 +141,8 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
 
     public async Task UnmountAllVolumesAsync()
     {
-        var mountPoints = _mountedVolumes.Keys.ToList();
-        foreach (var mountPoint in mountPoints)
+        List<string> mountPoints = _mountedVolumes.Keys.ToList();
+        foreach (string? mountPoint in mountPoints)
         {
             try
             {
@@ -165,17 +158,17 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     public void Dispose()
     {
         // Emergency cleanup - try to unmount all volumes without waiting
-        var mountPoints = _mountedVolumes.Keys.ToList();
-        foreach (var mountPoint in mountPoints)
+        List<string> mountPoints = _mountedVolumes.Keys.ToList();
+        foreach (string? mountPoint in mountPoints)
         {
             try
             {
                 // Try synchronous cleanup for dispose
-                var volumeInfo = _mountedVolumes[mountPoint];
-                volumeInfo.Watcher?.Dispose();
-                
+                VolumeInfo volumeInfo = _mountedVolumes[mountPoint];
+                volumeInfo.Dispose();
+
                 // Quick unmount attempt
-                var process = new Process
+                Process process = new()
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -190,9 +183,9 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
                 process.WaitForExit(2000); // Wait max 2 seconds
 
                 // Quick cleanup attempt
-                if (Directory.Exists(volumeInfo.TempDirectory))
+                if (Directory.Exists(volumeInfo.Configuration.TempDirectory))
                 {
-                    Directory.Delete(volumeInfo.TempDirectory, true);
+                    Directory.Delete(volumeInfo.Configuration.TempDirectory, true);
                 }
             }
             catch
@@ -205,7 +198,7 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
 
     private string CreateTemporaryMountDirectory(string mountPoint)
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), "CloudZCrypt", $"Mount_{mountPoint.Replace(":", "")}_{DateTime.UtcNow.Ticks}");
+        string tempDir = Path.Combine(Path.GetTempPath(), "CloudZCrypt", $"Mount_{mountPoint.Replace(":", "")}_{DateTime.UtcNow.Ticks}");
         if (Directory.Exists(tempDir))
         {
             Directory.Delete(tempDir, true);
@@ -221,12 +214,12 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
             // If it's a mount point, find the temp directory
             if (pathOrMountPoint.Length == 2 && pathOrMountPoint.EndsWith(":"))
             {
-                var tempBase = Path.Combine(Path.GetTempPath(), "CloudZCrypt");
+                string tempBase = Path.Combine(Path.GetTempPath(), "CloudZCrypt");
                 if (Directory.Exists(tempBase))
                 {
-                    var mountPrefix = $"Mount_{pathOrMountPoint.Replace(":", "")}_";
-                    var matchingDirs = Directory.GetDirectories(tempBase, mountPrefix + "*");
-                    foreach (var dir in matchingDirs)
+                    string mountPrefix = $"Mount_{pathOrMountPoint.Replace(":", "")}_";
+                    string[] matchingDirs = Directory.GetDirectories(tempBase, mountPrefix + "*");
+                    foreach (string dir in matchingDirs)
                     {
                         try
                         {
@@ -252,31 +245,31 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     }
 
     private async Task DecryptVaultToDirectory(
-        string encryptedDirectoryPath, 
-        string decryptedDirectoryPath, 
-        string password, 
+        string encryptedDirectoryPath,
+        string decryptedDirectoryPath,
+        string password,
         IEncryptionService encryptionService,
         KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
-        var encryptedFiles = Directory.GetFiles(encryptedDirectoryPath, "*.encrypted", SearchOption.AllDirectories);
+        string[] encryptedFiles = Directory.GetFiles(encryptedDirectoryPath, "*.encrypted", SearchOption.AllDirectories);
 
-        foreach (var encryptedFile in encryptedFiles)
+        foreach (string encryptedFile in encryptedFiles)
         {
             try
             {
-                var relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedFile);
-                var decryptedFileName = relativePath.Replace(".encrypted", "");
-                var decryptedFilePath = Path.Combine(decryptedDirectoryPath, decryptedFileName);
+                string relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedFile);
+                string decryptedFileName = relativePath.Replace(".encrypted", "");
+                string decryptedFilePath = Path.Combine(decryptedDirectoryPath, decryptedFileName);
 
                 // Ensure directory exists
-                var directory = Path.GetDirectoryName(decryptedFilePath);
+                string? directory = Path.GetDirectoryName(decryptedFilePath);
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
 
                 // Decrypt the file
-                var success = await encryptionService.DecryptFileAsync(encryptedFile, decryptedFilePath, password, keyDerivationAlgorithm);
+                bool success = await encryptionService.DecryptFileAsync(encryptedFile, decryptedFilePath, password, keyDerivationAlgorithm);
                 if (!success)
                 {
                     // Log error but continue with other files
@@ -289,23 +282,23 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
         }
 
         // Copy directory structure
-        var encryptedDirs = Directory.GetDirectories(encryptedDirectoryPath, "*", SearchOption.AllDirectories);
-        foreach (var encryptedDir in encryptedDirs)
+        string[] encryptedDirs = Directory.GetDirectories(encryptedDirectoryPath, "*", SearchOption.AllDirectories);
+        foreach (string encryptedDir in encryptedDirs)
         {
-            var relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedDir);
-            var decryptedDirPath = Path.Combine(decryptedDirectoryPath, relativePath);
+            string relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedDir);
+            string decryptedDirPath = Path.Combine(decryptedDirectoryPath, relativePath);
             Directory.CreateDirectory(decryptedDirPath);
         }
     }
 
     private FileSystemWatcher CreateFileSystemWatcher(
-        string tempDir, 
-        string encryptedDir, 
+        string tempDir,
+        string encryptedDir,
         string password,
         IEncryptionService encryptionService,
         KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
-        var watcher = new FileSystemWatcher(tempDir)
+        FileSystemWatcher watcher = new(tempDir)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
@@ -328,12 +321,12 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
             {
                 // Wait a bit to ensure file is fully written
                 await Task.Delay(500);
-                
-                var relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-                var encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
+
+                string relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
+                string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
 
                 // Ensure encrypted directory exists
-                var encryptedDirPath = Path.GetDirectoryName(encryptedPath);
+                string? encryptedDirPath = Path.GetDirectoryName(encryptedPath);
                 if (!string.IsNullOrEmpty(encryptedDirPath))
                 {
                     Directory.CreateDirectory(encryptedDirPath);
@@ -353,11 +346,11 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     {
         try
         {
-            var oldRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath));
-            var newRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-            
-            var oldEncryptedPath = Path.Combine(encryptedDir, oldRelativePath + ".encrypted");
-            var newEncryptedPath = Path.Combine(encryptedDir, newRelativePath + ".encrypted");
+            string oldRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath));
+            string newRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
+
+            string oldEncryptedPath = Path.Combine(encryptedDir, oldRelativePath + ".encrypted");
+            string newEncryptedPath = Path.Combine(encryptedDir, newRelativePath + ".encrypted");
 
             if (File.Exists(oldEncryptedPath))
             {
@@ -374,8 +367,8 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     {
         try
         {
-            var relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-            var encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
+            string relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
+            string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
 
             if (File.Exists(encryptedPath))
             {
@@ -393,7 +386,7 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
         try
         {
             // Use subst command to create a drive mapping
-            var process = new Process
+            Process process = new()
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -422,7 +415,7 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     {
         try
         {
-            var process = new Process
+            Process process = new()
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -448,23 +441,23 @@ public class WinFspVirtualFileSystemService : IVirtualFileSystemService, IDispos
     }
 
     private async Task SyncChangesToVault(
-        string tempDir, 
-        string encryptedDir, 
+        string tempDir,
+        string encryptedDir,
         string password,
         IEncryptionService encryptionService,
         KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
         try
         {
-            var files = Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories);
-            
-            foreach (var file in files)
+            string[] files = Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories);
+
+            foreach (string file in files)
             {
-                var relativePath = Path.GetRelativePath(tempDir, file);
-                var encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
+                string relativePath = Path.GetRelativePath(tempDir, file);
+                string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
 
                 // Ensure encrypted directory exists
-                var encryptedDirPath = Path.GetDirectoryName(encryptedPath);
+                string? encryptedDirPath = Path.GetDirectoryName(encryptedPath);
                 if (!string.IsNullOrEmpty(encryptedDirPath))
                 {
                     Directory.CreateDirectory(encryptedDirPath);

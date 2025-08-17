@@ -17,7 +17,7 @@ public static class MountPointExtensions
     /// </summary>
     public static MountPoint ToMountPoint(this string driveString)
     {
-        var driveLetter = driveString.Replace(":", "").ToUpperInvariant();
+        string driveLetter = driveString.Replace(":", "").ToUpperInvariant();
         return Enum.Parse<MountPoint>(driveLetter);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
-using CloudZCrypt.Domain.ValueObjects;
+using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;

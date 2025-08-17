@@ -33,7 +33,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         _mainViewModel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
         mainWindow.Show();
         base.OnStartup(e);
@@ -85,7 +85,7 @@ public partial class App : System.Windows.Application
 
     private async void CurrentDomain_UnhandledException(object? sender, UnhandledExceptionEventArgs e)
     {
-        var exception = e.ExceptionObject as Exception;
+        Exception? exception = e.ExceptionObject as Exception;
         await PerformCleanup($"Unhandled Domain Exception: {exception?.Message ?? "Unknown"}");
     }
 

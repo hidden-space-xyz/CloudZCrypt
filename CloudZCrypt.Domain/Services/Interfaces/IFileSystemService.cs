@@ -2,7 +2,7 @@ using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Domain.Services.Interfaces;
 
-public interface IVirtualFileSystemService
+public interface IFileSystemService
 {
     /// <summary>
     /// Mounts an encrypted directory as a virtual drive

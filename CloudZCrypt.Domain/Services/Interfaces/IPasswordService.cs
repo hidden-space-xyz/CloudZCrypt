@@ -1,5 +1,5 @@
 ﻿using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.ValueObjects;
+using CloudZCrypt.Domain.ValueObjects.Password;
 
 namespace CloudZCrypt.Domain.Services.Interfaces
 {

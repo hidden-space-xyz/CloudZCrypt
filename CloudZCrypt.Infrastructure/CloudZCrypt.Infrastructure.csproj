@@ -16,4 +16,8 @@
 	  <ProjectReference Include="..\CloudZCrypt.Domain\CloudZCrypt.Domain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Repositories\" />
+	</ItemGroup>
+
 </Project>

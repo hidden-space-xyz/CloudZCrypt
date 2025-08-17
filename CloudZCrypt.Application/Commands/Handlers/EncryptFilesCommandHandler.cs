@@ -23,27 +23,31 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
             string[] files = Directory.GetFiles(request.SourceDirectory, "*.*", SearchOption.AllDirectories);
             if (files.Length == 0)
             {
-                FileProcessingResult emptyResult = new(
-                    IsSuccess: false,
-                    ElapsedTime: stopwatch.Elapsed,
-                    TotalBytes: 0,
-                    ProcessedFiles: 0,
-                    TotalFiles: 0,
-                    Errors: ["No files found in the source directory."]);
+                // Create domain value object first, then map to DTO
+                Domain.ValueObjects.FileProcessing.FileProcessingResult emptyDomainResult = new(
+                    isSuccess: false,
+                    elapsedTime: stopwatch.Elapsed,
+                    totalBytes: 0,
+                    processedFiles: 0,
+                    totalFiles: 0,
+                    errors: ["No files found in the source directory."]);
 
-                return Result<FileProcessingResult>.Success(emptyResult);
+                return Result<FileProcessingResult>.Success(FileProcessingResult.FromDomain(emptyDomainResult));
             }
 
             long totalBytes = files.Sum(f => new FileInfo(f).Length);
             long processedBytes = 0;
 
+            // Create domain value object for progress reporting
+            Domain.ValueObjects.FileProcessing.FileProcessingStatus initialStatus = new(
+                processedFiles: 0,
+                totalFiles: files.Length,
+                processedBytes: processedBytes,
+                totalBytes: totalBytes,
+                elapsed: stopwatch.Elapsed);
+
             // Report initial progress
-            request.Progress?.Report(new FileProcessingStatus(
-                ProcessedFiles: 0,
-                TotalFiles: files.Length,
-                ProcessedBytes: processedBytes,
-                TotalBytes: totalBytes,
-                Elapsed: stopwatch.Elapsed));
+            request.Progress?.Report(FileProcessingStatus.FromDomain(initialStatus));
 
             // Create destination directory if it doesn't exist
             Directory.CreateDirectory(request.DestinationDirectory);
@@ -56,9 +60,9 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
 
                 string file = files[i];
                 string relativePath = Path.GetRelativePath(request.SourceDirectory, file);
-                
+
                 // For Cryptomator-style encryption, add .encrypted extension when encrypting
-                string destinationFilePath = request.EncryptOperation == EncryptOperation.Encrypt 
+                string destinationFilePath = request.EncryptOperation == EncryptOperation.Encrypt
                     ? Path.Combine(request.DestinationDirectory, relativePath + ".encrypted")
                     : Path.Combine(request.DestinationDirectory, relativePath.Replace(".encrypted", ""));
 
@@ -82,26 +86,30 @@ public class EncryptFilesCommandHandler(IEncryptionServiceFactory encryptionServ
 
                 processedBytes += new FileInfo(file).Length;
 
+                // Create domain value object for progress reporting
+                Domain.ValueObjects.FileProcessing.FileProcessingStatus progressStatus = new(
+                    processedFiles: i + 1,
+                    totalFiles: files.Length,
+                    processedBytes: processedBytes,
+                    totalBytes: totalBytes,
+                    elapsed: stopwatch.Elapsed);
+
                 // Report progress
-                request.Progress?.Report(new FileProcessingStatus(
-                    ProcessedFiles: i + 1,
-                    TotalFiles: files.Length,
-                    ProcessedBytes: processedBytes,
-                    TotalBytes: totalBytes,
-                    Elapsed: stopwatch.Elapsed));
+                request.Progress?.Report(FileProcessingStatus.FromDomain(progressStatus));
             }
 
             stopwatch.Stop();
 
-            FileProcessingResult result = new(
-                IsSuccess: errors.Count == 0,
-                ElapsedTime: stopwatch.Elapsed,
-                TotalBytes: totalBytes,
-                ProcessedFiles: files.Length - errors.Count,
-                TotalFiles: files.Length,
-                Errors: errors);
+            // Create domain value object for final result
+            Domain.ValueObjects.FileProcessing.FileProcessingResult domainResult = new(
+                isSuccess: errors.Count == 0,
+                elapsedTime: stopwatch.Elapsed,
+                totalBytes: totalBytes,
+                processedFiles: files.Length - errors.Count,
+                totalFiles: files.Length,
+                errors: errors);
 
-            return Result<FileProcessingResult>.Success(result);
+            return Result<FileProcessingResult>.Success(FileProcessingResult.FromDomain(domainResult));
         }
         catch (OperationCanceledException)
         {

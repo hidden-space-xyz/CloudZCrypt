@@ -4,7 +4,6 @@ using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Extensions;
-using CloudZCrypt.Domain.Models;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,7 +21,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IDialogService _dialogService;
     private readonly IFileEncryptionApplicationService _fileEncryptionApplicationService;
     private readonly IPasswordApplicationService _passwordApplicationService;
-    private readonly IVirtualFileSystemApplicationService _virtualFileSystemService;
+    private readonly IFileSystemApplicationService _virtualFileSystemService;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -133,7 +132,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         IDialogService dialogService,
         IFileEncryptionApplicationService fileEncryptionService,
         IPasswordApplicationService passwordApplicationService,
-        IVirtualFileSystemApplicationService virtualFileSystemService)
+        IFileSystemApplicationService virtualFileSystemService)
     {
         _dialogService = dialogService;
         _fileEncryptionApplicationService = fileEncryptionService;
@@ -392,7 +391,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _virtualFileSystemService.MountVolumeAsync(
+            Result<bool> result = await _virtualFileSystemService.MountVolumeAsync(
                 EncryptedVaultPath,
                 SelectedMountPoint.ToDriveString(),
                 Password,
@@ -404,7 +403,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 IsVaultMounted = true;
                 MountButtonText = "Unmount Vault";
                 UpdateMountStatus($"Mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Green);
-                
+
                 _dialogService.ShowMessage(
                     $"Vault mounted successfully at {SelectedMountPoint.ToDriveString()}",
                     "Success",
@@ -440,14 +439,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
+            Result<bool> result = await _virtualFileSystemService.UnmountVolumeAsync(SelectedMountPoint.ToDriveString());
 
             if (result.IsSuccess)
             {
                 IsVaultMounted = false;
                 MountButtonText = "Mount Vault";
                 UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
-                
+
                 _dialogService.ShowMessage(
                     $"Vault unmounted successfully",
                     "Success",
@@ -482,8 +481,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private void UpdateVaultMountStatus()
     {
         // Check if current mount point is already mounted
-        var mountPointString = SelectedMountPoint.ToDriveString();
-        var isMounted = Directory.Exists(mountPointString) && !IsDirectoryEmpty(mountPointString);
+        string mountPointString = SelectedMountPoint.ToDriveString();
+        bool isMounted = Directory.Exists(mountPointString) && !IsDirectoryEmpty(mountPointString);
 
         IsVaultMounted = isMounted;
         MountButtonText = IsVaultMounted ? "Unmount Vault" : "Mount Vault";

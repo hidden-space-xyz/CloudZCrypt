@@ -7,8 +7,8 @@ using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+using CloudZCrypt.Infrastructure.Services.FileSystem;
 using CloudZCrypt.Infrastructure.Services.KeyDerivation;
-using CloudZCrypt.Infrastructure.Services.VirtualFileSystem;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -32,9 +32,9 @@ public static class DependencyInjection
         services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
 
         services.AddScoped<IPasswordService, PasswordService>();
-        
+
         // Virtual File System Services
-        services.AddSingleton<IVirtualFileSystemService, WinFspVirtualFileSystemService>();
+        services.AddSingleton<IFileSystemService, FileSystemService>();
 
         return services;
     }
@@ -56,7 +56,7 @@ public static class DependencyInjection
         // Add Application Services
         services.AddScoped<IFileEncryptionApplicationService, FileEncryptionApplicationService>();
         services.AddScoped<IPasswordApplicationService, PasswordApplicationService>();
-        services.AddScoped<IVirtualFileSystemApplicationService, VirtualFileSystemApplicationService>();
+        services.AddScoped<IFileSystemApplicationService, FileSystemApplicationService>();
 
         return services;
     }

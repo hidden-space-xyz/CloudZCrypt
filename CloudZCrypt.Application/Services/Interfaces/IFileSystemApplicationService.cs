@@ -1,10 +1,10 @@
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Models;
+using CloudZCrypt.Domain.ValueObjects.FileSystem;
 
 namespace CloudZCrypt.Application.Services.Interfaces;
 
-public interface IVirtualFileSystemApplicationService
+public interface IFileSystemApplicationService
 {
     /// <summary>
     /// Mounts an encrypted directory as a virtual volume
