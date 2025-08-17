@@ -6,16 +6,26 @@
     xmlns:converters="clr-namespace:CloudZCrypt.WPF.Converters"
     Title="CloudZCrypt - Cryptomator-style Encryption"
     Width="800"
-    Height="650"
+    Height="655"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">
         <!--  Tab Control  -->
-        <TabControl Name="MainTabControl">
+        <TabControl 
+            Name="MainTabControl" 
+            Style="{StaticResource EnhancedTabControlStyle}">
 
             <!--  Create Vault Tab  -->
-            <TabItem Name="CreateVaultTab" Header="New Vault">
+            <TabItem 
+                Name="CreateVaultTab" 
+                Style="{StaticResource EnhancedTabItemStyle}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔐" FontSize="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="New Vault" FontWeight="Bold"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
@@ -28,12 +38,6 @@
                         Padding="10"
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock
-                                Margin="0,0,0,10"
-                                FontSize="16"
-                                FontWeight="Bold"
-                                Text="Vault Configuration" />
-
                             <!--  Source Directory  -->
                             <TextBlock FontWeight="Bold" Text="Source Directory (for vault creation):" />
                             <DockPanel Margin="0,5,0,20">
@@ -201,7 +205,7 @@
                                     Text="{Binding ConfirmPasswordStrengthText}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1">
+                            <StackPanel>
                                 <TextBlock
                                     x:Name="ProgressText"
                                     HorizontalAlignment="Center"
@@ -224,16 +228,21 @@
                                 Content="{Binding EncryptButtonText}"
                                 FontSize="14"
                                 FontWeight="SemiBold" />
-
-                            <!--  Progress Bar (only for Create Vault tab)  -->
-
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </TabItem>
 
             <!--  Mount Vault Tab  -->
-            <TabItem Name="MountVaultTab" Header="Manage Vault">
+            <TabItem 
+                Name="MountVaultTab" 
+                Style="{StaticResource EnhancedTabItemStyle}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾" FontSize="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="Manage Vault" FontWeight="Bold"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock
@@ -354,6 +363,5 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
-
     </Grid>
 </Window>

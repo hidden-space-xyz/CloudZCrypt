@@ -8,6 +8,89 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Custom TabControl Style -->
+            <Style x:Key="EnhancedTabControlStyle" TargetType="TabControl">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="2"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <!-- Tab Headers -->
+                                <TabPanel 
+                                    Grid.Row="0"
+                                    Name="HeaderPanel"
+                                    IsItemsHost="True"
+                                    Background="Transparent"
+                                    Margin="0,0,0,10"/>
+                                
+                                <!-- Separator Line -->
+                                <Rectangle 
+                                    Grid.Row="1"
+                                    Height="2"
+                                    Fill="#E1E5E9"
+                                    Margin="0,0,0,0"/>
+                                
+                                <!-- Content Area -->
+                                <ContentPresenter 
+                                    Grid.Row="2"
+                                    Name="PART_SelectedContentHost"
+                                    ContentSource="SelectedContent"
+                                    Margin="0,10,0,0"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Custom TabItem Style -->
+            <Style x:Key="EnhancedTabItemStyle" TargetType="TabItem">
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Foreground" Value="#495057"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="20,12,20,12"/>
+                <Setter Property="Margin" Value="0,0,2,0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Border 
+                                Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8,8,0,0"
+                                Padding="{TemplateBinding Padding}">
+                                <ContentPresenter 
+                                    Name="ContentSite"
+                                    ContentSource="Header"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="#F8F9FA"/>
+                                    <Setter Property="Foreground" Value="#212529"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="#1a1919"/>
+                                    <Setter Property="Foreground" Value="MediumSlateBlue"/>
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="MediumSlateBlue"/>
+                                    <Setter TargetName="Border" Property="BorderThickness" Value="0,0,0,3"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
