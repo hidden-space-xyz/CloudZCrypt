@@ -7,9 +7,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace CloudZCrypt.Infrastructure.Services.FileSystem;
-public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactory) : IFileSystemService, IDisposable
+public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactory, ILazyDecryptionService lazyDecryptionService) : IFileSystemService, IDisposable
 {
     private readonly ConcurrentDictionary<string, VolumeInfo> _mountedVolumes = new();
+    private readonly ConcurrentDictionary<string, LazyDecryptionFileWatcher> _lazyWatchers = new();
 
     public async Task<bool> MountVolumeAsync(
         string encryptedDirectoryPath,
@@ -32,16 +33,16 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
 
             IEncryptionService encryptionService = encryptionServiceFactory.Create(encryptionAlgorithm);
 
-
+            // Create temporary mount directory
             string tempDir = CreateTemporaryMountDirectory(mountPoint);
 
+            // Use lazy decryption - create structure without decrypting files
+            await lazyDecryptionService.CreateVaultStructureAsync(encryptedDirectoryPath, tempDir, password, encryptionService, keyDerivationAlgorithm);
 
-            await DecryptVaultToDirectory(encryptedDirectoryPath, tempDir, password, encryptionService, keyDerivationAlgorithm);
+            // Create lazy decryption file watcher instead of regular watcher
+            LazyDecryptionFileWatcher watcher = CreateLazyDecryptionWatcher(tempDir, encryptedDirectoryPath, password, encryptionService, keyDerivationAlgorithm);
 
-
-            FileSystemWatcher watcher = CreateFileSystemWatcher(tempDir, encryptedDirectoryPath, password, encryptionService, keyDerivationAlgorithm);
-
-
+            // Mount as network drive
             bool success = await MountAsNetworkDrive(mountPoint, tempDir);
             if (!success)
             {
@@ -50,21 +51,25 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
                 return false;
             }
 
-
+            // Create volume configuration
             VolumeConfiguration configuration = new(
                 encryptedDirectoryPath,
                 tempDir,
                 password,
                 keyDerivationAlgorithm);
 
-
+            // Create volume info with lazy watcher
             VolumeInfo volumeInfo = new(
                 configuration,
                 DateTime.UtcNow,
                 encryptionService,
-                watcher);
+                null); // We'll set a custom watcher property later
 
             _mountedVolumes[mountPoint] = volumeInfo;
+            _lazyWatchers[mountPoint] = watcher;
+
+            // Enable the lazy decryption watcher
+            watcher.EnableRaisingEvents = true;
 
             return true;
         }
@@ -80,16 +85,20 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
         {
             if (!_mountedVolumes.TryRemove(mountPoint, out VolumeInfo? volumeInfo))
             {
-
+                // Try to cleanup anyway
                 await UnmountNetworkDrive(mountPoint);
                 await CleanupTemporaryDirectory(mountPoint);
                 return true;
             }
 
+            // Disable and dispose lazy watcher
+            if (_lazyWatchers.TryRemove(mountPoint, out LazyDecryptionFileWatcher? lazyWatcher))
+            {
+                lazyWatcher.EnableRaisingEvents = false;
+                lazyWatcher.Dispose();
+            }
 
-            volumeInfo.DisableWatcher();
-
-
+            // Sync changes to vault - decrypt any placeholder files that were modified
             await SyncChangesToVault(
                 volumeInfo.Configuration.TempDirectory,
                 volumeInfo.Configuration.EncryptedDirectory,
@@ -97,28 +106,32 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
                 volumeInfo.EncryptionService,
                 volumeInfo.Configuration.KeyDerivationAlgorithm);
 
-
+            // Unmount network drive
             await UnmountNetworkDrive(mountPoint);
 
-
+            // Cleanup temporary directory
             await CleanupTemporaryDirectory(volumeInfo.Configuration.TempDirectory);
 
-
+            // Dispose volume info
             volumeInfo.Dispose();
 
             return true;
         }
         catch (Exception ex)
         {
-
+            // Cleanup anyway on error
             try
             {
+                if (_lazyWatchers.TryRemove(mountPoint, out LazyDecryptionFileWatcher? lazyWatcher))
+                {
+                    lazyWatcher.Dispose();
+                }
                 await UnmountNetworkDrive(mountPoint);
                 await CleanupTemporaryDirectory(mountPoint);
             }
             catch
             {
-
+                // Ignore cleanup errors
             }
             return false;
         }
@@ -152,17 +165,23 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
 
     public void Dispose()
     {
-
+        // Dispose all lazy watchers
         List<string> mountPoints = _mountedVolumes.Keys.ToList();
         foreach (string? mountPoint in mountPoints)
         {
             try
             {
+                // Dispose lazy watcher
+                if (_lazyWatchers.TryRemove(mountPoint, out LazyDecryptionFileWatcher? lazyWatcher))
+                {
+                    lazyWatcher.Dispose();
+                }
 
+                // Dispose volume info
                 VolumeInfo volumeInfo = _mountedVolumes[mountPoint];
                 volumeInfo.Dispose();
 
-
+                // Unmount drive
                 Process process = new()
                 {
                     StartInfo = new ProcessStartInfo
@@ -177,7 +196,7 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
                 process.Start();
                 process.WaitForExit(2000);
 
-
+                // Cleanup temp directory
                 if (Directory.Exists(volumeInfo.Configuration.TempDirectory))
                 {
                     Directory.Delete(volumeInfo.Configuration.TempDirectory, true);
@@ -185,10 +204,11 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
             }
             catch
             {
-
+                // Ignore errors during disposal
             }
         }
         _mountedVolumes.Clear();
+        _lazyWatchers.Clear();
     }
 
     private string CreateTemporaryMountDirectory(string mountPoint)
@@ -286,26 +306,20 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
         }
     }
 
-    private FileSystemWatcher CreateFileSystemWatcher(
+    private LazyDecryptionFileWatcher CreateLazyDecryptionWatcher(
         string tempDir,
         string encryptedDir,
         string password,
         IEncryptionService encryptionService,
         KeyDerivationAlgorithm keyDerivationAlgorithm)
     {
-        FileSystemWatcher watcher = new(tempDir)
-        {
-            IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
-        };
-
-        watcher.Created += async (s, e) => await OnFileSystemChanged(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Changed += async (s, e) => await OnFileSystemChanged(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Renamed += async (s, e) => await OnFileSystemRenamed(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Deleted += async (s, e) => await OnFileSystemDeleted(e, encryptedDir);
-
-        watcher.EnableRaisingEvents = true;
-        return watcher;
+        return new LazyDecryptionFileWatcher(
+            lazyDecryptionService,
+            tempDir,
+            encryptedDir,
+            password,
+            encryptionService,
+            keyDerivationAlgorithm);
     }
 
     private async Task OnFileSystemChanged(FileSystemEventArgs e, string encryptedDir, string password, IEncryptionService encryptionService, KeyDerivationAlgorithm keyDerivationAlgorithm)
