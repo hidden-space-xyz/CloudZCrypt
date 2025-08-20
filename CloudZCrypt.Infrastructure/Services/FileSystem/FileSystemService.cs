@@ -467,4 +467,16 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
 
         }
     }
+
+    public IEnumerable<MountPoint> GetAvailableMountPoints()
+    {
+        // Get all drive letters currently in use by Windows
+        DriveInfo[] drives = DriveInfo.GetDrives();
+        HashSet<string> usedDriveLetters = [.. drives.Select(d => d.Name[0].ToString())];
+
+        // Return all MountPoint values that are not in use
+        return Enum.GetValues<MountPoint>()
+            .Where(mp => !usedDriveLetters.Contains(Enum.GetName(mp)))
+            .OrderBy(mp => mp);
+    }
 }

@@ -16,6 +16,6 @@ public class DialogService : IDialogService
     public string? ShowFolderDialog(string description)
     {
         using System.Windows.Forms.FolderBrowserDialog dialog = new() { Description = description };
-        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
+        return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null;
     }
 }

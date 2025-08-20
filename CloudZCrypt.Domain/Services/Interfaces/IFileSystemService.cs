@@ -13,4 +13,5 @@ public interface IFileSystemService
     Task<bool> UnmountVolumeAsync(string mountPoint);
     IEnumerable<string> GetMountedVolumes();
     bool IsMounted(string mountPoint);
+    IEnumerable<MountPoint> GetAvailableMountPoints();
 }

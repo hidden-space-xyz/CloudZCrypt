@@ -81,6 +81,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool _areControlsEnabled = true;
 
     [ObservableProperty]
+    private bool _areMountControlsEnabled = true;
+
+    [ObservableProperty]
     private MountPoint _selectedMountPoint = MountPoint.Z;
 
     [ObservableProperty]
@@ -148,10 +151,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithm>(Enum.GetValues<EncryptionAlgorithm>());
         AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithm>(Enum.GetValues<KeyDerivationAlgorithm>());
-        AvailableMountPoints = new ObservableCollection<MountPoint>(Enum.GetValues<MountPoint>());
+        AvailableMountPoints = [];
         SelectedEncryptionAlgorithm = EncryptionAlgorithm.Aes;
         SelectedKeyDerivationAlgorithm = KeyDerivationAlgorithm.PBKDF2;
-        SelectedMountPoint = MountPoint.Z;
+
+        // Initialize available mount points and select the first available one
+        RefreshAvailableMountPoints();
 
 #if DEBUG
         SourceDirectory = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
@@ -159,6 +164,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 #endif
 
         UpdateVaultMountStatus();
+        UpdateControlState(); // Ensure controls are in correct state
     }
 
     #endregion
@@ -321,7 +327,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool CanExecuteCreateVault()
     {
-        return !IsProcessing;
+        return !IsProcessing && !IsVaultMounted; // Prevent creating vault when another is mounted
     }
 
     private bool CanExecuteMountUnmount()
@@ -373,6 +379,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     partial void OnIsVaultMountedChanged(bool value)
     {
         MountUnmountVaultCommand.NotifyCanExecuteChanged();
+        UpdateControlState(); // Update control state when mount status changes
     }
 
     #endregion
@@ -402,6 +409,27 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     #region Private Methods
 
+    private void RefreshAvailableMountPoints()
+    {
+        IEnumerable<MountPoint> availablePoints = _fileSystemService.GetAvailableMountPoints();
+
+        AvailableMountPoints.Clear();
+        foreach (MountPoint point in availablePoints)
+        {
+            AvailableMountPoints.Add(point);
+        }
+
+        // Set default selection to first available mount point, or Z if none available
+        if (AvailableMountPoints.Any())
+        {
+            SelectedMountPoint = AvailableMountPoints.First();
+        }
+        else
+        {
+            SelectedMountPoint = MountPoint.Z; // Fallback
+        }
+    }
+
     private async Task MountVaultAsync()
     {
         if (!AreMountInputsValid())
@@ -409,7 +437,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         IsProcessing = true;
         MountButtonText = "Mounting...";
-        UpdateMountStatus("Mounting...", System.Windows.Media.Colors.Orange);
+        UpdateMountStatus("Mounting...", Colors.Orange);
 
         try
         {
@@ -424,7 +452,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 IsVaultMounted = true;
                 MountButtonText = "Unmount Vault";
-                UpdateMountStatus($"Mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Green);
+                UpdateMountStatus($"Mounted at {SelectedMountPoint.ToDriveString()}", Colors.Green);
 
                 _dialogService.ShowMessage(
                     $"Vault mounted successfully at {SelectedMountPoint.ToDriveString()}",
@@ -433,13 +461,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
             else
             {
-                UpdateMountStatus("Mount failed", System.Windows.Media.Colors.Red);
+                UpdateMountStatus("Mount failed", Colors.Red);
                 _dialogService.ShowMessage("Failed to mount vault", "Error", MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            UpdateMountStatus("Mount error", System.Windows.Media.Colors.Red);
+            UpdateMountStatus("Mount error", Colors.Red);
             _dialogService.ShowMessage($"Error mounting vault: {ex.Message}", "Error", MessageBoxImage.Error);
         }
         finally
@@ -448,7 +476,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             if (!IsVaultMounted)
             {
                 MountButtonText = "Mount Vault";
-                UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+                UpdateMountStatus("Not mounted", Colors.Gray);
             }
         }
     }
@@ -457,7 +485,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         IsProcessing = true;
         MountButtonText = "Unmounting...";
-        UpdateMountStatus("Unmounting...", System.Windows.Media.Colors.Orange);
+        UpdateMountStatus("Unmounting...", Colors.Orange);
 
         try
         {
@@ -467,7 +495,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 IsVaultMounted = false;
                 MountButtonText = "Mount Vault";
-                UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+                UpdateMountStatus("Not mounted", Colors.Gray);
+
+                // Refresh available mount points to include the now-freed drive letter
+                RefreshAvailableMountPoints();
 
                 _dialogService.ShowMessage(
                     "Vault unmounted successfully",
@@ -476,13 +507,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
             else
             {
-                UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Red);
+                UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", Colors.Red);
                 _dialogService.ShowMessage("Failed to unmount vault", "Error", MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", System.Windows.Media.Colors.Red);
+            UpdateMountStatus($"Still mounted at {SelectedMountPoint.ToDriveString()}", Colors.Red);
             _dialogService.ShowMessage($"Error unmounting vault: {ex.Message}", "Error", MessageBoxImage.Error);
         }
         finally
@@ -510,11 +541,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         if (IsVaultMounted)
         {
-            UpdateMountStatus($"Mounted at {mountPointString}", System.Windows.Media.Colors.Green);
+            UpdateMountStatus($"Mounted at {mountPointString}", Colors.Green);
         }
         else
         {
-            UpdateMountStatus("Not mounted", System.Windows.Media.Colors.Gray);
+            UpdateMountStatus("Not mounted", Colors.Gray);
         }
     }
 
@@ -578,6 +609,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private void UpdateControlState()
     {
         AreControlsEnabled = !IsProcessing;
+        AreMountControlsEnabled = !IsProcessing && !IsVaultMounted; // Disable mount controls when vault is mounted
         ProgressVisibility = IsProcessing ? Visibility.Visible : Visibility.Hidden;
 
         if (!IsProcessing)
