@@ -39,6 +39,7 @@ public static class DependencyInjection
         // Infrastructure services
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddScoped<IFileOperationsService, FileOperationsService>();
+        services.AddScoped<ILazyDecryptionService, LazyDecryptionService>();
 
         return services;
     }
