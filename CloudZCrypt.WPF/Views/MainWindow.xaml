@@ -12,18 +12,17 @@
 
     <Grid Margin="20">
         <!--  Tab Control  -->
-        <TabControl 
-            Name="MainTabControl" 
-            Style="{StaticResource EnhancedTabControlStyle}">
+        <TabControl Name="MainTabControl" Style="{StaticResource EnhancedTabControlStyle}">
 
             <!--  Create Vault Tab  -->
-            <TabItem 
-                Name="CreateVaultTab" 
-                Style="{StaticResource EnhancedTabItemStyle}">
+            <TabItem Name="CreateVaultTab" Style="{StaticResource EnhancedTabItemStyle}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔐" FontSize="16" Margin="0,0,8,0"/>
-                        <TextBlock Text="New Vault" FontWeight="Bold"/>
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            FontSize="16"
+                            Text="🔐" />
+                        <TextBlock FontWeight="Bold" Text="New Vault" />
                     </StackPanel>
                 </TabItem.Header>
                 <Grid>
@@ -234,28 +233,18 @@
             </TabItem>
 
             <!--  Mount Vault Tab  -->
-            <TabItem 
-                Name="MountVaultTab" 
-                Style="{StaticResource EnhancedTabItemStyle}">
+            <TabItem Name="MountVaultTab" Style="{StaticResource EnhancedTabItemStyle}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💾" FontSize="16" Margin="0,0,8,0"/>
-                        <TextBlock Text="Manage Vault" FontWeight="Bold"/>
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            FontSize="16"
+                            Text="💾" />
+                        <TextBlock FontWeight="Bold" Text="Manage Vault" />
                     </StackPanel>
                 </TabItem.Header>
                 <ScrollViewer Padding="10" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock
-                            Margin="0,0,0,5"
-                            FontSize="16"
-                            FontWeight="Bold"
-                            Text="Virtual Drive Mounting" />
-                        <TextBlock
-                            Margin="0,0,0,20"
-                            FontSize="12"
-                            Foreground="Gray"
-                            Text="Mount encrypted vault as virtual drive for transparent access" />
-
                         <!--  Encrypted Vault Directory for Mounting  -->
                         <TextBlock FontWeight="Bold" Text="Encrypted Vault Directory:" />
                         <DockPanel Margin="0,5,0,20">
@@ -272,6 +261,42 @@
                                 IsReadOnly="True"
                                 Text="{Binding EncryptedVaultPath}" />
                         </DockPanel>
+
+                        <!--  Encryption Settings  -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Vertical">
+                                <TextBlock FontWeight="Bold" Text="Encryption Algorithm:" />
+                                <ComboBox
+                                    x:Name="AlgorithmComboBoxMount"
+                                    Width="200"
+                                    Margin="0,5,0,0"
+                                    Padding="5"
+                                    HorizontalAlignment="Left"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ItemsSource="{Binding AvailableEncryptionAlgorithms}"
+                                    SelectedItem="{Binding SelectedEncryptionAlgorithm}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Vertical">
+                                <TextBlock FontWeight="Bold" Text="Key Derivation Algorithm:" />
+                                <ComboBox
+                                    x:Name="KeyDerivationAlgorithmComboBoxMount"
+                                    Width="200"
+                                    Margin="0,5,0,0"
+                                    Padding="5"
+                                    HorizontalAlignment="Left"
+                                    IsEnabled="{Binding AreControlsEnabled}"
+                                    ItemsSource="{Binding AvailableKeyDerivationAlgorithms}"
+                                    SelectedItem="{Binding SelectedKeyDerivationAlgorithm}" />
+                            </StackPanel>
+                        </Grid>
 
                         <!--  Password for Mounting  -->
                         <TextBlock FontWeight="Bold" Text="Vault Password:" />
