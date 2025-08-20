@@ -7,9 +7,16 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace CloudZCrypt.Infrastructure.Services.FileSystem;
+
+/// <summary>
+/// FileSystemService with on-demand decryption capability
+/// Files are only decrypted when accessed, not at mount time
+/// </summary>
 public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactory) : IFileSystemService, IDisposable
 {
     private readonly ConcurrentDictionary<string, VolumeInfo> _mountedVolumes = new();
+    private readonly ConcurrentDictionary<string, IOnDemandDecryptionService> _decryptionServices = new();
+    private readonly ConcurrentDictionary<string, OnDemandFileSystemWatcher> _fileWatchers = new();
 
     public async Task<bool> MountVolumeAsync(
         string encryptedDirectoryPath,
@@ -32,39 +39,70 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
 
             IEncryptionService encryptionService = encryptionServiceFactory.Create(encryptionAlgorithm);
 
-
+            // Create temporary mount directory
             string tempDir = CreateTemporaryMountDirectory(mountPoint);
 
+            // Initialize on-demand decryption service
+            var decryptionService = new OnDemandDecryptionService(encryptionServiceFactory);
+            bool initSuccess = await decryptionService.InitializeAsync(
+                encryptedDirectoryPath,
+                tempDir,
+                password,
+                encryptionAlgorithm,
+                keyDerivationAlgorithm);
 
-            await DecryptVaultToDirectory(encryptedDirectoryPath, tempDir, password, encryptionService, keyDerivationAlgorithm);
-
-
-            FileSystemWatcher watcher = CreateFileSystemWatcher(tempDir, encryptedDirectoryPath, password, encryptionService, keyDerivationAlgorithm);
-
-
-            bool success = await MountAsNetworkDrive(mountPoint, tempDir);
-            if (!success)
+            if (!initSuccess)
             {
-                watcher?.Dispose();
+                decryptionService.Dispose();
                 Directory.Delete(tempDir, true);
                 return false;
             }
 
+            // Create virtual directory structure with placeholder files
+            bool structureSuccess = await decryptionService.CreateVirtualDirectoryStructureAsync(
+                encryptedDirectoryPath, tempDir);
 
+            if (!structureSuccess)
+            {
+                decryptionService.Dispose();
+                Directory.Delete(tempDir, true);
+                return false;
+            }
+
+            // Create enhanced file system watcher for on-demand decryption
+            var fileWatcher = new OnDemandFileSystemWatcher(tempDir, decryptionService);
+
+            // Mount as network drive
+            bool mountSuccess = await MountAsNetworkDrive(mountPoint, tempDir);
+            if (!mountSuccess)
+            {
+                fileWatcher.Dispose();
+                decryptionService.Dispose();
+                Directory.Delete(tempDir, true);
+                return false;
+            }
+
+            // Start file access monitoring
+            fileWatcher.Start();
+
+            // Create volume configuration
             VolumeConfiguration configuration = new(
                 encryptedDirectoryPath,
                 tempDir,
                 password,
                 keyDerivationAlgorithm);
 
-
+            // Create volume info (no traditional FileSystemWatcher needed)
             VolumeInfo volumeInfo = new(
                 configuration,
                 DateTime.UtcNow,
                 encryptionService,
-                watcher);
+                null); // No traditional watcher
 
+            // Store all references
             _mountedVolumes[mountPoint] = volumeInfo;
+            _decryptionServices[mountPoint] = decryptionService;
+            _fileWatchers[mountPoint] = fileWatcher;
 
             return true;
         }
@@ -78,39 +116,44 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
     {
         try
         {
+            // Stop file access monitoring first
+            if (_fileWatchers.TryRemove(mountPoint, out OnDemandFileSystemWatcher? fileWatcher))
+            {
+                fileWatcher.Stop();
+                fileWatcher.Dispose();
+            }
+
+            // Get decryption service
+            if (_decryptionServices.TryRemove(mountPoint, out IOnDemandDecryptionService? decryptionService))
+            {
+                // Cleanup cached files
+                await decryptionService.CleanupUnusedFilesAsync();
+                decryptionService.Dispose();
+            }
+
+            // Remove volume info
             if (!_mountedVolumes.TryRemove(mountPoint, out VolumeInfo? volumeInfo))
             {
-
+                // Even if not in our tracking, try to unmount
                 await UnmountNetworkDrive(mountPoint);
                 await CleanupTemporaryDirectory(mountPoint);
                 return true;
             }
 
-
-            volumeInfo.DisableWatcher();
-
-
-            await SyncChangesToVault(
-                volumeInfo.Configuration.TempDirectory,
-                volumeInfo.Configuration.EncryptedDirectory,
-                volumeInfo.Configuration.Password,
-                volumeInfo.EncryptionService,
-                volumeInfo.Configuration.KeyDerivationAlgorithm);
-
-
+            // Unmount network drive
             await UnmountNetworkDrive(mountPoint);
 
-
+            // Cleanup temporary directory
             await CleanupTemporaryDirectory(volumeInfo.Configuration.TempDirectory);
 
-
+            // Dispose volume info
             volumeInfo.Dispose();
 
             return true;
         }
         catch (Exception ex)
         {
-
+            // Cleanup attempt even on error
             try
             {
                 await UnmountNetworkDrive(mountPoint);
@@ -118,7 +161,7 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
             }
             catch
             {
-
+                // Ignore cleanup errors
             }
             return false;
         }
@@ -145,24 +188,53 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
             }
             catch
             {
-
+                // Ignore individual unmount errors
             }
         }
     }
 
     public void Dispose()
     {
+        // Stop all file watchers
+        foreach (var watcher in _fileWatchers.Values)
+        {
+            try
+            {
+                watcher.Stop();
+                watcher.Dispose();
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+        _fileWatchers.Clear();
 
+        // Dispose all decryption services
+        foreach (var service in _decryptionServices.Values)
+        {
+            try
+            {
+                service.Dispose();
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+        _decryptionServices.Clear();
+
+        // Cleanup mounted volumes
         List<string> mountPoints = _mountedVolumes.Keys.ToList();
         foreach (string? mountPoint in mountPoints)
         {
             try
             {
-
+                // Get volume info
                 VolumeInfo volumeInfo = _mountedVolumes[mountPoint];
                 volumeInfo.Dispose();
 
-
+                // Unmount drive
                 Process process = new()
                 {
                     StartInfo = new ProcessStartInfo
@@ -177,7 +249,7 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
                 process.Start();
                 process.WaitForExit(2000);
 
-
+                // Cleanup temp directory
                 if (Directory.Exists(volumeInfo.Configuration.TempDirectory))
                 {
                     Directory.Delete(volumeInfo.Configuration.TempDirectory, true);
@@ -185,7 +257,7 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
             }
             catch
             {
-
+                // Ignore cleanup errors
             }
         }
         _mountedVolumes.Clear();
@@ -206,7 +278,7 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
     {
         try
         {
-
+            // Handle both direct paths and mount point references
             if (pathOrMountPoint.Length == 2 && pathOrMountPoint.EndsWith(":"))
             {
                 string tempBase = Path.Combine(Path.GetTempPath(), "CloudZCrypt");
@@ -222,157 +294,19 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
                         }
                         catch
                         {
-
+                            // Ignore individual directory cleanup errors
                         }
                     }
                 }
             }
             else if (Directory.Exists(pathOrMountPoint))
             {
-
                 Directory.Delete(pathOrMountPoint, true);
             }
         }
         catch
         {
-
-        }
-    }
-
-    private async Task DecryptVaultToDirectory(
-        string encryptedDirectoryPath,
-        string decryptedDirectoryPath,
-        string password,
-        IEncryptionService encryptionService,
-        KeyDerivationAlgorithm keyDerivationAlgorithm)
-    {
-        string[] encryptedFiles = Directory.GetFiles(encryptedDirectoryPath, "*.encrypted", SearchOption.AllDirectories);
-
-        foreach (string encryptedFile in encryptedFiles)
-        {
-            try
-            {
-                string relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedFile);
-                string decryptedFileName = relativePath.Replace(".encrypted", "");
-                string decryptedFilePath = Path.Combine(decryptedDirectoryPath, decryptedFileName);
-
-
-                string? directory = Path.GetDirectoryName(decryptedFilePath);
-                if (!string.IsNullOrEmpty(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-
-                bool success = await encryptionService.DecryptFileAsync(encryptedFile, decryptedFilePath, password, keyDerivationAlgorithm);
-                if (!success)
-                {
-
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
-
-
-        string[] encryptedDirs = Directory.GetDirectories(encryptedDirectoryPath, "*", SearchOption.AllDirectories);
-        foreach (string encryptedDir in encryptedDirs)
-        {
-            string relativePath = Path.GetRelativePath(encryptedDirectoryPath, encryptedDir);
-            string decryptedDirPath = Path.Combine(decryptedDirectoryPath, relativePath);
-            Directory.CreateDirectory(decryptedDirPath);
-        }
-    }
-
-    private FileSystemWatcher CreateFileSystemWatcher(
-        string tempDir,
-        string encryptedDir,
-        string password,
-        IEncryptionService encryptionService,
-        KeyDerivationAlgorithm keyDerivationAlgorithm)
-    {
-        FileSystemWatcher watcher = new(tempDir)
-        {
-            IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
-        };
-
-        watcher.Created += async (s, e) => await OnFileSystemChanged(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Changed += async (s, e) => await OnFileSystemChanged(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Renamed += async (s, e) => await OnFileSystemRenamed(e, encryptedDir, password, encryptionService, keyDerivationAlgorithm);
-        watcher.Deleted += async (s, e) => await OnFileSystemDeleted(e, encryptedDir);
-
-        watcher.EnableRaisingEvents = true;
-        return watcher;
-    }
-
-    private async Task OnFileSystemChanged(FileSystemEventArgs e, string encryptedDir, string password, IEncryptionService encryptionService, KeyDerivationAlgorithm keyDerivationAlgorithm)
-    {
-        if (File.Exists(e.FullPath))
-        {
-            try
-            {
-
-                await Task.Delay(500);
-
-                string relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-                string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
-
-
-                string? encryptedDirPath = Path.GetDirectoryName(encryptedPath);
-                if (!string.IsNullOrEmpty(encryptedDirPath))
-                {
-                    Directory.CreateDirectory(encryptedDirPath);
-                }
-
-
-                await encryptionService.EncryptFileAsync(e.FullPath, encryptedPath, password, keyDerivationAlgorithm);
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
-    }
-
-    private async Task OnFileSystemRenamed(RenamedEventArgs e, string encryptedDir, string password, IEncryptionService encryptionService, KeyDerivationAlgorithm keyDerivationAlgorithm)
-    {
-        try
-        {
-            string oldRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath));
-            string newRelativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-
-            string oldEncryptedPath = Path.Combine(encryptedDir, oldRelativePath + ".encrypted");
-            string newEncryptedPath = Path.Combine(encryptedDir, newRelativePath + ".encrypted");
-
-            if (File.Exists(oldEncryptedPath))
-            {
-                File.Move(oldEncryptedPath, newEncryptedPath);
-            }
-        }
-        catch (Exception ex)
-        {
-
-        }
-    }
-
-    private async Task OnFileSystemDeleted(FileSystemEventArgs e, string encryptedDir)
-    {
-        try
-        {
-            string relativePath = Path.GetRelativePath(Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath));
-            string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
-
-            if (File.Exists(encryptedPath))
-            {
-                File.Delete(encryptedPath);
-            }
-        }
-        catch (Exception ex)
-        {
-
+            // Ignore cleanup errors
         }
     }
 
@@ -380,7 +314,6 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
     {
         try
         {
-
             Process process = new()
             {
                 StartInfo = new ProcessStartInfo
@@ -432,39 +365,6 @@ public class FileSystemService(IEncryptionServiceFactory encryptionServiceFactor
         catch (Exception ex)
         {
             return false;
-        }
-    }
-
-    private async Task SyncChangesToVault(
-        string tempDir,
-        string encryptedDir,
-        string password,
-        IEncryptionService encryptionService,
-        KeyDerivationAlgorithm keyDerivationAlgorithm)
-    {
-        try
-        {
-            string[] files = Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories);
-
-            foreach (string file in files)
-            {
-                string relativePath = Path.GetRelativePath(tempDir, file);
-                string encryptedPath = Path.Combine(encryptedDir, relativePath + ".encrypted");
-
-
-                string? encryptedDirPath = Path.GetDirectoryName(encryptedPath);
-                if (!string.IsNullOrEmpty(encryptedDirPath))
-                {
-                    Directory.CreateDirectory(encryptedDirPath);
-                }
-
-
-                await encryptionService.EncryptFileAsync(file, encryptedPath, password, keyDerivationAlgorithm);
-            }
-        }
-        catch (Exception ex)
-        {
-
         }
     }
 

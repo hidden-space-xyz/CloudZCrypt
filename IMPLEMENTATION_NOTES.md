@@ -56,3 +56,29 @@ The selection is passed through the entire processing pipeline and used during b
 - **PBKDF2**: ~100-200ms per file (significantly faster)
 
 The performance difference is most noticeable when processing many small files.
+
+# On-Demand File Decryption Implementation
+
+## New Feature: VeraCrypt-Style On-Demand Decryption
+
+CloudZCrypt now supports on-demand file decryption, similar to VeraCrypt's behavior. Instead of decrypting all files when mounting a vault, files are only decrypted when the user attempts to access them.
+
+### Key Benefits
+- **Faster Mount Times**: Vaults mount immediately without waiting for all files to decrypt
+- **Lower Resource Usage**: Only accessed files consume memory and processing
+- **Better Scalability**: Can efficiently handle very large vaults
+- **Improved User Experience**: Immediate access to vault with transparent decryption
+
+### How It Works
+1. **Mount**: Creates placeholder files in virtual directory structure
+2. **Access**: When user opens a file, it's decrypted just-in-time
+3. **Cache**: Decrypted files are cached temporarily for performance
+4. **Cleanup**: Unused files are automatically cleaned up
+
+### Implementation Components
+- **IOnDemandDecryptionService**: Core service for managing on-demand decryption
+- **OnDemandFileSystemWatcher**: Detects file access and triggers decryption
+- **VirtualFileMetadata**: Tracks file status and metadata
+- **Enhanced FileSystemService**: Uses on-demand decryption instead of bulk decryption
+
+For detailed implementation information, see [ON_DEMAND_DECRYPTION.md](ON_DEMAND_DECRYPTION.md)
