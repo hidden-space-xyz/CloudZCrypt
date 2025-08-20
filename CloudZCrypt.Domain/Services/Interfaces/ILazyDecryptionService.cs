@@ -39,4 +39,14 @@ public interface ILazyDecryptionService
         string decryptedFilePath,
         string decryptedRoot,
         string encryptedRoot);
+
+    /// <summary>
+    /// Clears the internal cache of decrypted files
+    /// </summary>
+    void ClearCache();
+
+    /// <summary>
+    /// Gets the current size of the decryption cache
+    /// </summary>
+    int GetCacheSize();
 }
