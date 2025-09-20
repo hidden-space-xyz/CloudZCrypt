@@ -43,11 +43,6 @@ public static class DependencyInjection
     {
         Assembly applicationAssembly = typeof(Result).Assembly;
 
-        services.AddMediatR(config =>
-        {
-            config.RegisterServicesFromAssembly(applicationAssembly);
-        });
-
         services.AddValidatorsFromAssembly(applicationAssembly);
 
         services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
