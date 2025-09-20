@@ -16,7 +16,6 @@ public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivation
 
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         TwofishEngine twofishEngine = new();
         GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
@@ -27,7 +26,6 @@ public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivation
 
     protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         TwofishEngine twofishEngine = new();
         GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);

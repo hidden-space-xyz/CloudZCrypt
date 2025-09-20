@@ -5,5 +5,5 @@ namespace CloudZCrypt.Domain.Factories.Interfaces;
 
 public interface IEncryptionServiceFactory
 {
-    IEncryptionService Create(EncryptionAlgorithm algorithm);
+    IEncryptionAlgorithmStrategy Create(EncryptionAlgorithm algorithm);
 }

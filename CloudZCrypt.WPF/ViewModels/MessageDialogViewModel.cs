@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using MediaBrush = System.Windows.Media.Brush;
 using MediaBrushes = System.Windows.Media.Brushes;
@@ -8,7 +6,7 @@ using MediaColor = System.Windows.Media.Color;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
-public class MessageDialogViewModel 
+public class MessageDialogViewModel
 {
     public string Message { get; }
     public string Title { get; }

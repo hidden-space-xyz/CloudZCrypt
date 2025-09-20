@@ -17,5 +17,6 @@ public sealed class EncryptionAlgorithmViewModel
         Description = strategy.Description,
         Summary = strategy.Summary
     };
+
     public override string ToString() => DisplayName;
 }

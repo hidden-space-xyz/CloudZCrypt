@@ -29,7 +29,7 @@ public class ProcessFileCommandHandler(
                 return Result<FileProcessingResult>.Failure("Source path does not exist.");
             }
 
-            IEncryptionService encryptionService = encryptionServiceFactory.Create(request.EncryptionAlgorithm);
+            IEncryptionAlgorithmStrategy encryptionService = encryptionServiceFactory.Create(request.EncryptionAlgorithm);
 
             if (isFile)
             {
@@ -219,7 +219,7 @@ public class ProcessFileCommandHandler(
     }
 
     private static Task<bool> ProcessSingleFile(
-        IEncryptionService encryptionService,
+        IEncryptionAlgorithmStrategy encryptionService,
         ProcessFileCommand request,
         string sourceFile,
         string destinationFile,

@@ -15,7 +15,6 @@ public class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivatio
 
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         ChaCha20Poly1305 chacha20Poly1305 = new();
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
         chacha20Poly1305.Init(true, parameters);
@@ -25,7 +24,6 @@ public class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivatio
 
     protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         ChaCha20Poly1305 chacha20Poly1305 = new();
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
         chacha20Poly1305.Init(false, parameters);

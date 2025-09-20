@@ -8,7 +8,7 @@ public class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> 
 {
     private readonly IReadOnlyDictionary<EncryptionAlgorithm, IEncryptionAlgorithmStrategy> _strategies = strategies.ToDictionary(s => s.Id, s => s);
 
-    public IEncryptionService Create(EncryptionAlgorithm algorithm)
+    public IEncryptionAlgorithmStrategy Create(EncryptionAlgorithm algorithm)
     {
         if (!_strategies.TryGetValue(algorithm, out IEncryptionAlgorithmStrategy? strategy))
             throw new ArgumentOutOfRangeException(nameof(algorithm), $"Encryption algorithm '{algorithm}' no registrado.");

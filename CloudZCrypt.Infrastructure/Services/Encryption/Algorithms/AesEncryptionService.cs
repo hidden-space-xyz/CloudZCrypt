@@ -16,7 +16,6 @@ public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServ
 
     protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         AesEngine aesEngine = new();
         GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
@@ -27,7 +26,6 @@ public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServ
 
     protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
     {
-
         AesEngine aesEngine = new();
         GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
