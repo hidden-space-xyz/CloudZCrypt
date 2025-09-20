@@ -1,4 +1,3 @@
-using CloudZCrypt.Application.Common.Behaviors;
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
@@ -47,8 +46,6 @@ public static class DependencyInjection
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(applicationAssembly);
-            config.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
-            config.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(applicationAssembly);
