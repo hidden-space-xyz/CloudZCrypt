@@ -16,17 +16,26 @@ public partial class App : System.Windows.Application
         IServiceCollection services = new ServiceCollection();
         ConfigureServices(services);
         serviceProvider = services.BuildServiceProvider();
-
-        // Register exception handling
-        RegisterExceptionHandling();
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
         mainViewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();
-        mainWindow.Show();
+
+        serviceProvider.GetRequiredService<MainWindow>().Show();
+
         base.OnStartup(e);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        if (mainViewModel != null)
+            mainViewModel.Dispose();
+
+        if (serviceProvider is IDisposable disposable)
+            disposable.Dispose();
+
+        base.OnExit(e);
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -37,35 +46,5 @@ public partial class App : System.Windows.Application
 
         services.AddDomainServices();
         services.AddApplicationServices();
-    }
-
-    private void RegisterExceptionHandling()
-    {
-        this.DispatcherUnhandledException += OnUnhandledException;
-        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-    }
-
-    private async void OnUnhandledException(object? sender, EventArgs e)
-    {
-        await PerformCleanupAsync();
-
-        // Let the application handle unhandled exceptions normally
-        if (e is System.Windows.Threading.DispatcherUnhandledExceptionEventArgs dispatcherArgs)
-            dispatcherArgs.Handled = false;
-    }
-
-    private async Task PerformCleanupAsync()
-    {
-        try
-        {
-            if (mainViewModel != null)
-            {
-                mainViewModel.Dispose();
-            }
-        }
-        catch
-        {
-            // Ignore cleanup errors during shutdown
-        }
     }
 }

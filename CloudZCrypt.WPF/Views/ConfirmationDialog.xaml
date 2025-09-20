@@ -64,9 +64,9 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
                                     <Border
+                                        Padding="{TemplateBinding Padding}"
                                         Background="{TemplateBinding Background}"
-                                        CornerRadius="4"
-                                        Padding="{TemplateBinding Padding}">
+                                        CornerRadius="4">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -100,9 +100,9 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
                                     <Border
+                                        Padding="{TemplateBinding Padding}"
                                         Background="{TemplateBinding Background}"
-                                        CornerRadius="4"
-                                        Padding="{TemplateBinding Padding}">
+                                        CornerRadius="4">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <ControlTemplate.Triggers>
