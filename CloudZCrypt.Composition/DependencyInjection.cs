@@ -46,7 +46,6 @@ public static class DependencyInjection
 
         // Stateless domain and infrastructure services can be singletons
         services.AddSingleton<IPasswordService, PasswordService>();
-        services.AddSingleton<IFileProcessingDomainService, FileProcessingDomainService>();
 
         services.AddSingleton<IFileOperationsService, FileOperationsService>();
         services.AddSingleton<ISystemStorageService, SystemStorageService>();

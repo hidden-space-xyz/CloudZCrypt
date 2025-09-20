@@ -11,7 +11,6 @@ namespace CloudZCrypt.Application.Commands.Handlers;
 
 public class ProcessFileCommandHandler(
     IEncryptionServiceFactory encryptionServiceFactory,
-    IFileProcessingDomainService fileProcessingDomainService,
     IFileOperationsService fileOperationsService) : IRequestHandler<ProcessFileCommand, Result<FileProcessingResult>>
 {
     public async Task<Result<FileProcessingResult>> Handle(ProcessFileCommand request, CancellationToken cancellationToken)
@@ -67,15 +66,7 @@ public class ProcessFileCommandHandler(
             }
             else
             {
-                // Process directory
-                (bool canProceed, IEnumerable<string> validationErrors) = await fileProcessingDomainService
-                    .ValidateProcessingOperationAsync(request.SourcePath, request.DestinationPath, cancellationToken);
-
-                if (!canProceed)
-                {
-                    return Result<FileProcessingResult>.Failure(validationErrors.ToArray());
-                }
-
+                // Process directory (validation was already performed in orchestrator layer)
                 string[] files = await fileOperationsService.GetFilesAsync(request.SourcePath, "*.*", cancellationToken);
                 if (files.Length == 0)
                 {
@@ -194,7 +185,7 @@ public class ProcessFileCommandHandler(
 
                 // Determine if operation was successful
                 bool isSuccess = errors.Count == 0 && processedFiles == files.Length;
-                bool isPartialSuccess = processedFiles > 0 && processedFiles < files.Length;
+                bool isPartialSuccess = processedFiles > 0 && processedFiles < files.Length; // currently unused but could be leveraged
 
                 if (errors.Count > 0 && processedFiles == 0)
                 {
