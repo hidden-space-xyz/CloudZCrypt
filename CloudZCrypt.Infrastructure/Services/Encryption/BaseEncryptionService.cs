@@ -12,7 +12,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
     protected const int KeySize = 256;
     protected const int SaltSize = 32;
     protected const int NonceSize = 12;
-    protected const int TagSize = 16;
+    protected const int MacSize = 128;
     protected const int BufferSize = 4 * 1024;
 
     public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm)
@@ -200,7 +200,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
                 using FileStream destinationFile = File.Create(destinationFilePath);
 
                 // Skip salt and nonce
-                await sourceFile.ReadAsync(new byte[SaltSize + NonceSize]);
+                await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
 
                 await DecryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }
@@ -322,7 +322,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
 
     protected byte[] DeriveKey(string password, byte[] salt, int keySize, KeyDerivationAlgorithm algorithm)
     {
-        IKeyDerivationService keyDerivationService = keyDerivationServiceFactory.Create(algorithm);
+        IKeyDerivationAlgorithmStrategy keyDerivationService = keyDerivationServiceFactory.Create(algorithm);
         return keyDerivationService.DeriveKey(password, salt, keySize);
     }
 

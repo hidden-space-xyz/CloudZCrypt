@@ -5,5 +5,5 @@ namespace CloudZCrypt.Domain.Factories.Interfaces;
 
 public interface IKeyDerivationServiceFactory
 {
-    IKeyDerivationService Create(KeyDerivationAlgorithm algorithm);
+    IKeyDerivationAlgorithmStrategy Create(KeyDerivationAlgorithm algorithm);
 }

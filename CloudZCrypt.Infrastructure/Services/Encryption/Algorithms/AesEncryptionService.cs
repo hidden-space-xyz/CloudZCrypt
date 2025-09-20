@@ -18,7 +18,7 @@ public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServ
     {
         AesEngine aesEngine = new();
         GcmBlockCipher gcmCipher = new(aesEngine);
-        AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
+        AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(true, parameters);
 
         await ProcessFileWithCipherAsync(sourceStream, destinationStream, gcmCipher);
@@ -28,7 +28,7 @@ public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServ
     {
         AesEngine aesEngine = new();
         GcmBlockCipher gcmCipher = new(aesEngine);
-        AeadParameters parameters = new(new KeyParameter(key), TagSize * 8, nonce);
+        AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(false, parameters);
 
         await ProcessFileWithCipherAsync(sourceStream, destinationStream, gcmCipher);
