@@ -2,7 +2,6 @@ using CloudZCrypt.Application.Common.Behaviors;
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
@@ -20,33 +19,21 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
+        // Factories 
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
         services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
 
-        // Keyed derivation services (used at runtime by factory)
-        services.AddKeyedTransient<IKeyDerivationService, Argon2IdKeyDerivationService>(KeyDerivationAlgorithm.Argon2id);
-        services.AddKeyedTransient<IKeyDerivationService, Pbkdf2KeyDerivationService>(KeyDerivationAlgorithm.PBKDF2);
+        // Strategies
+        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Argon2IdKeyDerivationService>();
+        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Pbkdf2KeyDerivationService>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, AesEncryptionService>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, TwofishEncryptionService>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, SerpentEncryptionService>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, ChaCha20EncryptionService>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, CamelliaEncryptionService>();
 
-        // Keyed encryption services (used at runtime by factory)
-        services.AddKeyedTransient<IEncryptionService, AesEncryptionService>(EncryptionAlgorithm.Aes);
-        services.AddKeyedTransient<IEncryptionService, TwofishEncryptionService>(EncryptionAlgorithm.Twofish);
-        services.AddKeyedTransient<IEncryptionService, SerpentEncryptionService>(EncryptionAlgorithm.Serpent);
-        services.AddKeyedTransient<IEncryptionService, ChaCha20EncryptionService>(EncryptionAlgorithm.ChaCha20);
-        services.AddKeyedTransient<IEncryptionService, CamelliaEncryptionService>(EncryptionAlgorithm.Camellia);
-
-        // Strategy collections for UI metadata binding
-        services.AddTransient<IEncryptionAlgorithmStrategy, AesEncryptionService>();
-        services.AddTransient<IEncryptionAlgorithmStrategy, TwofishEncryptionService>();
-        services.AddTransient<IEncryptionAlgorithmStrategy, SerpentEncryptionService>();
-        services.AddTransient<IEncryptionAlgorithmStrategy, ChaCha20EncryptionService>();
-        services.AddTransient<IEncryptionAlgorithmStrategy, CamelliaEncryptionService>();
-
-        services.AddTransient<IKeyDerivationAlgorithmStrategy, Argon2IdKeyDerivationService>();
-        services.AddTransient<IKeyDerivationAlgorithmStrategy, Pbkdf2KeyDerivationService>();
-
-        // Stateless domain and infrastructure services can be singletons
+        // Services
         services.AddSingleton<IPasswordService, PasswordService>();
-
         services.AddSingleton<IFileOperationsService, FileOperationsService>();
         services.AddSingleton<ISystemStorageService, SystemStorageService>();
 

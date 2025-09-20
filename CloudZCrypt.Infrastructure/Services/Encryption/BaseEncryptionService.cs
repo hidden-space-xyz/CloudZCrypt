@@ -179,7 +179,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
             {
                 throw new EncryptionCorruptedFileException(sourceFilePath);
             }
-            catch (Exception ex)
+            catch
             {
                 throw new EncryptionCorruptedFileException(sourceFilePath);
             }
@@ -224,7 +224,7 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
             {
                 throw new EncryptionAccessDeniedException(destinationFilePath, ex);
             }
-            catch (CryptographicException ex)
+            catch (CryptographicException)
             {
                 // This typically indicates wrong password or corrupted data
                 throw new EncryptionInvalidPasswordException();

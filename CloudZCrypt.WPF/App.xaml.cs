@@ -29,7 +29,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
     }
 
-    private void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();
