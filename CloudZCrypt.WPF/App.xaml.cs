@@ -8,14 +8,14 @@ using System.Windows;
 namespace CloudZCrypt.WPF;
 public partial class App : System.Windows.Application
 {
-    private readonly IServiceProvider _serviceProvider;
-    private MainWindowViewModel? _mainViewModel;
+    private readonly IServiceProvider serviceProvider;
+    private MainWindowViewModel? mainViewModel;
 
     public App()
     {
         IServiceCollection services = new ServiceCollection();
         ConfigureServices(services);
-        _serviceProvider = services.BuildServiceProvider();
+        serviceProvider = services.BuildServiceProvider();
 
         // Register exception handling
         RegisterExceptionHandling();
@@ -23,8 +23,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-        _mainViewModel = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+        MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
+        mainViewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();
         mainWindow.Show();
         base.OnStartup(e);
     }
@@ -58,9 +58,9 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            if (_mainViewModel != null)
+            if (mainViewModel != null)
             {
-                _mainViewModel.Dispose();
+                mainViewModel.Dispose();
             }
         }
         catch

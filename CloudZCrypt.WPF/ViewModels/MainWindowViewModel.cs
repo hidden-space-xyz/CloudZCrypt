@@ -22,14 +22,14 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 {
     #region Private Fields
 
-    private readonly IDialogService _dialogService;
-    private readonly IMediator _mediator;
-    private readonly IFileProcessingOrchestrator _orchestrator;
+    private readonly IDialogService dialogService;
+    private readonly IMediator mediator;
+    private readonly IFileProcessingOrchestrator orchestrator;
 
-    private CancellationTokenSource? _cancellationTokenSource;
+    private CancellationTokenSource? cancellationTokenSource;
 
     // Cached brushes to avoid recreation
-    private static readonly Dictionary<PasswordStrength, SolidColorBrush> _strengthColorCache = new()
+    private static readonly Dictionary<PasswordStrength, SolidColorBrush> strengthColorCache = new()
     {
         [PasswordStrength.VeryWeak] = new(System.Windows.Media.Color.FromRgb(220, 53, 69)),
         [PasswordStrength.Weak] = new(System.Windows.Media.Color.FromRgb(255, 193, 7)),
@@ -39,26 +39,26 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     };
 
     // Private fields for properties
-    private string _sourceFilePath = string.Empty;
-    private string _destinationPath = string.Empty;
-    private string _password = string.Empty;
-    private string _confirmPassword = string.Empty;
-    private bool _isPasswordVisible = false;
-    private bool _isConfirmPasswordVisible = false;
-    private EncryptionAlgorithm _selectedEncryptionAlgorithm;
-    private KeyDerivationAlgorithm _selectedKeyDerivationAlgorithm; // keep enum for processing
-    private bool _isProcessing;
-    private double _progressValue;
-    private string _progressText = string.Empty;
-    private bool _areControlsEnabled = true;
-    private double _passwordStrengthScore;
-    private string _passwordStrengthText = string.Empty;
-    private System.Windows.Media.Brush _passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
-    private Visibility _passwordStrengthVisibility = Visibility.Hidden;
-    private double _confirmPasswordStrengthScore;
-    private string _confirmPasswordStrengthText = string.Empty;
-    private System.Windows.Media.Brush _confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
-    private Visibility _confirmPasswordStrengthVisibility = Visibility.Hidden;
+    private string sourceFilePath = string.Empty;
+    private string destinationPath = string.Empty;
+    private string password = string.Empty;
+    private string confirmPassword = string.Empty;
+    private bool isPasswordVisible = false;
+    private bool isConfirmPasswordVisible = false;
+    private EncryptionAlgorithm selectedEncryptionAlgorithm;
+    private KeyDerivationAlgorithm selectedKeyDerivationAlgorithm;
+    private bool isProcessing;
+    private double progressValue;
+    private string progressText = string.Empty;
+    private bool areControlsEnabled = true;
+    private double passwordStrengthScore;
+    private string passwordStrengthText = string.Empty;
+    private System.Windows.Media.Brush passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
+    private Visibility passwordStrengthVisibility = Visibility.Hidden;
+    private double confirmPasswordStrengthScore;
+    private string confirmPasswordStrengthText = string.Empty;
+    private System.Windows.Media.Brush confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
+    private Visibility confirmPasswordStrengthVisibility = Visibility.Hidden;
 
     #endregion
 
@@ -66,10 +66,10 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public string SourceFilePath
     {
-        get => _sourceFilePath;
+        get => sourceFilePath;
         set
         {
-            if (SetProperty(ref _sourceFilePath, value))
+            if (SetProperty(ref sourceFilePath, value))
             {
                 ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
                 ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
@@ -79,10 +79,10 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public string DestinationPath
     {
-        get => _destinationPath;
+        get => destinationPath;
         set
         {
-            if (SetProperty(ref _destinationPath, value))
+            if (SetProperty(ref destinationPath, value))
             {
                 ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
                 ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
@@ -92,12 +92,12 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public string Password
     {
-        get => _password;
+        get => password;
         set
         {
-            if (SetProperty(ref _password, value))
+            if (SetProperty(ref password, value))
             {
-                _ = UpdatePasswordStrengthAsync(value, isConfirmField: false);
+                UpdatePasswordStrengthAsync(value, isConfirmField: false).Wait();
                 ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
                 ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
             }
@@ -106,12 +106,12 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public string ConfirmPassword
     {
-        get => _confirmPassword;
+        get => confirmPassword;
         set
         {
-            if (SetProperty(ref _confirmPassword, value))
+            if (SetProperty(ref confirmPassword, value))
             {
-                _ = UpdatePasswordStrengthAsync(value, isConfirmField: true);
+                UpdatePasswordStrengthAsync(value, isConfirmField: true).Wait();
                 ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
                 ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
             }
@@ -120,22 +120,22 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public bool IsPasswordVisible
     {
-        get => _isPasswordVisible;
-        set => SetProperty(ref _isPasswordVisible, value);
+        get => isPasswordVisible;
+        set => SetProperty(ref isPasswordVisible, value);
     }
 
     public bool IsConfirmPasswordVisible
     {
-        get => _isConfirmPasswordVisible;
-        set => SetProperty(ref _isConfirmPasswordVisible, value);
+        get => isConfirmPasswordVisible;
+        set => SetProperty(ref isConfirmPasswordVisible, value);
     }
 
     public EncryptionAlgorithm SelectedEncryptionAlgorithm
     {
-        get => _selectedEncryptionAlgorithm;
+        get => selectedEncryptionAlgorithm;
         set
         {
-            if (SetProperty(ref _selectedEncryptionAlgorithm, value))
+            if (SetProperty(ref selectedEncryptionAlgorithm, value))
             {
                 OnPropertyChanged(nameof(SelectedEncryptionAlgorithmInfo));
             }
@@ -144,10 +144,10 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public KeyDerivationAlgorithm SelectedKeyDerivationAlgorithm
     {
-        get => _selectedKeyDerivationAlgorithm;
+        get => selectedKeyDerivationAlgorithm;
         set
         {
-            if (SetProperty(ref _selectedKeyDerivationAlgorithm, value))
+            if (SetProperty(ref selectedKeyDerivationAlgorithm, value))
             {
                 OnPropertyChanged(nameof(SelectedKeyDerivationAlgorithmInfo));
             }
@@ -155,17 +155,17 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public EncryptionAlgorithmViewModel? SelectedEncryptionAlgorithmInfo =>
-        AvailableEncryptionAlgorithms.FirstOrDefault(a => a.Id == _selectedEncryptionAlgorithm);
+        AvailableEncryptionAlgorithms.FirstOrDefault(a => a.Id == selectedEncryptionAlgorithm);
 
     public KeyDerivationAlgorithmViewModel? SelectedKeyDerivationAlgorithmInfo =>
-        AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == _selectedKeyDerivationAlgorithm);
+        AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == selectedKeyDerivationAlgorithm);
 
     public bool IsProcessing
     {
-        get => _isProcessing;
+        get => isProcessing;
         set
         {
-            if (SetProperty(ref _isProcessing, value))
+            if (SetProperty(ref isProcessing, value))
             {
                 UpdateControlState();
                 ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
@@ -176,68 +176,68 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public double ProgressValue
     {
-        get => _progressValue;
-        set => SetProperty(ref _progressValue, value);
+        get => progressValue;
+        set => SetProperty(ref progressValue, value);
     }
 
     public string ProgressText
     {
-        get => _progressText;
-        set => SetProperty(ref _progressText, value);
+        get => progressText;
+        set => SetProperty(ref progressText, value);
     }
 
     public bool AreControlsEnabled
     {
-        get => _areControlsEnabled;
-        set => SetProperty(ref _areControlsEnabled, value);
+        get => areControlsEnabled;
+        set => SetProperty(ref areControlsEnabled, value);
     }
 
     public double PasswordStrengthScore
     {
-        get => _passwordStrengthScore;
-        set => SetProperty(ref _passwordStrengthScore, value);
+        get => passwordStrengthScore;
+        set => SetProperty(ref passwordStrengthScore, value);
     }
 
     public string PasswordStrengthText
     {
-        get => _passwordStrengthText;
-        set => SetProperty(ref _passwordStrengthText, value);
+        get => passwordStrengthText;
+        set => SetProperty(ref passwordStrengthText, value);
     }
 
     public System.Windows.Media.Brush PasswordStrengthColor
     {
-        get => _passwordStrengthColor;
-        set => SetProperty(ref _passwordStrengthColor, value);
+        get => passwordStrengthColor;
+        set => SetProperty(ref passwordStrengthColor, value);
     }
 
     public Visibility PasswordStrengthVisibility
     {
-        get => _passwordStrengthVisibility;
-        set => SetProperty(ref _passwordStrengthVisibility, value);
+        get => passwordStrengthVisibility;
+        set => SetProperty(ref passwordStrengthVisibility, value);
     }
 
     public double ConfirmPasswordStrengthScore
     {
-        get => _confirmPasswordStrengthScore;
-        set => SetProperty(ref _confirmPasswordStrengthScore, value);
+        get => confirmPasswordStrengthScore;
+        set => SetProperty(ref confirmPasswordStrengthScore, value);
     }
 
     public string ConfirmPasswordStrengthText
     {
-        get => _confirmPasswordStrengthText;
-        set => SetProperty(ref _confirmPasswordStrengthText, value);
+        get => confirmPasswordStrengthText;
+        set => SetProperty(ref confirmPasswordStrengthText, value);
     }
 
     public System.Windows.Media.Brush ConfirmPasswordStrengthColor
     {
-        get => _confirmPasswordStrengthColor;
-        set => SetProperty(ref _confirmPasswordStrengthColor, value);
+        get => confirmPasswordStrengthColor;
+        set => SetProperty(ref confirmPasswordStrengthColor, value);
     }
 
     public Visibility ConfirmPasswordStrengthVisibility
     {
-        get => _confirmPasswordStrengthVisibility;
-        set => SetProperty(ref _confirmPasswordStrengthVisibility, value);
+        get => confirmPasswordStrengthVisibility;
+        set => SetProperty(ref confirmPasswordStrengthVisibility, value);
     }
 
     #endregion
@@ -272,9 +272,9 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         IEnumerable<IEncryptionAlgorithmStrategy> encryptionStrategies,
         IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies)
     {
-        _dialogService = dialogService;
-        _mediator = mediator;
-        _orchestrator = orchestrator;
+        this.dialogService = dialogService;
+        this.mediator = mediator;
+        this.orchestrator = orchestrator;
 
         AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithmViewModel>(
             encryptionStrategies.Select(EncryptionAlgorithmViewModel.FromStrategy)
@@ -284,8 +284,8 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             keyDerivationStrategies.Select(KeyDerivationAlgorithmViewModel.FromStrategy)
                                    .OrderBy(a => a.DisplayName));
 
-        _selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First().Id;
-        _selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First().Id;
+        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First().Id;
+        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First().Id;
 
         // Initialize commands
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
@@ -308,8 +308,8 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }, CanExecuteProcessFile);
 
 #if DEBUG
-        _sourceFilePath = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
-        _destinationPath = @"D:\WorkSpace\EncryptionTest\Encrypted";
+        sourceFilePath = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
+        destinationPath = @"D:\WorkSpace\EncryptionTest\Encrypted";
 #endif
         UpdateControlState();
     }
@@ -325,7 +325,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             // Show confirmation for replacing existing password
             if (!string.IsNullOrEmpty(Password))
             {
-                bool shouldReplace = _dialogService.ShowConfirmation(
+                bool shouldReplace = dialogService.ShowConfirmation(
                     "This will replace your current password. Are you sure you want to generate a new one?",
                     "Replace Password");
 
@@ -342,7 +342,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 IncludeSpecialCharacters: true,
                 ExcludeSimilarCharacters: false);
 
-            Result<string> result = await _mediator.Send(query);
+            Result<string> result = await mediator.Send(query);
 
             if (result.IsSuccess)
             {
@@ -352,7 +352,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 try
                 {
                     System.Windows.Clipboard.SetText(result.Value);
-                    _dialogService.ShowMessage(
+                    dialogService.ShowMessage(
                         "🔐 Strong password generated successfully!\n\n" +
                         "✅ 128 characters long\n" +
                         "✅ Includes uppercase, lowercase, numbers, and symbols\n" +
@@ -363,7 +363,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 }
                 catch
                 {
-                    _dialogService.ShowMessage(
+                    dialogService.ShowMessage(
                         "🔐 Strong password generated successfully!\n\n" +
                         "✅ 128 characters long\n" +
                         "✅ Includes uppercase, lowercase, numbers, and symbols\n\n" +
@@ -375,12 +375,12 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             }
             else
             {
-                _dialogService.ShowMessage($"Failed to generate password:\n\n{string.Join("\n", result.Errors.Select(e => $"• {e}"))}", "Password Generation Error", MessageBoxImage.Error);
+                dialogService.ShowMessage($"Failed to generate password:\n\n{string.Join("\n", result.Errors.Select(e => $"• {e}"))}", "Password Generation Error", MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Unexpected error while generating password: {ex.Message}", "Password Generation Error", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Unexpected error while generating password: {ex.Message}", "Password Generation Error", MessageBoxImage.Error);
         }
     }
 
@@ -388,7 +388,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            string? selectedPath = _dialogService.ShowOpenFileDialog("Select file to encrypt/decrypt");
+            string? selectedPath = dialogService.ShowOpenFileDialog("Select file to encrypt/decrypt");
             if (!string.IsNullOrEmpty(selectedPath))
             {
                 if (File.Exists(selectedPath))
@@ -397,13 +397,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 }
                 else
                 {
-                    _dialogService.ShowMessage("The selected file no longer exists.", "File Not Found", MessageBoxImage.Warning);
+                    dialogService.ShowMessage("The selected file no longer exists.", "File Not Found", MessageBoxImage.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Error selecting file: {ex.Message}", "File Selection Error", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Error selecting file: {ex.Message}", "File Selection Error", MessageBoxImage.Error);
         }
     }
 
@@ -411,7 +411,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            string? selectedPath = _dialogService.ShowFolderDialog("Select directory to encrypt/decrypt");
+            string? selectedPath = dialogService.ShowFolderDialog("Select directory to encrypt/decrypt");
             if (!string.IsNullOrEmpty(selectedPath))
             {
                 if (Directory.Exists(selectedPath))
@@ -420,13 +420,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 }
                 else
                 {
-                    _dialogService.ShowMessage("The selected directory no longer exists.", "Directory Not Found", MessageBoxImage.Warning);
+                    dialogService.ShowMessage("The selected directory no longer exists.", "Directory Not Found", MessageBoxImage.Warning);
                 }
             }
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Error selecting directory: {ex.Message}", "Directory Selection Error", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Error selecting directory: {ex.Message}", "Directory Selection Error", MessageBoxImage.Error);
         }
     }
 
@@ -438,7 +438,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             {
                 // For single file, show save dialog
                 string defaultName = Path.GetFileNameWithoutExtension(SourceFilePath);
-                string? selectedPath = _dialogService.ShowSaveFileDialog("Select destination for processed file", "All files (*.*)|*.*", defaultName);
+                string? selectedPath = dialogService.ShowSaveFileDialog("Select destination for processed file", "All files (*.*)|*.*", defaultName);
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DestinationPath = selectedPath;
@@ -447,7 +447,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             else
             {
                 // For directory, show folder dialog
-                string? selectedPath = _dialogService.ShowFolderDialog("Select destination directory");
+                string? selectedPath = dialogService.ShowFolderDialog("Select destination directory");
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DestinationPath = selectedPath;
@@ -456,7 +456,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Error selecting destination: {ex.Message}", "Destination Selection Error", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Error selecting destination: {ex.Message}", "Destination Selection Error", MessageBoxImage.Error);
         }
     }
 
@@ -482,21 +482,21 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             operation);
 
         // Validate inputs using orchestrator
-        IReadOnlyList<string> validationErrors = await _orchestrator.ValidateAsync(request);
+        IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
 
         if (validationErrors.Any())
         {
-            _dialogService.ShowValidationErrors(validationErrors);
+            dialogService.ShowValidationErrors(validationErrors);
             return;
         }
 
         // Analyze warnings
-        IReadOnlyList<string> warnings = await _orchestrator.AnalyzeWarningsAsync(request);
+        IReadOnlyList<string> warnings = await orchestrator.AnalyzeWarningsAsync(request);
 
         if (warnings.Any())
         {
             string warningMessage = $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
-            bool shouldContinue = _dialogService.ShowConfirmation(
+            bool shouldContinue = dialogService.ShowConfirmation(
                 $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
                 "Confirm Operation");
 
@@ -512,42 +512,42 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
-            _cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource = new CancellationTokenSource();
 
-            Result<FileProcessingResult> result = await _orchestrator.ExecuteAsync(
+            Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(
                 request,
                 progress,
-                _cancellationTokenSource.Token);
+                cancellationTokenSource.Token);
 
             if (result.IsSuccess && result.Value != null)
             {
                 string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
-                _dialogService.ShowProcessingResult(result.Value, operation, sourceType);
+                dialogService.ShowProcessingResult(result.Value, operation, sourceType);
             }
             else
             {
-                _dialogService.ShowMessage($"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
+                dialogService.ShowMessage($"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
             }
         }
         catch (OperationCanceledException)
         {
-            _dialogService.ShowMessage($"{operationText} was cancelled by user.", "Operation Cancelled", MessageBoxImage.Information);
+            dialogService.ShowMessage($"{operationText} was cancelled by user.", "Operation Cancelled", MessageBoxImage.Information);
         }
         catch (UnauthorizedAccessException ex)
         {
-            _dialogService.ShowMessage($"Access denied: {ex.Message}\n\nPlease check file permissions and try running as administrator if necessary.", "Access Denied", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Access denied: {ex.Message}\n\nPlease check file permissions and try running as administrator if necessary.", "Access Denied", MessageBoxImage.Error);
         }
         catch (DirectoryNotFoundException ex)
         {
-            _dialogService.ShowMessage($"Directory not found: {ex.Message}\n\nPlease verify the path exists and is accessible.", "Directory Not Found", MessageBoxImage.Error);
+            dialogService.ShowMessage($"Directory not found: {ex.Message}\n\nPlease verify the path exists and is accessible.", "Directory Not Found", MessageBoxImage.Error);
         }
         catch (FileNotFoundException ex)
         {
-            _dialogService.ShowMessage($"File not found: {ex.Message}\n\nPlease verify the file exists and is accessible.", "File Not Found", MessageBoxImage.Error);
+            dialogService.ShowMessage($"File not found: {ex.Message}\n\nPlease verify the file exists and is accessible.", "File Not Found", MessageBoxImage.Error);
         }
         catch (IOException ex)
         {
-            _dialogService.ShowMessage($"I/O error occurred: {ex.Message}\n\nThis might be due to insufficient disk space, file locks, or hardware issues.", "I/O Error", MessageBoxImage.Error);
+            dialogService.ShowMessage($"I/O error occurred: {ex.Message}\n\nThis might be due to insufficient disk space, file locks, or hardware issues.", "I/O Error", MessageBoxImage.Error);
         }
         catch (Exception ex)
         {
@@ -586,13 +586,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 errorMessage = $"An error occurred during {operation.ToString().ToLower()}: {errorMessage}";
             }
 
-            _dialogService.ShowMessage(errorMessage, errorTitle, MessageBoxImage.Error);
+            dialogService.ShowMessage(errorMessage, errorTitle, MessageBoxImage.Error);
         }
         finally
         {
             IsProcessing = false;
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+            cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
         }
     }
 
@@ -632,7 +632,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         // Updated to primary-constructor record
         AnalyzePasswordStrengthQuery query = new(password);
-        Result<PasswordStrengthResult> result = await _mediator.Send(query);
+        Result<PasswordStrengthResult> result = await mediator.Send(query);
 
         if (result.IsSuccess)
         {
@@ -665,7 +665,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
     {
-        return _strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
+        return strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
     }
 
     #endregion
@@ -695,7 +695,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public void Dispose()
     {
-        _cancellationTokenSource?.Dispose();
+        cancellationTokenSource?.Dispose();
     }
 
     #endregion

@@ -5,12 +5,12 @@ namespace CloudZCrypt.WPF;
 
 public partial class MainWindow : Window
 {
-    private readonly MainWindowViewModel _viewModel;
+    private readonly MainWindowViewModel viewModel;
 
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = viewModel;
+        this.viewModel = viewModel;
         DataContext = viewModel;
 
         this.Closing += MainWindow_Closing;
@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            _viewModel.Dispose();
+            viewModel.Dispose();
         }
         catch
         {

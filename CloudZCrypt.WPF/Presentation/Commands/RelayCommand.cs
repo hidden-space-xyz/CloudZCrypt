@@ -8,34 +8,34 @@ namespace CloudZCrypt.WPF.Presentation.Commands;
 /// </summary>
 public sealed class RelayCommand : ICommand
 {
-    private readonly Func<Task>? _asyncExecute;
-    private readonly Action? _execute;
-    private readonly Func<bool>? _canExecute;
+    private readonly Func<Task>? asyncExecute;
+    private readonly Action? execute;
+    private readonly Func<bool>? canExecute;
 
     public RelayCommand(Action execute, Func<bool>? canExecute = null)
     {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        this.canExecute = canExecute;
     }
 
     public RelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
     {
-        _asyncExecute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        asyncExecute = execute ?? throw new ArgumentNullException(nameof(execute));
+        this.canExecute = canExecute;
     }
 
     public event EventHandler? CanExecuteChanged;
 
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
+    public bool CanExecute(object? parameter) => canExecute?.Invoke() ?? true;
 
     public async void Execute(object? parameter)
     {
-        if (_asyncExecute is not null)
+        if (asyncExecute is not null)
         {
-            await _asyncExecute();
+            await asyncExecute();
             return;
         }
-        _execute?.Invoke();
+        execute?.Invoke();
     }
 
     public void NotifyCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
