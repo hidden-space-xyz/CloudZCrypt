@@ -24,7 +24,7 @@
                             Margin="5,0,0,0"
                             Command="{Binding SelectSourceFileCommand}"
                             Content="📄"
-                            Foreground="MediumPurple"
+                            Foreground="LimeGreen"
                             IsEnabled="{Binding AreControlsEnabled}"
                             ToolTip="File" />
                         <Button
@@ -32,7 +32,7 @@
                             Margin="5,0,0,0"
                             Command="{Binding SelectSourceDirectoryCommand}"
                             Content="📁"
-                            Foreground="MediumPurple"
+                            Foreground="LimeGreen"
                             IsEnabled="{Binding AreControlsEnabled}"
                             ToolTip="Directory" />
                     </StackPanel>
@@ -54,7 +54,7 @@
                         Command="{Binding SelectDestinationPathCommand}"
                         Content="📂"
                         DockPanel.Dock="Right"
-                        Foreground="MediumPurple"
+                        Foreground="LimeGreen"
                         IsEnabled="{Binding AreControlsEnabled}" />
                     <TextBox
                         x:Name="DestinationPathBox"
@@ -97,7 +97,7 @@
                                     <TextBlock
                                         FontSize="14"
                                         FontWeight="SemiBold"
-                                        Foreground="MediumPurple"
+                                        Foreground="LimeGreen"
                                         Text="{Binding DisplayName}" />
                                     <TextBlock
                                         FontSize="10"
@@ -114,7 +114,7 @@
                                             <TextBlock
                                                 FontSize="14"
                                                 FontWeight="Bold"
-                                                Foreground="MediumPurple"
+                                                Foreground="LimeGreen"
                                                 Text="{Binding DisplayName}" />
                                             <TextBlock
                                                 FontSize="11"
@@ -154,7 +154,7 @@
                                     <TextBlock
                                         FontSize="14"
                                         FontWeight="SemiBold"
-                                        Foreground="MediumPurple"
+                                        Foreground="LimeGreen"
                                         Text="{Binding DisplayName}" />
                                     <TextBlock
                                         FontSize="10"
@@ -171,7 +171,7 @@
                                             <TextBlock
                                                 FontSize="14"
                                                 FontWeight="Bold"
-                                                Foreground="MediumPurple"
+                                                Foreground="LimeGreen"
                                                 Text="{Binding DisplayName}" />
                                             <TextBlock
                                                 FontSize="11"
@@ -198,7 +198,7 @@
                         Command="{Binding GenerateStrongPasswordCommand}"
                         Content="🔄"
                         DockPanel.Dock="Right"
-                        Foreground="MediumPurple"
+                        Foreground="LimeGreen"
                         IsEnabled="{Binding AreControlsEnabled}"
                         ToolTip="Generate strong password (128 chars)" />
                     <Button
@@ -207,25 +207,25 @@
                         Command="{Binding TogglePasswordVisibilityCommand}"
                         Content="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
                         DockPanel.Dock="Right"
-                        Foreground="MediumPurple"
+                        Foreground="LimeGreen"
                         IsEnabled="{Binding AreControlsEnabled}"
                         ToolTip="Toggle password visibility" />
                     <PasswordBox
                         x:Name="PasswordBox"
                         Height="30"
                         Padding="5"
-                        Foreground="LightGray"
                         behaviors:PasswordBoxBehavior.Attach="True"
                         behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
                         DockPanel.Dock="Top"
+                        Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
                         Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
                     <TextBox
                         x:Name="PasswordTextBox"
                         Height="30"
                         Padding="5"
-                        Foreground="LightGray"
                         DockPanel.Dock="Top"
+                        Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
                         Text="{Binding Password, Mode=TwoWay}"
                         Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
@@ -256,25 +256,25 @@
                         Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
                         Content="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToEyeEmojiConverter.Instance}}"
                         DockPanel.Dock="Right"
-                        Foreground="MediumPurple"
+                        Foreground="LimeGreen"
                         IsEnabled="{Binding AreControlsEnabled}"
                         ToolTip="Toggle password visibility" />
                     <PasswordBox
                         x:Name="ConfirmPasswordBox"
                         Height="30"
-                        Foreground="LightGray"
                         Padding="5"
                         behaviors:PasswordBoxBehavior.Attach="True"
                         behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
                         DockPanel.Dock="Top"
+                        Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
                         Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.InstanceInverted}}" />
                     <TextBox
                         x:Name="ConfirmPasswordTextBox"
                         Height="30"
                         Padding="5"
-                        Foreground="LightGray"
                         DockPanel.Dock="Top"
+                        Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
                         Text="{Binding ConfirmPassword, Mode=TwoWay}"
                         Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
@@ -308,7 +308,7 @@
                     <ProgressBar
                         x:Name="ProgressBar"
                         Height="4"
-                        Foreground="MediumPurple"
+                        Foreground="LimeGreen"
                         Value="{Binding ProgressValue}" />
                 </StackPanel>
 
@@ -324,7 +324,7 @@
                         Content="🔒 Encrypt"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="MediumPurple" />
+                        Foreground="LimeGreen" />
                     <Button
                         x:Name="DecryptButton"
                         Padding="20,10"
@@ -332,7 +332,7 @@
                         Content="🔓 Decrypt"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="MediumPurple" />
+                        Foreground="LimeGreen" />
                 </StackPanel>
 
             </StackPanel>

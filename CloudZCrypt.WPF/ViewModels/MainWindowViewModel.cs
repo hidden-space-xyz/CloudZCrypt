@@ -9,16 +9,14 @@ using CloudZCrypt.WPF.Presentation.Commands;
 using CloudZCrypt.WPF.Services.Interfaces;
 using MediatR;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
-public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
+public class MainWindowViewModel : ObservableObject, IDisposable
 {
     #region Private Fields
 
@@ -67,91 +65,40 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public string SourceFilePath
     {
         get => sourceFilePath;
-        set
-        {
-            if (SetProperty(ref sourceFilePath, value))
-            {
-                ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
-                ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
-            }
-        }
+        set { if (SetProperty(ref sourceFilePath, value)) RefreshProcessCommands(); }
     }
 
     public string DestinationPath
     {
         get => destinationPath;
-        set
-        {
-            if (SetProperty(ref destinationPath, value))
-            {
-                ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
-                ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
-            }
-        }
+        set { if (SetProperty(ref destinationPath, value)) RefreshProcessCommands(); }
     }
 
     public string Password
     {
         get => password;
-        set
-        {
-            if (SetProperty(ref password, value))
-            {
-                UpdatePasswordStrengthAsync(value, isConfirmField: false).Wait();
-                ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
-                ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
-            }
-        }
+        set { if (SetProperty(ref password, value)) { _ = UpdatePasswordStrengthAsync(value, false); RefreshProcessCommands(); } }
     }
 
     public string ConfirmPassword
     {
         get => confirmPassword;
-        set
-        {
-            if (SetProperty(ref confirmPassword, value))
-            {
-                UpdatePasswordStrengthAsync(value, isConfirmField: true).Wait();
-                ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
-                ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
-            }
-        }
+        set { if (SetProperty(ref confirmPassword, value)) { _ = UpdatePasswordStrengthAsync(value, true); RefreshProcessCommands(); } }
     }
 
-    public bool IsPasswordVisible
-    {
-        get => isPasswordVisible;
-        set => SetProperty(ref isPasswordVisible, value);
-    }
-
-    public bool IsConfirmPasswordVisible
-    {
-        get => isConfirmPasswordVisible;
-        set => SetProperty(ref isConfirmPasswordVisible, value);
-    }
+    public bool IsPasswordVisible { get => isPasswordVisible; set => SetProperty(ref isPasswordVisible, value); }
+    public bool IsConfirmPasswordVisible { get => isConfirmPasswordVisible; set => SetProperty(ref isConfirmPasswordVisible, value); }
 
     public EncryptionAlgorithm SelectedEncryptionAlgorithm
     {
         get => selectedEncryptionAlgorithm;
-        set
-        {
-            if (SetProperty(ref selectedEncryptionAlgorithm, value))
-            {
-                OnPropertyChanged(nameof(SelectedEncryptionAlgorithmInfo));
-            }
-        }
+        set { if (SetProperty(ref selectedEncryptionAlgorithm, value)) OnPropertyChanged(nameof(SelectedEncryptionAlgorithmInfo)); }
     }
 
     public KeyDerivationAlgorithm SelectedKeyDerivationAlgorithm
     {
         get => selectedKeyDerivationAlgorithm;
-        set
-        {
-            if (SetProperty(ref selectedKeyDerivationAlgorithm, value))
-            {
-                OnPropertyChanged(nameof(SelectedKeyDerivationAlgorithmInfo));
-            }
-        }
+        set { if (SetProperty(ref selectedKeyDerivationAlgorithm, value)) OnPropertyChanged(nameof(SelectedKeyDerivationAlgorithmInfo)); }
     }
 
     public EncryptionAlgorithmViewModel? SelectedEncryptionAlgorithmInfo =>
@@ -163,90 +110,29 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public bool IsProcessing
     {
         get => isProcessing;
-        set
-        {
-            if (SetProperty(ref isProcessing, value))
-            {
-                UpdateControlState();
-                ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
-                ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
-            }
-        }
+        set { if (SetProperty(ref isProcessing, value)) { UpdateControlState(); RefreshProcessCommands(); } }
     }
 
-    public double ProgressValue
-    {
-        get => progressValue;
-        set => SetProperty(ref progressValue, value);
-    }
+    public double ProgressValue { get => progressValue; set => SetProperty(ref progressValue, value); }
+    public string ProgressText { get => progressText; set => SetProperty(ref progressText, value); }
+    public bool AreControlsEnabled { get => areControlsEnabled; set => SetProperty(ref areControlsEnabled, value); }
 
-    public string ProgressText
-    {
-        get => progressText;
-        set => SetProperty(ref progressText, value);
-    }
+    public double PasswordStrengthScore { get => passwordStrengthScore; set => SetProperty(ref passwordStrengthScore, value); }
+    public string PasswordStrengthText { get => passwordStrengthText; set => SetProperty(ref passwordStrengthText, value); }
+    public System.Windows.Media.Brush PasswordStrengthColor { get => passwordStrengthColor; set => SetProperty(ref passwordStrengthColor, value); }
+    public Visibility PasswordStrengthVisibility { get => passwordStrengthVisibility; set => SetProperty(ref passwordStrengthVisibility, value); }
 
-    public bool AreControlsEnabled
-    {
-        get => areControlsEnabled;
-        set => SetProperty(ref areControlsEnabled, value);
-    }
-
-    public double PasswordStrengthScore
-    {
-        get => passwordStrengthScore;
-        set => SetProperty(ref passwordStrengthScore, value);
-    }
-
-    public string PasswordStrengthText
-    {
-        get => passwordStrengthText;
-        set => SetProperty(ref passwordStrengthText, value);
-    }
-
-    public System.Windows.Media.Brush PasswordStrengthColor
-    {
-        get => passwordStrengthColor;
-        set => SetProperty(ref passwordStrengthColor, value);
-    }
-
-    public Visibility PasswordStrengthVisibility
-    {
-        get => passwordStrengthVisibility;
-        set => SetProperty(ref passwordStrengthVisibility, value);
-    }
-
-    public double ConfirmPasswordStrengthScore
-    {
-        get => confirmPasswordStrengthScore;
-        set => SetProperty(ref confirmPasswordStrengthScore, value);
-    }
-
-    public string ConfirmPasswordStrengthText
-    {
-        get => confirmPasswordStrengthText;
-        set => SetProperty(ref confirmPasswordStrengthText, value);
-    }
-
-    public System.Windows.Media.Brush ConfirmPasswordStrengthColor
-    {
-        get => confirmPasswordStrengthColor;
-        set => SetProperty(ref confirmPasswordStrengthColor, value);
-    }
-
-    public Visibility ConfirmPasswordStrengthVisibility
-    {
-        get => confirmPasswordStrengthVisibility;
-        set => SetProperty(ref confirmPasswordStrengthVisibility, value);
-    }
+    public double ConfirmPasswordStrengthScore { get => confirmPasswordStrengthScore; set => SetProperty(ref confirmPasswordStrengthScore, value); }
+    public string ConfirmPasswordStrengthText { get => confirmPasswordStrengthText; set => SetProperty(ref confirmPasswordStrengthText, value); }
+    public System.Windows.Media.Brush ConfirmPasswordStrengthColor { get => confirmPasswordStrengthColor; set => SetProperty(ref confirmPasswordStrengthColor, value); }
+    public Visibility ConfirmPasswordStrengthVisibility { get => confirmPasswordStrengthVisibility; set => SetProperty(ref confirmPasswordStrengthVisibility, value); }
 
     #endregion
 
     #region Collections
 
-    // Replace enum collection with strategy descriptors
     public ObservableCollection<EncryptionAlgorithmViewModel> AvailableEncryptionAlgorithms { get; }
-    public ObservableCollection<KeyDerivationAlgorithmViewModel> AvailableKeyDerivationAlgorithms { get; } // cambiado a ViewModel
+    public ObservableCollection<KeyDerivationAlgorithmViewModel> AvailableKeyDerivationAlgorithms { get; }
 
     #endregion
 
@@ -276,18 +162,12 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         this.mediator = mediator;
         this.orchestrator = orchestrator;
 
-        AvailableEncryptionAlgorithms = new ObservableCollection<EncryptionAlgorithmViewModel>(
-            encryptionStrategies.Select(EncryptionAlgorithmViewModel.FromStrategy)
-                                 .OrderBy(a => a.DisplayName));
-
-        AvailableKeyDerivationAlgorithms = new ObservableCollection<KeyDerivationAlgorithmViewModel>(
-            keyDerivationStrategies.Select(KeyDerivationAlgorithmViewModel.FromStrategy)
-                                   .OrderBy(a => a.DisplayName));
+        AvailableEncryptionAlgorithms = new(encryptionStrategies.Select(EncryptionAlgorithmViewModel.FromStrategy).OrderBy(a => a.DisplayName));
+        AvailableKeyDerivationAlgorithms = new(keyDerivationStrategies.Select(KeyDerivationAlgorithmViewModel.FromStrategy).OrderBy(a => a.DisplayName));
 
         selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First().Id;
         selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First().Id;
 
-        // Initialize commands
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);
         SelectSourceDirectoryCommand = new RelayCommand(SelectSourceDirectory);
@@ -295,17 +175,8 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         TogglePasswordVisibilityCommand = new RelayCommand(() => IsPasswordVisible = !IsPasswordVisible);
         ToggleConfirmPasswordVisibilityCommand = new RelayCommand(() => IsConfirmPasswordVisible = !IsConfirmPasswordVisible);
 
-        EncryptFileCommand = new RelayCommand(async () =>
-        {
-            try { await ProcessFileAsync(EncryptOperation.Encrypt); }
-            catch (OperationCanceledException) { /* Ignore */ }
-        }, CanExecuteProcessFile);
-
-        DecryptFileCommand = new RelayCommand(async () =>
-        {
-            try { await ProcessFileAsync(EncryptOperation.Decrypt); }
-            catch (OperationCanceledException) { /* Ignore */ }
-        }, CanExecuteProcessFile);
+        EncryptFileCommand = new RelayCommand(async () => { try { await ProcessFileAsync(EncryptOperation.Encrypt); } catch (OperationCanceledException) { } }, CanExecuteProcessFile);
+        DecryptFileCommand = new RelayCommand(async () => { try { await ProcessFileAsync(EncryptOperation.Decrypt); } catch (OperationCanceledException) { } }, CanExecuteProcessFile);
 
 #if DEBUG
         sourceFilePath = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
@@ -322,56 +193,17 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            // Show confirmation for replacing existing password
-            if (!string.IsNullOrEmpty(Password))
-            {
-                bool shouldReplace = dialogService.ShowConfirmation(
-                    "This will replace your current password. Are you sure you want to generate a new one?",
-                    "Replace Password");
+            if (!string.IsNullOrEmpty(Password) && !dialogService.ShowConfirmation("This will replace your current password. Are you sure you want to generate a new one?", "Replace Password"))
+                return;
 
-                if (!shouldReplace)
-                    return;
-            }
-
-            // Updated to primary-constructor record
-            GeneratePasswordQuery query = new(
-                Length: 128,
-                IncludeUppercase: true,
-                IncludeLowercase: true,
-                IncludeNumbers: true,
-                IncludeSpecialCharacters: true,
-                ExcludeSimilarCharacters: false);
-
+            GeneratePasswordQuery query = new(128, true, true, true, true, false);
             Result<string> result = await mediator.Send(query);
 
             if (result.IsSuccess)
             {
-                Password = result.Value;
-                ConfirmPassword = result.Value;
-
-                try
-                {
-                    System.Windows.Clipboard.SetText(result.Value);
-                    dialogService.ShowMessage(
-                        "🔐 Strong password generated successfully!\n\n" +
-                        "✅ 128 characters long\n" +
-                        "✅ Includes uppercase, lowercase, numbers, and symbols\n" +
-                        "✅ Copied to clipboard for your convenience\n\n" +
-                        "⚠️ Please store this password securely - it cannot be recovered if lost!",
-                        "Password Generated",
-                        MessageBoxImage.Information);
-                }
-                catch
-                {
-                    dialogService.ShowMessage(
-                        "🔐 Strong password generated successfully!\n\n" +
-                        "✅ 128 characters long\n" +
-                        "✅ Includes uppercase, lowercase, numbers, and symbols\n\n" +
-                        "⚠️ Could not copy to clipboard - please copy it manually\n" +
-                        "⚠️ Please store this password securely - it cannot be recovered if lost!",
-                        "Password Generated",
-                        MessageBoxImage.Information);
-                }
+                Password = ConfirmPassword = result.Value;
+                bool copied = TryCopyToClipboard(result.Value);
+                dialogService.ShowMessage(BuildPasswordGeneratedMessage(copied), "Password Generated", MessageBoxImage.Information);
             }
             else
             {
@@ -380,53 +212,37 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
         catch (Exception ex)
         {
-            dialogService.ShowMessage($"Unexpected error while generating password: {ex.Message}", "Password Generation Error", MessageBoxImage.Error);
+            ShowError(ex, "generating password");
         }
     }
 
-    private void SelectSourceFile()
+    private static bool TryCopyToClipboard(string value)
+    {
+        try { System.Windows.Clipboard.SetText(value); return true; } catch { return false; }
+    }
+
+    private static string BuildPasswordGeneratedMessage(bool clipboard) =>
+        "🔐 Strong password generated successfully!\n\n" +
+        "✅ 128 characters long\n" +
+        "✅ Includes uppercase, lowercase, numbers, and symbols\n" +
+        (clipboard ? "✅ Copied to clipboard for your convenience\n\n" : "⚠️ Could not copy to clipboard - please copy it manually\n\n") +
+        "⚠️ Please store this password securely - it cannot be recovered if lost!";
+
+    private void SelectSourceFile() => SelectPath(dialogService.ShowOpenFileDialog("Select file to encrypt/decrypt"), File.Exists);
+    private void SelectSourceDirectory() => SelectPath(dialogService.ShowFolderDialog("Select directory to encrypt/decrypt"), Directory.Exists);
+
+    private void SelectPath(string? selectedPath, Func<string, bool> exists)
     {
         try
         {
-            string? selectedPath = dialogService.ShowOpenFileDialog("Select file to encrypt/decrypt");
             if (!string.IsNullOrEmpty(selectedPath))
             {
-                if (File.Exists(selectedPath))
-                {
-                    SourceFilePath = selectedPath;
-                }
-                else
-                {
-                    dialogService.ShowMessage("The selected file no longer exists.", "File Not Found", MessageBoxImage.Warning);
-                }
+                if (exists(selectedPath)) SourceFilePath = selectedPath; else dialogService.ShowMessage("The selected path no longer exists.", "Not Found", MessageBoxImage.Warning);
             }
         }
         catch (Exception ex)
         {
-            dialogService.ShowMessage($"Error selecting file: {ex.Message}", "File Selection Error", MessageBoxImage.Error);
-        }
-    }
-
-    private void SelectSourceDirectory()
-    {
-        try
-        {
-            string? selectedPath = dialogService.ShowFolderDialog("Select directory to encrypt/decrypt");
-            if (!string.IsNullOrEmpty(selectedPath))
-            {
-                if (Directory.Exists(selectedPath))
-                {
-                    SourceFilePath = selectedPath;
-                }
-                else
-                {
-                    dialogService.ShowMessage("The selected directory no longer exists.", "Directory Not Found", MessageBoxImage.Warning);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            dialogService.ShowMessage($"Error selecting directory: {ex.Message}", "Directory Selection Error", MessageBoxImage.Error);
+            ShowError(ex, "selecting path");
         }
     }
 
@@ -436,157 +252,59 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             if (File.Exists(SourceFilePath))
             {
-                // For single file, show save dialog
                 string defaultName = Path.GetFileNameWithoutExtension(SourceFilePath);
                 string? selectedPath = dialogService.ShowSaveFileDialog("Select destination for processed file", "All files (*.*)|*.*", defaultName);
-                if (!string.IsNullOrEmpty(selectedPath))
-                {
-                    DestinationPath = selectedPath;
-                }
+                if (!string.IsNullOrEmpty(selectedPath)) DestinationPath = selectedPath;
             }
             else
             {
-                // For directory, show folder dialog
                 string? selectedPath = dialogService.ShowFolderDialog("Select destination directory");
-                if (!string.IsNullOrEmpty(selectedPath))
-                {
-                    DestinationPath = selectedPath;
-                }
+                if (!string.IsNullOrEmpty(selectedPath)) DestinationPath = selectedPath;
             }
         }
         catch (Exception ex)
         {
-            dialogService.ShowMessage($"Error selecting destination: {ex.Message}", "Destination Selection Error", MessageBoxImage.Error);
+            ShowError(ex, "selecting destination");
         }
     }
 
-    private bool CanExecuteProcessFile()
-    {
-        return !IsProcessing &&
-               !string.IsNullOrWhiteSpace(SourceFilePath) &&
-               !string.IsNullOrWhiteSpace(DestinationPath) &&
-               !string.IsNullOrWhiteSpace(Password) &&
-               !string.IsNullOrWhiteSpace(ConfirmPassword);
-    }
+    private bool CanExecuteProcessFile() => !IsProcessing && new[] { SourceFilePath, DestinationPath, Password, ConfirmPassword }.All(s => !string.IsNullOrWhiteSpace(s));
 
     private async Task ProcessFileAsync(EncryptOperation operation)
     {
-        // Build request DTO for orchestration
-        FileProcessingOrchestratorRequest request = new(
-            SourceFilePath,
-            DestinationPath,
-            Password,
-            ConfirmPassword,
-            SelectedEncryptionAlgorithm,
-            SelectedKeyDerivationAlgorithm,
-            operation);
-
-        // Validate inputs using orchestrator
+        FileProcessingOrchestratorRequest request = new(SourceFilePath, DestinationPath, Password, ConfirmPassword, SelectedEncryptionAlgorithm, SelectedKeyDerivationAlgorithm, operation);
         IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
+        if (validationErrors.Any()) { dialogService.ShowValidationErrors(validationErrors); return; }
 
-        if (validationErrors.Any())
-        {
-            dialogService.ShowValidationErrors(validationErrors);
-            return;
-        }
-
-        // Analyze warnings
         IReadOnlyList<string> warnings = await orchestrator.AnalyzeWarningsAsync(request);
-
         if (warnings.Any())
         {
             string warningMessage = $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
-            bool shouldContinue = dialogService.ShowConfirmation(
-                $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
-                "Confirm Operation");
-
-            if (!shouldContinue)
-            {
+            if (!dialogService.ShowConfirmation($"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?", "Confirm Operation"))
                 throw new OperationCanceledException("Operation cancelled by user due to warnings.");
-            }
         }
 
         IsProcessing = true;
         string operationText = operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
-
         try
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
-            cancellationTokenSource = new CancellationTokenSource();
-
-            Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(
-                request,
-                progress,
-                cancellationTokenSource.Token);
-
+            cancellationTokenSource = new();
+            Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(request, progress, cancellationTokenSource.Token);
             if (result.IsSuccess && result.Value != null)
             {
                 string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
                 dialogService.ShowProcessingResult(result.Value, operation, sourceType);
             }
-            else
-            {
-                dialogService.ShowMessage($"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
-            }
+            else dialogService.ShowMessage($"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}", "Error", MessageBoxImage.Error);
         }
         catch (OperationCanceledException)
         {
             dialogService.ShowMessage($"{operationText} was cancelled by user.", "Operation Cancelled", MessageBoxImage.Information);
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            dialogService.ShowMessage($"Access denied: {ex.Message}\n\nPlease check file permissions and try running as administrator if necessary.", "Access Denied", MessageBoxImage.Error);
-        }
-        catch (DirectoryNotFoundException ex)
-        {
-            dialogService.ShowMessage($"Directory not found: {ex.Message}\n\nPlease verify the path exists and is accessible.", "Directory Not Found", MessageBoxImage.Error);
-        }
-        catch (FileNotFoundException ex)
-        {
-            dialogService.ShowMessage($"File not found: {ex.Message}\n\nPlease verify the file exists and is accessible.", "File Not Found", MessageBoxImage.Error);
-        }
-        catch (IOException ex)
-        {
-            dialogService.ShowMessage($"I/O error occurred: {ex.Message}\n\nThis might be due to insufficient disk space, file locks, or hardware issues.", "I/O Error", MessageBoxImage.Error);
-        }
         catch (Exception ex)
         {
-            // Handle specific error messages from the enhanced error handling
-            string errorMessage = ex.Message;
-            string errorTitle = "Error";
-
-            if (errorMessage.Contains("access denied", StringComparison.OrdinalIgnoreCase))
-            {
-                errorTitle = "Access Denied";
-                errorMessage += "\n\nPlease check file permissions and try running as administrator if necessary.";
-            }
-            else if (errorMessage.Contains("insufficient disk space", StringComparison.OrdinalIgnoreCase))
-            {
-                errorTitle = "Insufficient Disk Space";
-                errorMessage += "\n\nPlease free up disk space or choose a different destination.";
-            }
-            else if (errorMessage.Contains("invalid password", StringComparison.OrdinalIgnoreCase))
-            {
-                errorTitle = "Invalid Password";
-                errorMessage += "\n\nPlease verify that you entered the correct password.";
-            }
-            else if (errorMessage.Contains("corrupted", StringComparison.OrdinalIgnoreCase))
-            {
-                errorTitle = "File Corruption";
-                errorMessage += "\n\nThe file may be damaged or not properly encrypted.";
-            }
-            else if (errorMessage.Contains("key derivation", StringComparison.OrdinalIgnoreCase))
-            {
-                errorTitle = "Key Derivation Error";
-                errorMessage += "\n\nThere was a problem generating the encryption key.";
-            }
-            else
-            {
-                errorTitle = "Operation Failed";
-                errorMessage = $"An error occurred during {operation.ToString().ToLower()}: {errorMessage}";
-            }
-
-            dialogService.ShowMessage(errorMessage, errorTitle, MessageBoxImage.Error);
+            ShowError(ex, operationText.ToLower(), operation);
         }
         finally
         {
@@ -600,10 +318,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         double progress = update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
         double bytesPerSecond = update.ProcessedBytes / update.Elapsed.TotalSeconds;
-        TimeSpan eta = update.TotalBytes > 0 && bytesPerSecond > 0
-            ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
-            : TimeSpan.Zero;
-
+        TimeSpan eta = update.TotalBytes > 0 && bytesPerSecond > 0 ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond) : TimeSpan.Zero;
         ProgressValue = progress;
         ProgressText = $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
     }
@@ -611,92 +326,86 @@ public class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private void UpdateControlState()
     {
         AreControlsEnabled = !IsProcessing;
-
-        if (!IsProcessing)
-        {
-            ProgressValue = 0;
-            ProgressText = string.Empty;
-        }
+        if (!IsProcessing) { ProgressValue = 0; ProgressText = string.Empty; }
     }
 
-    private async Task UpdatePasswordStrengthAsync(string password, bool isConfirmField)
+    private async Task UpdatePasswordStrengthAsync(string pwd, bool isConfirmField)
     {
-        if (string.IsNullOrEmpty(password))
+        if (string.IsNullOrEmpty(pwd)) { HideStrength(isConfirmField); return; }
+        Result<PasswordStrengthResult> result = await mediator.Send(new AnalyzePasswordStrengthQuery(pwd));
+        if (result.IsSuccess) ApplyStrengthResult(isConfirmField, result.Value); else HideStrength(isConfirmField);
+    }
+
+    private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthResult strengthResult)
+    {
+        System.Windows.Media.Brush color = GetStrengthColor(strengthResult.Strength);
+        if (isConfirmField)
         {
-            if (isConfirmField)
-                ConfirmPasswordStrengthVisibility = Visibility.Hidden;
-            else
-                PasswordStrengthVisibility = Visibility.Hidden;
-            return;
-        }
-
-        // Updated to primary-constructor record
-        AnalyzePasswordStrengthQuery query = new(password);
-        Result<PasswordStrengthResult> result = await mediator.Send(query);
-
-        if (result.IsSuccess)
-        {
-            PasswordStrengthResult strengthResult = result.Value;
-            System.Windows.Media.Brush strengthColor = GetStrengthColor(strengthResult.Strength);
-
-            if (isConfirmField)
-            {
-                ConfirmPasswordStrengthScore = strengthResult.Score;
-                ConfirmPasswordStrengthText = strengthResult.Description;
-                ConfirmPasswordStrengthColor = strengthColor;
-                ConfirmPasswordStrengthVisibility = Visibility.Visible;
-            }
-            else
-            {
-                PasswordStrengthScore = strengthResult.Score;
-                PasswordStrengthText = strengthResult.Description;
-                PasswordStrengthColor = strengthColor;
-                PasswordStrengthVisibility = Visibility.Visible;
-            }
+            ConfirmPasswordStrengthScore = strengthResult.Score;
+            ConfirmPasswordStrengthText = strengthResult.Description;
+            ConfirmPasswordStrengthColor = color;
+            ConfirmPasswordStrengthVisibility = Visibility.Visible;
         }
         else
         {
-            if (isConfirmField)
-                ConfirmPasswordStrengthVisibility = Visibility.Hidden;
-            else
-                PasswordStrengthVisibility = Visibility.Hidden;
+            PasswordStrengthScore = strengthResult.Score;
+            PasswordStrengthText = strengthResult.Description;
+            PasswordStrengthColor = color;
+            PasswordStrengthVisibility = Visibility.Visible;
         }
     }
 
-    private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
+    private void HideStrength(bool isConfirmField) =>
+        _ = isConfirmField ? ConfirmPasswordStrengthVisibility = Visibility.Hidden : PasswordStrengthVisibility = Visibility.Hidden;
+
+    private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength) =>
+        strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
+
+    private void RefreshProcessCommands()
     {
-        return strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
+        ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
     }
 
     #endregion
 
-    #region INotifyPropertyChanged
+    #region Centralized Error Handling
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    private void ShowError(Exception ex, string context, EncryptOperation? operation = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        (string title, string message) = BuildErrorMessage(ex, context, operation);
+        dialogService.ShowMessage(message, title, MessageBoxImage.Error);
     }
 
-    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    private static (string Title, string Message) BuildErrorMessage(Exception ex, string context, EncryptOperation? operation)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-            return false;
+        string raw = ex.Message ?? "Unknown error.";
+        string lower = raw.ToLowerInvariant();
 
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
+        StringComparison casePolicy = StringComparison.InvariantCultureIgnoreCase;
+
+        (string Title, string Advice)? rule = lower switch
+        {
+            var s when s.Contains("access denied", casePolicy) => ("Access Denied", "Check file or folder permissions or run as administrator."),
+            var s when s.Contains("insufficient disk space", casePolicy) => ("Insufficient Disk Space", "Free disk space or choose another destination."),
+            var s when s.Contains("invalid password", casePolicy) => ("Invalid Password", "Verify the password and try again."),
+            var s when s.Contains("corrupted", casePolicy) => ("File Corruption", "The file may be damaged or not properly encrypted."),
+            var s when s.Contains("key derivation", casePolicy) => ("Key Derivation Error", "A problem occurred while deriving the encryption key."),
+            _ => null
+        };
+
+        if (rule is { } r)
+            return (r.Title, $"{raw}\n\n{r.Advice}");
+
+        string opText = operation is null ? string.Empty : $" during {operation.Value.ToString().ToLower()}";
+        return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
     }
 
     #endregion
 
     #region IDisposable
 
-    public void Dispose()
-    {
-        cancellationTokenSource?.Dispose();
-    }
+    public void Dispose() => cancellationTokenSource?.Dispose();
 
     #endregion
 }

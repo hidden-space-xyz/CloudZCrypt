@@ -8,7 +8,7 @@ using MediaColor = System.Windows.Media.Color;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
-public class MessageDialogViewModel : INotifyPropertyChanged
+public class MessageDialogViewModel 
 {
     public string Message { get; }
     public string Title { get; }
@@ -35,13 +35,4 @@ public class MessageDialogViewModel : INotifyPropertyChanged
             _ => (string.Empty, MediaBrushes.Transparent, Visibility.Collapsed)
         };
     }
-
-    #region INotifyPropertyChanged
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-    #endregion
 }
