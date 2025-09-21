@@ -1,5 +1,6 @@
-﻿using CloudZCrypt.Application.Common.Models;
+﻿using CloudZCrypt.Application.DataTransferObjects.Passwords;
 using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
@@ -34,8 +35,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     private string destinationPath = string.Empty;
     private string password = string.Empty;
     private string confirmPassword = string.Empty;
-    private bool isPasswordVisible = false;
-    private bool isConfirmPasswordVisible = false;
+    private bool isPasswordVisible;
+    private bool isConfirmPasswordVisible;
     private EncryptionAlgorithm selectedEncryptionAlgorithm;
     private KeyDerivationAlgorithm selectedKeyDerivationAlgorithm;
     private bool isProcessing;
@@ -44,19 +45,11 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     private bool areControlsEnabled = true;
     private double passwordStrengthScore;
     private string passwordStrengthText = string.Empty;
-    private System.Windows.Media.Brush passwordStrengthColor = System
-        .Windows
-        .Media
-        .Brushes
-        .Transparent;
+    private System.Windows.Media.Brush passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
     private Visibility passwordStrengthVisibility = Visibility.Hidden;
     private double confirmPasswordStrengthScore;
     private string confirmPasswordStrengthText = string.Empty;
-    private System.Windows.Media.Brush confirmPasswordStrengthColor = System
-        .Windows
-        .Media
-        .Brushes
-        .Transparent;
+    private System.Windows.Media.Brush confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
     private Visibility confirmPasswordStrengthVisibility = Visibility.Hidden;
 
     public string SourceFilePath
@@ -70,6 +63,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public string DestinationPath
     {
         get => destinationPath;
@@ -81,6 +75,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public string Password
     {
         get => password;
@@ -93,6 +88,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public string ConfirmPassword
     {
         get => confirmPassword;
@@ -105,16 +101,19 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public bool IsPasswordVisible
     {
         get => isPasswordVisible;
         set => SetProperty(ref isPasswordVisible, value);
     }
+
     public bool IsConfirmPasswordVisible
     {
         get => isConfirmPasswordVisible;
         set => SetProperty(ref isConfirmPasswordVisible, value);
     }
+
     public EncryptionAlgorithm SelectedEncryptionAlgorithm
     {
         get => selectedEncryptionAlgorithm;
@@ -126,6 +125,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public KeyDerivationAlgorithm SelectedKeyDerivationAlgorithm
     {
         get => selectedKeyDerivationAlgorithm;
@@ -137,12 +137,13 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public EncryptionAlgorithmViewModel? SelectedEncryptionAlgorithmInfo =>
         AvailableEncryptionAlgorithms.FirstOrDefault(a => a.Id == selectedEncryptionAlgorithm);
+
     public KeyDerivationAlgorithmViewModel? SelectedKeyDerivationAlgorithmInfo =>
-        AvailableKeyDerivationAlgorithms.FirstOrDefault(a =>
-            a.Id == selectedKeyDerivationAlgorithm
-        );
+        AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == selectedKeyDerivationAlgorithm);
+
     public bool IsProcessing
     {
         get => isProcessing;
@@ -155,56 +156,67 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
     }
+
     public double ProgressValue
     {
         get => progressValue;
         set => SetProperty(ref progressValue, value);
     }
+
     public string ProgressText
     {
         get => progressText;
         set => SetProperty(ref progressText, value);
     }
+
     public bool AreControlsEnabled
     {
         get => areControlsEnabled;
         set => SetProperty(ref areControlsEnabled, value);
     }
+
     public double PasswordStrengthScore
     {
         get => passwordStrengthScore;
         set => SetProperty(ref passwordStrengthScore, value);
     }
+
     public string PasswordStrengthText
     {
         get => passwordStrengthText;
         set => SetProperty(ref passwordStrengthText, value);
     }
+
     public System.Windows.Media.Brush PasswordStrengthColor
     {
         get => passwordStrengthColor;
         set => SetProperty(ref passwordStrengthColor, value);
     }
+
     public Visibility PasswordStrengthVisibility
     {
         get => passwordStrengthVisibility;
         set => SetProperty(ref passwordStrengthVisibility, value);
     }
+
     public double ConfirmPasswordStrengthScore
     {
         get => confirmPasswordStrengthScore;
         set => SetProperty(ref confirmPasswordStrengthScore, value);
     }
+
     public string ConfirmPasswordStrengthText
     {
         get => confirmPasswordStrengthText;
         set => SetProperty(ref confirmPasswordStrengthText, value);
     }
+
     public System.Windows.Media.Brush ConfirmPasswordStrengthColor
     {
         get => confirmPasswordStrengthColor;
         set => SetProperty(ref confirmPasswordStrengthColor, value);
     }
+
     public Visibility ConfirmPasswordStrengthVisibility
     {
         get => confirmPasswordStrengthVisibility;
@@ -228,8 +240,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         IFileProcessingOrchestrator orchestrator,
         IPasswordService passwordService,
         IEnumerable<IEncryptionAlgorithmStrategy> encryptionStrategies,
-        IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies
-    )
+        IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies)
     {
         this.dialogService = dialogService;
         this.orchestrator = orchestrator;
@@ -238,13 +249,13 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         AvailableEncryptionAlgorithms = new(
             encryptionStrategies
                 .Select(EncryptionAlgorithmViewModel.FromStrategy)
-                .OrderBy(a => a.DisplayName)
-        );
+                .OrderBy(a => a.DisplayName));
+
         AvailableKeyDerivationAlgorithms = new(
             keyDerivationStrategies
                 .Select(KeyDerivationAlgorithmViewModel.FromStrategy)
-                .OrderBy(a => a.DisplayName)
-        );
+                .OrderBy(a => a.DisplayName));
+
         selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First().Id;
         selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First().Id;
 
@@ -252,12 +263,9 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);
         SelectSourceDirectoryCommand = new RelayCommand(SelectSourceDirectory);
         SelectDestinationPathCommand = new RelayCommand(SelectDestinationPath);
-        TogglePasswordVisibilityCommand = new RelayCommand(() =>
-            IsPasswordVisible = !IsPasswordVisible
-        );
-        ToggleConfirmPasswordVisibilityCommand = new RelayCommand(() =>
-            IsConfirmPasswordVisible = !IsConfirmPasswordVisible
-        );
+        TogglePasswordVisibilityCommand = new RelayCommand(() => IsPasswordVisible = !IsPasswordVisible);
+        ToggleConfirmPasswordVisibilityCommand = new RelayCommand(() => IsConfirmPasswordVisible = !IsConfirmPasswordVisible);
+
         EncryptFileCommand = new RelayCommand(
             async () =>
             {
@@ -267,8 +275,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                 }
                 catch (OperationCanceledException) { }
             },
-            CanExecuteProcessFile
-        );
+            CanExecuteProcessFile);
+
         DecryptFileCommand = new RelayCommand(
             async () =>
             {
@@ -278,8 +286,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                 }
                 catch (OperationCanceledException) { }
             },
-            CanExecuteProcessFile
-        );
+            CanExecuteProcessFile);
+
 #if DEBUG
         sourceFilePath = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
         destinationPath = @"D:\WorkSpace\EncryptionTest\Encrypted";
@@ -287,35 +295,38 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         UpdateControlState();
     }
 
+    public void Dispose()
+    {
+        cancellationTokenSource?.Dispose();
+    }
+
     private async Task GenerateStrongPassword()
     {
         try
         {
-            if (
-                !string.IsNullOrEmpty(Password)
-                && !dialogService.ShowConfirmation(
+            if (!string.IsNullOrEmpty(Password) &&
+                !dialogService.ShowConfirmation(
                     "This will replace your current password. Are you sure you want to generate a new one?",
-                    "Replace Password"
-                )
-            )
+                    "Replace Password"))
             {
                 return;
             }
-            // replicate previous defaults
+
             int length = 128;
             PasswordGenerationOptions options =
-                PasswordGenerationOptions.IncludeUppercase
-                | PasswordGenerationOptions.IncludeLowercase
-                | PasswordGenerationOptions.IncludeNumbers
-                | PasswordGenerationOptions.IncludeSpecialCharacters;
+                PasswordGenerationOptions.IncludeUppercase |
+                PasswordGenerationOptions.IncludeLowercase |
+                PasswordGenerationOptions.IncludeNumbers |
+                PasswordGenerationOptions.IncludeSpecialCharacters;
+
             string generated = passwordService.GeneratePassword(length, options);
             Password = ConfirmPassword = generated;
+
             bool copied = TryCopyToClipboard(generated);
             dialogService.ShowMessage(
                 BuildPasswordGeneratedMessage(copied),
                 "Password Generated",
-                MessageBoxImage.Information
-            );
+                MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -338,15 +349,13 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     private static string BuildPasswordGeneratedMessage(bool clipboard)
     {
-        return "🔐 Strong password generated successfully!\n\n"
-            + "✅ 128 characters long\n"
-            + "✅ Includes uppercase, lowercase, numbers, and symbols\n"
-            + (
-                clipboard
-                    ? "✅ Copied to clipboard for your convenience\n\n"
-                    : "⚠️ Could not copy to clipboard - please copy it manually\n\n"
-            )
-            + "⚠️ Please store this password securely - it cannot be recovered if lost!";
+        return "🔐 Strong password generated successfully!\n\n" +
+               "✅ 128 characters long\n" +
+               "✅ Includes uppercase, lowercase, numbers, and symbols\n" +
+               (clipboard
+                   ? "✅ Copied to clipboard for your convenience\n\n"
+                   : "⚠️ Could not copy to clipboard - please copy it manually\n\n") +
+               "⚠️ Please store this password securely - it cannot be recovered if lost!";
     }
 
     private void SelectSourceFile()
@@ -356,10 +365,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     private void SelectSourceDirectory()
     {
-        SelectPath(
-            dialogService.ShowFolderDialog("Select directory to encrypt/decrypt"),
-            Directory.Exists
-        );
+        SelectPath(dialogService.ShowFolderDialog("Select directory to encrypt/decrypt"), Directory.Exists);
     }
 
     private void SelectPath(string? selectedPath, Func<string, bool> exists)
@@ -377,8 +383,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                     dialogService.ShowMessage(
                         "The selected path no longer exists.",
                         "Not Found",
-                        MessageBoxImage.Warning
-                    );
+                        MessageBoxImage.Warning);
                 }
             }
         }
@@ -398,8 +403,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                 string? selectedPath = dialogService.ShowSaveFileDialog(
                     "Select destination for processed file",
                     "All files (*.*)|*.*",
-                    defaultName
-                );
+                    defaultName);
+
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DestinationPath = selectedPath;
@@ -407,9 +412,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             }
             else
             {
-                string? selectedPath = dialogService.ShowFolderDialog(
-                    "Select destination directory"
-                );
+                string? selectedPath = dialogService.ShowFolderDialog("Select destination directory");
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DestinationPath = selectedPath;
@@ -424,10 +427,9 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     private bool CanExecuteProcessFile()
     {
-        return !IsProcessing
-            && new[] { SourceFilePath, DestinationPath, Password, ConfirmPassword }.All(s =>
-                !string.IsNullOrWhiteSpace(s)
-            );
+        return !IsProcessing &&
+               new[] { SourceFilePath, DestinationPath, Password, ConfirmPassword }
+                   .All(s => !string.IsNullOrWhiteSpace(s));
     }
 
     private async Task ProcessFileAsync(EncryptOperation operation)
@@ -439,33 +441,30 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             ConfirmPassword,
             SelectedEncryptionAlgorithm,
             SelectedKeyDerivationAlgorithm,
-            operation
-        );
+            operation);
+
         IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
         if (validationErrors.Any())
         {
             dialogService.ShowValidationErrors(validationErrors);
             return;
         }
+
         IReadOnlyList<string> warnings = await orchestrator.AnalyzeWarningsAsync(request);
         if (warnings.Any())
         {
-            string warningMessage =
-                $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
-            if (
-                !dialogService.ShowConfirmation(
+            string warningMessage = $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
+            if (!dialogService.ShowConfirmation(
                     $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
-                    "Confirm Operation"
-                )
-            )
+                    "Confirm Operation"))
             {
-                throw new OperationCanceledException(
-                    "Operation cancelled by user due to warnings."
-                );
+                throw new OperationCanceledException("Operation cancelled by user due to warnings.");
             }
         }
+
         IsProcessing = true;
         string operationText = operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
+
         try
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
@@ -473,8 +472,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(
                 request,
                 progress,
-                cancellationTokenSource.Token
-            );
+                cancellationTokenSource.Token);
+
             if (result.IsSuccess && result.Value != null)
             {
                 string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
@@ -485,8 +484,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                 dialogService.ShowMessage(
                     $"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}",
                     "Error",
-                    MessageBoxImage.Error
-                );
+                    MessageBoxImage.Error);
             }
         }
         catch (OperationCanceledException)
@@ -494,8 +492,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             dialogService.ShowMessage(
                 $"{operationText} was cancelled by user.",
                 "Operation Cancelled",
-                MessageBoxImage.Information
-            );
+                MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -511,16 +508,14 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     private void OnProgressUpdate(FileProcessingStatus update)
     {
-        double progress =
-            update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
+        double progress = update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
         double bytesPerSecond = update.ProcessedBytes / update.Elapsed.TotalSeconds;
-        TimeSpan eta =
-            update.TotalBytes > 0 && bytesPerSecond > 0
-                ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
-                : TimeSpan.Zero;
+        TimeSpan eta = update.TotalBytes > 0 && bytesPerSecond > 0
+            ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
+            : TimeSpan.Zero;
+
         ProgressValue = progress;
-        ProgressText =
-            $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
+        ProgressText = $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
     }
 
     private void UpdateControlState()
@@ -540,22 +535,17 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             HideStrength(isConfirmField);
             return;
         }
-        Domain.ValueObjects.Password.PasswordStrengthAnalysis analysis =
-            passwordService.AnalyzePasswordStrength(pwd);
+
+        Domain.ValueObjects.Password.PasswordStrengthAnalysis analysis = passwordService.AnalyzePasswordStrength(pwd);
         ApplyStrengthResult(
             isConfirmField,
-            new Application.DataTransferObjects.Passwords.PasswordStrengthResult(
+            new PasswordStrengthResult(
                 analysis.Strength,
                 analysis.Description,
-                analysis.Score
-            )
-        );
+                analysis.Score));
     }
 
-    private void ApplyStrengthResult(
-        bool isConfirmField,
-        Application.DataTransferObjects.Passwords.PasswordStrengthResult strengthResult
-    )
+    private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthResult strengthResult)
     {
         System.Windows.Media.Brush color = GetStrengthColor(strengthResult.Strength);
         if (isConfirmField)
@@ -576,17 +566,19 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     private void HideStrength(bool isConfirmField)
     {
-        _ = isConfirmField
-            ? ConfirmPasswordStrengthVisibility = Visibility.Hidden
-            : PasswordStrengthVisibility = Visibility.Hidden;
+        if (isConfirmField)
+        {
+            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
+        }
+        else
+        {
+            PasswordStrengthVisibility = Visibility.Hidden;
+        }
     }
 
     private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
     {
-        return strengthColorCache.GetValueOrDefault(
-            strength,
-            System.Windows.Media.Brushes.Transparent
-        );
+        return strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
     }
 
     private void RefreshProcessCommands()
@@ -601,51 +593,33 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         dialogService.ShowMessage(message, title, MessageBoxImage.Error);
     }
 
-    private static (string Title, string Message) BuildErrorMessage(
-        Exception ex,
-        string context,
-        EncryptOperation? operation
-    )
+    private static (string Title, string Message) BuildErrorMessage(Exception ex, string context, EncryptOperation? operation)
     {
         string raw = ex.Message ?? "Unknown error.";
         string lower = raw.ToLowerInvariant();
         StringComparison casePolicy = StringComparison.InvariantCultureIgnoreCase;
+
         (string Title, string Advice)? rule = lower switch
         {
-            var s when s.Contains("access denied", casePolicy) => (
-                "Access Denied",
-                "Check file or folder permissions or run as administrator."
-            ),
-            var s when s.Contains("insufficient disk space", casePolicy) => (
-                "Insufficient Disk Space",
-                "Free disk space or choose another destination."
-            ),
-            var s when s.Contains("invalid password", casePolicy) => (
-                "Invalid Password",
-                "Verify the password and try again."
-            ),
-            var s when s.Contains("corrupted", casePolicy) => (
-                "File Corruption",
-                "The file may be damaged or not properly encrypted."
-            ),
-            var s when s.Contains("key derivation", casePolicy) => (
-                "Key Derivation Error",
-                "A problem occurred while deriving the encryption key."
-            ),
+            var s when s.Contains("access denied", casePolicy) =>
+                ("Access Denied", "Check file or folder permissions or run as administrator."),
+            var s when s.Contains("insufficient disk space", casePolicy) =>
+                ("Insufficient Disk Space", "Free disk space or choose another destination."),
+            var s when s.Contains("invalid password", casePolicy) =>
+                ("Invalid Password", "Verify the password and try again."),
+            var s when s.Contains("corrupted", casePolicy) =>
+                ("File Corruption", "The file may be damaged or not properly encrypted."),
+            var s when s.Contains("key derivation", casePolicy) =>
+                ("Key Derivation Error", "A problem occurred while deriving the encryption key."),
             _ => null,
         };
+
         if (rule is { } r)
         {
             return (r.Title, $"{raw}\n\n{r.Advice}");
         }
-        string opText = operation is null
-            ? string.Empty
-            : $" during {operation.Value.ToString().ToLower()}";
-        return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
-    }
 
-    public void Dispose()
-    {
-        cancellationTokenSource?.Dispose();
+        string opText = operation is null ? string.Empty : $" during {operation.Value.ToString().ToLower()}";
+        return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
     }
 }

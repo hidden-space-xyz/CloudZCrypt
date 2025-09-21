@@ -1,5 +1,5 @@
-using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
@@ -9,6 +9,29 @@ using System.Diagnostics;
 
 namespace CloudZCrypt.Application.Services;
 
+/// <summary>
+/// Orchestrates end-to-end file processing workflows including validation, advisory analysis, and
+/// execution of encryption or decryption operations for single files or entire directory trees.
+/// </summary>
+/// <remarks>
+/// This coordinator encapsulates the high-level pipeline for cryptographic processing:
+/// <list type="number">
+/// <item>
+/// <description><see cref="ValidateAsync"/> performs fail-fast validation of paths, password rules, and basic structural constraints.</description>
+/// </item>
+/// <item>
+/// <description><see cref="AnalyzeWarningsAsync"/> surfaces non-fatal environmental or usability concerns (e.g., low disk space, weak passwords, large job size).</description>
+/// </item>
+/// <item>
+/// <description><see cref="ExecuteAsync"/> performs the actual encryption / decryption, reporting granular progress and aggregating metrics.</description>
+/// </item>
+/// </list>
+/// The class is designed to remain agnostic of concrete filesystem and cryptographic implementations by relying on abstraction interfaces.
+/// </remarks>
+/// <param name="fileOperations">Service providing abstracted file and directory operations (existence checks, enumeration, size retrieval, path combination, etc.).</param>
+/// <param name="systemStorage">Service used to query storage / drive capabilities such as free space and readiness.</param>
+/// <param name="passwordService">Domain service used for password strength analysis and (potentially) generation.</param>
+/// <param name="encryptionServiceFactory">Factory that resolves an <see cref="IEncryptionAlgorithmStrategy"/> implementation for a selected <see cref="EncryptionAlgorithm"/>.</param>
 public sealed class FileProcessingOrchestrator(
     IFileOperationsService fileOperations,
     ISystemStorageService systemStorage,
@@ -16,6 +39,17 @@ public sealed class FileProcessingOrchestrator(
     IEncryptionServiceFactory encryptionServiceFactory
 ) : IFileProcessingOrchestrator
 {
+    /// <summary>
+    /// Validates the supplied request for correctness prior to any file system or cryptographic operation that would mutate state.
+    /// </summary>
+    /// <param name="request">The file processing request containing source / destination paths, operation mode, password, and algorithm selections.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation. If signaled, the method may abort early.</param>
+    /// <returns>A read-only list of validation error messages; empty when the request is valid.</returns>
+    /// <remarks>
+    /// This method performs inexpensive checks only (existence, accessibility, path conflict, password rules). It may create the destination directory
+    /// only for the purpose of verifying write access but does not write or transform any file data.
+    /// </remarks>
+    /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is signaled before completion.</exception>
     public async Task<IReadOnlyList<string>> ValidateAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
@@ -193,6 +227,16 @@ public sealed class FileProcessingOrchestrator(
         return errors;
     }
 
+    /// <summary>
+    /// Analyzes the supplied request for non-fatal advisory conditions, producing warnings that may inform the user before execution.
+    /// </summary>
+    /// <param name="request">The file processing request containing paths, password, and algorithm selections.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation while performing file enumeration or storage queries.</param>
+    /// <returns>A read-only list of warning messages; empty when no advisory conditions are detected.</returns>
+    /// <remarks>
+    /// Examples of warnings include: low disk space, large batch size, destination overwrite potential, and weak password strength.
+    /// </remarks>
+    /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is signaled during asynchronous operations.</exception>
     public async Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
@@ -286,6 +330,18 @@ public sealed class FileProcessingOrchestrator(
         return warnings;
     }
 
+    /// <summary>
+    /// Executes the full processing pipeline (encryption or decryption) for the given request, reporting progress and aggregating results.
+    /// </summary>
+    /// <param name="request">The file processing request describing source / destination, operation, password, and algorithm selections.</param>
+    /// <param name="progress">Optional progress reporter that receives <see cref="FileProcessingStatus"/> updates as files and bytes are processed.</param>
+    /// <param name="cancellationToken">Token to cooperatively cancel the operation; may result in a partial outcome.</param>
+    /// <returns>A result containing a <see cref="FileProcessingResult"/> on success, or failure details when unrecoverable errors occur.</returns>
+    /// <remarks>
+    /// Partial successes (some files failed) are treated as success at the <see cref="Result{T}"/> level with detailed error entries inside the value.
+    /// Catastrophic failures (e.g., invalid password across all files) produce a failed <see cref="Result"/>.
+    /// </remarks>
+    /// <exception cref="OperationCanceledException">Thrown if cancellation is requested before completion.</exception>
     public async Task<Result<FileProcessingResult>> ExecuteAsync(
         FileProcessingOrchestratorRequest request,
         IProgress<FileProcessingStatus> progress,
@@ -326,6 +382,16 @@ public sealed class FileProcessingOrchestrator(
         }
     }
 
+    /// <summary>
+    /// Processes either a single file or a directory recursively, coordinating encryption / decryption operations and progress reporting.
+    /// </summary>
+    /// <param name="sourcePath">The normalized source path (file or directory) to process. Must exist.</param>
+    /// <param name="destinationPath">The normalized destination path (file or directory) where results will be written.</param>
+    /// <param name="request">The original orchestrator request containing operation metadata.</param>
+    /// <param name="progress">An optional progress reporter for real-time status updates.</param>
+    /// <param name="cancellationToken">Token used to cooperatively cancel the operation.</param>
+    /// <returns>A result wrapping a <see cref="FileProcessingResult"/> with aggregate metrics, success state, and collected file-level errors.</returns>
+    /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> signals during file iteration or encryption.</exception>
     private async Task<Result<FileProcessingResult>> ProcessOperationAsync(
         string sourcePath,
         string destinationPath,
@@ -462,6 +528,16 @@ public sealed class FileProcessingOrchestrator(
             : Result<FileProcessingResult>.Success(new FileProcessingResult(isSuccess, stopwatch.Elapsed, totalBytes, processedFiles, files.Length, errors));
     }
 
+    /// <summary>
+    /// Processes a single file using the configured encryption algorithm strategy for either encryption or decryption.
+    /// </summary>
+    /// <param name="encryptionService">The algorithm strategy to perform the operation.</param>
+    /// <param name="sourceFile">The absolute path of the source file to read.</param>
+    /// <param name="destinationFile">The absolute path of the destination file to write.</param>
+    /// <param name="request">The current request providing password, key derivation algorithm, and operation mode.</param>
+    /// <param name="cancellationToken">Token that may signal cancellation before operation completion.</param>
+    /// <returns><c>true</c> when the file is processed successfully; otherwise <c>false</c>.</returns>
+    /// <exception cref="NotSupportedException">Thrown when an unsupported <see cref="EncryptOperation"/> value is encountered.</exception>
     private Task<bool> ProcessSingleFile(
         IEncryptionAlgorithmStrategy encryptionService,
         string sourceFile,
@@ -475,6 +551,12 @@ public sealed class FileProcessingOrchestrator(
         _ => throw new NotSupportedException($"Unsupported operation: {request.Operation}"),
     };
 
+    /// <summary>
+    /// Attempts to normalize a raw path string to an absolute, fully expanded path while capturing validation errors.
+    /// </summary>
+    /// <param name="rawPath">The user-provided path (may contain environment variables or relative segments).</param>
+    /// <param name="error">Outputs an error message when the path is invalid; otherwise <c>null</c>.</param>
+    /// <returns>The normalized absolute path, an empty string when the input was null/whitespace, or <c>null</c> when invalid.</returns>
     private static string? TryNormalizePath(string rawPath, out string? error)
     {
         error = null;
@@ -495,6 +577,11 @@ public sealed class FileProcessingOrchestrator(
         }
     }
 
+    /// <summary>
+    /// Produces a human-readable string for a byte size value using binary (1024) scaling.
+    /// </summary>
+    /// <param name="bytes">The size in bytes.</param>
+    /// <returns>A formatted string with one decimal place and an appropriate unit suffix (B, KB, MB, GB, TB).</returns>
     private static string FormatBytes(long bytes)
     {
         if (bytes == 0)

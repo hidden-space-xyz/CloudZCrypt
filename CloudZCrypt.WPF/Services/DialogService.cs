@@ -9,6 +9,13 @@ namespace CloudZCrypt.WPF.Services;
 
 public class DialogService : IDialogService
 {
+    public bool ShowConfirmation(string message, string title)
+    {
+        Window? owner = System.Windows.Application.Current?.MainWindow;
+        ConfirmationDialog dialog = new(message, title, owner);
+        return dialog.ShowDialog() == true;
+    }
+
     public void ShowMessage(string message, string title, MessageBoxImage icon)
     {
         Window? owner = System.Windows.Application.Current?.MainWindow;
@@ -16,11 +23,26 @@ public class DialogService : IDialogService
         dialog.ShowDialog();
     }
 
-    public void ShowProcessingResult(
-        FileProcessingResult result,
-        EncryptOperation operation,
-        string sourceType
-    )
+    public void ShowProcessingWarning(string message, string title)
+    {
+        ShowMessage($"⚠️ {message}", title, MessageBoxImage.Warning);
+    }
+
+    public void ShowValidationErrors(IEnumerable<string> errors)
+    {
+        StringBuilder message = new();
+        message.AppendLine("⚠️ Please correct the following issues before proceeding:");
+        message.AppendLine();
+
+        foreach (string error in errors)
+        {
+            message.AppendLine($"• {error}");
+        }
+
+        ShowMessage(message.ToString(), "Validation Error", MessageBoxImage.Warning);
+    }
+
+    public void ShowProcessingResult(FileProcessingResult result, EncryptOperation operation, string sourceType)
     {
         string operationText = operation == EncryptOperation.Encrypt ? "Encryption" : "Decryption";
         string title = $"{operationText} Complete";
@@ -45,12 +67,8 @@ public class DialogService : IDialogService
         }
 
         message.AppendLine();
-
-        // Statistics
         message.AppendLine("📊 Statistics:");
-        message.AppendLine(
-            $"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}"
-        );
+        message.AppendLine($"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}");
 
         if (result.TotalFiles > 1)
         {
@@ -62,9 +80,7 @@ public class DialogService : IDialogService
 
         if (result.ElapsedTime.TotalSeconds > 0)
         {
-            message.AppendLine(
-                $"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s"
-            );
+            message.AppendLine($"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s");
 
             if (result.TotalFiles > 1)
             {
@@ -72,14 +88,12 @@ public class DialogService : IDialogService
             }
         }
 
-        // Failed files info
         if (result.FailedFiles > 0)
         {
             message.AppendLine();
             message.AppendLine($"⚠️ Failed files: {result.FailedFiles:N0}");
         }
 
-        // Show errors if any (limit to first 3)
         if (result.HasErrors)
         {
             message.AppendLine();
@@ -99,36 +113,10 @@ public class DialogService : IDialogService
         ShowMessage(message.ToString(), title, icon);
     }
 
-    public void ShowValidationErrors(IEnumerable<string> errors)
-    {
-        StringBuilder message = new();
-        message.AppendLine("⚠️ Please correct the following issues before proceeding:");
-        message.AppendLine();
-
-        foreach (string error in errors)
-        {
-            message.AppendLine($"• {error}");
-        }
-
-        ShowMessage(message.ToString(), "Validation Error", MessageBoxImage.Warning);
-    }
-
-    public void ShowProcessingWarning(string message, string title)
-    {
-        ShowMessage($"⚠️ {message}", title, MessageBoxImage.Warning);
-    }
-
-    public bool ShowConfirmation(string message, string title)
-    {
-        Window? owner = System.Windows.Application.Current?.MainWindow;
-        ConfirmationDialog dialog = new(message, title, owner);
-        return dialog.ShowDialog() == true;
-    }
-
     public string? ShowFolderDialog(string description)
     {
         using System.Windows.Forms.FolderBrowserDialog dialog = new() { Description = description };
-        return dialog.ShowDialog() == DialogResult.OK ? dialog.SelectedPath : null;
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
     }
 
     public string? ShowOpenFileDialog(string title, string filter = "All files (*.*)|*.*")
@@ -142,10 +130,7 @@ public class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string[]? ShowOpenMultipleFilesDialog(
-        string title,
-        string filter = "All files (*.*)|*.*"
-    )
+    public string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*")
     {
         Microsoft.Win32.OpenFileDialog dialog = new()
         {
@@ -156,11 +141,7 @@ public class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileNames : null;
     }
 
-    public string? ShowSaveFileDialog(
-        string title,
-        string filter = "All files (*.*)|*.*",
-        string defaultFileName = ""
-    )
+    public string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "")
     {
         Microsoft.Win32.SaveFileDialog dialog = new()
         {
