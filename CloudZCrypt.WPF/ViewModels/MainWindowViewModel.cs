@@ -1,15 +1,15 @@
-﻿using System.Collections.ObjectModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
-using CloudZCrypt.Application.Common.Models;
+﻿using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using CloudZCrypt.WPF.Presentation.Commands;
 using CloudZCrypt.WPF.Services.Interfaces;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace CloudZCrypt.WPF.ViewModels;
 

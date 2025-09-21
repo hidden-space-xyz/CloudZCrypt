@@ -1,9 +1,9 @@
-using System.Security.Cryptography;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
+using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
@@ -26,13 +26,11 @@ public abstract class BaseEncryptionService(
     {
         try
         {
-            // Validate input files
             if (!File.Exists(sourceFilePath))
             {
                 throw new EncryptionFileNotFoundException(sourceFilePath);
             }
 
-            // Check if we can read the source file
             try
             {
                 using FileStream testRead = File.OpenRead(sourceFilePath);
@@ -42,7 +40,6 @@ public abstract class BaseEncryptionService(
                 throw new EncryptionAccessDeniedException(sourceFilePath, ex);
             }
 
-            // Check if we can write to the destination
             string? destinationDir = Path.GetDirectoryName(destinationFilePath);
             if (!string.IsNullOrEmpty(destinationDir))
             {
@@ -56,14 +53,11 @@ public abstract class BaseEncryptionService(
                 }
             }
 
-            // Check disk space
             await ValidateDiskSpaceAsync(sourceFilePath, destinationFilePath);
 
-            // Generate cryptographic materials
             byte[] salt = GenerateSalt();
             byte[] nonce = GenerateNonce();
 
-            // Derive key
             byte[] key;
             try
             {
@@ -74,7 +68,6 @@ public abstract class BaseEncryptionService(
                 throw new EncryptionKeyDerivationException(ex);
             }
 
-            // Perform encryption
             try
             {
                 using FileStream sourceFile = File.OpenRead(sourceFilePath);
@@ -86,7 +79,6 @@ public abstract class BaseEncryptionService(
             }
             catch (IOException ex)
             {
-                // Clean up partial file on failure
                 try
                 {
                     if (File.Exists(destinationFilePath))
@@ -95,7 +87,8 @@ public abstract class BaseEncryptionService(
                     }
                 }
                 catch
-                { /* Ignore cleanup errors */
+                {
+                    /* Ignore cleanup errors */
                 }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
@@ -110,7 +103,6 @@ public abstract class BaseEncryptionService(
             }
             catch (Exception ex)
             {
-                // Clean up partial file on failure
                 try
                 {
                     if (File.Exists(destinationFilePath))
@@ -119,7 +111,8 @@ public abstract class BaseEncryptionService(
                     }
                 }
                 catch
-                { /* Ignore cleanup errors */
+                {
+                    /* Ignore cleanup errors */
                 }
 
                 throw new EncryptionCipherException("encryption", ex);
@@ -129,7 +122,7 @@ public abstract class BaseEncryptionService(
         }
         catch (EncryptionException)
         {
-            throw; // Re-throw our specific exceptions
+            throw;
         }
         catch (Exception ex)
         {
@@ -146,13 +139,11 @@ public abstract class BaseEncryptionService(
     {
         try
         {
-            // Validate input files
             if (!File.Exists(sourceFilePath))
             {
                 throw new EncryptionFileNotFoundException(sourceFilePath);
             }
 
-            // Check if we can read the source file
             try
             {
                 using FileStream testRead = File.OpenRead(sourceFilePath);
@@ -162,14 +153,12 @@ public abstract class BaseEncryptionService(
                 throw new EncryptionAccessDeniedException(sourceFilePath, ex);
             }
 
-            // Validate file size (must be at least salt + nonce size)
             FileInfo fileInfo = new(sourceFilePath);
             if (fileInfo.Length < SaltSize + NonceSize)
             {
                 throw new EncryptionCorruptedFileException(sourceFilePath);
             }
 
-            // Check if we can write to the destination
             string? destinationDir = Path.GetDirectoryName(destinationFilePath);
             if (!string.IsNullOrEmpty(destinationDir))
             {
@@ -183,7 +172,6 @@ public abstract class BaseEncryptionService(
                 }
             }
 
-            // Read cryptographic materials and derive key
             byte[] salt,
                 nonce,
                 key;
@@ -193,7 +181,6 @@ public abstract class BaseEncryptionService(
                 salt = await ReadSaltAsync(sourceFile);
                 nonce = await ReadNonceAsync(sourceFile);
 
-                // Reset to beginning and validate we read correctly
                 sourceFile.Seek(0, SeekOrigin.Begin);
                 await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
             }
@@ -215,20 +202,17 @@ public abstract class BaseEncryptionService(
                 throw new EncryptionKeyDerivationException(ex);
             }
 
-            // Perform decryption
             try
             {
                 using FileStream sourceFile = File.OpenRead(sourceFilePath);
                 using FileStream destinationFile = File.Create(destinationFilePath);
 
-                // Skip salt and nonce
                 await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
 
                 await DecryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }
             catch (IOException ex)
             {
-                // Clean up partial file on failure
                 try
                 {
                     if (File.Exists(destinationFilePath))
@@ -237,7 +221,8 @@ public abstract class BaseEncryptionService(
                     }
                 }
                 catch
-                { /* Ignore cleanup errors */
+                {
+                    /* Ignore cleanup errors */
                 }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
@@ -252,12 +237,10 @@ public abstract class BaseEncryptionService(
             }
             catch (CryptographicException)
             {
-                // This typically indicates wrong password or corrupted data
                 throw new EncryptionInvalidPasswordException();
             }
             catch (Exception ex)
             {
-                // Clean up partial file on failure
                 try
                 {
                     if (File.Exists(destinationFilePath))
@@ -266,10 +249,10 @@ public abstract class BaseEncryptionService(
                     }
                 }
                 catch
-                { /* Ignore cleanup errors */
+                {
+                    /* Ignore cleanup errors */
                 }
 
-                // Check if it might be a password issue
                 if (
                     ex.Message.Contains("tag", StringComparison.OrdinalIgnoreCase)
                     || ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase)
@@ -286,49 +269,12 @@ public abstract class BaseEncryptionService(
         }
         catch (EncryptionException)
         {
-            throw; // Re-throw our specific exceptions
+            throw;
         }
         catch (Exception ex)
         {
             throw new EncryptionCipherException("decryption", ex);
         }
-    }
-
-    private static async Task ValidateDiskSpaceAsync(
-        string sourceFilePath,
-        string destinationFilePath
-    )
-    {
-        try
-        {
-            FileInfo sourceFileInfo = new(sourceFilePath);
-            string? destinationDrive = Path.GetPathRoot(Path.GetFullPath(destinationFilePath));
-
-            if (!string.IsNullOrEmpty(destinationDrive))
-            {
-                DriveInfo driveInfo = new(destinationDrive);
-                if (driveInfo.IsReady)
-                {
-                    // Estimate required space (source file size + 20% buffer + fixed overhead)
-                    long requiredSpace = (long)(sourceFileInfo.Length * 1.2) + 1024; // 20% buffer + 1KB overhead
-
-                    if (driveInfo.AvailableFreeSpace < requiredSpace)
-                    {
-                        throw new EncryptionInsufficientSpaceException(destinationFilePath);
-                    }
-                }
-            }
-        }
-        catch (EncryptionException)
-        {
-            throw;
-        }
-        catch
-        {
-            // If we can't check disk space, continue anyway
-        }
-
-        await Task.CompletedTask;
     }
 
     protected abstract Task EncryptStreamAsync(
@@ -426,5 +372,41 @@ public abstract class BaseEncryptionService(
         {
             await destinationStream.WriteAsync(outputBuffer.AsMemory(0, finalBytes));
         }
+    }
+
+    private static async Task ValidateDiskSpaceAsync(
+        string sourceFilePath,
+        string destinationFilePath
+    )
+    {
+        try
+        {
+            FileInfo sourceFileInfo = new(sourceFilePath);
+            string? destinationDrive = Path.GetPathRoot(Path.GetFullPath(destinationFilePath));
+
+            if (!string.IsNullOrEmpty(destinationDrive))
+            {
+                DriveInfo driveInfo = new(destinationDrive);
+                if (driveInfo.IsReady)
+                {
+                    long requiredSpace = (long)(sourceFileInfo.Length * 1.2) + 1024;
+
+                    if (driveInfo.AvailableFreeSpace < requiredSpace)
+                    {
+                        throw new EncryptionInsufficientSpaceException(destinationFilePath);
+                    }
+                }
+            }
+        }
+        catch (EncryptionException)
+        {
+            throw;
+        }
+        catch
+        {
+            // If we can't check disk space, continue anyway
+        }
+
+        await Task.CompletedTask;
     }
 }

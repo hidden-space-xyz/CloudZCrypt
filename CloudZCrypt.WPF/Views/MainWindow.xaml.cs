@@ -1,5 +1,5 @@
-using System.Windows;
 using CloudZCrypt.WPF.ViewModels;
+using System.Windows;
 
 namespace CloudZCrypt.WPF;
 
