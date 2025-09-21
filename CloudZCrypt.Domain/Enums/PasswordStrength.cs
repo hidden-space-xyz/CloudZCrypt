@@ -6,6 +6,6 @@
         Weak,
         Fair,
         Good,
-        Strong
+        Strong,
     }
 }

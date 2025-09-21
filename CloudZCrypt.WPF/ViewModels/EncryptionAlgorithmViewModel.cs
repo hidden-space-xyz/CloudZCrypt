@@ -10,13 +10,19 @@ public sealed class EncryptionAlgorithmViewModel
     public required string Description { get; init; }
     public required string Summary { get; init; }
 
-    public static EncryptionAlgorithmViewModel FromStrategy(IEncryptionAlgorithmStrategy strategy) => new()
+    public static EncryptionAlgorithmViewModel FromStrategy(IEncryptionAlgorithmStrategy strategy)
     {
-        Id = strategy.Id,
-        DisplayName = strategy.DisplayName,
-        Description = strategy.Description,
-        Summary = strategy.Summary
-    };
+        return new()
+        {
+            Id = strategy.Id,
+            DisplayName = strategy.DisplayName,
+            Description = strategy.Description,
+            Summary = strategy.Summary,
+        };
+    }
 
-    public override string ToString() => DisplayName;
+    public override string ToString()
+    {
+        return DisplayName;
+    }
 }

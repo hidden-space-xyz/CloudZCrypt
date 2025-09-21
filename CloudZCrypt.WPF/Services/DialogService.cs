@@ -1,9 +1,9 @@
-﻿using CloudZCrypt.Domain.Enums;
+﻿using System.Text;
+using System.Windows;
+using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.Views;
-using System.Text;
-using System.Windows;
 
 namespace CloudZCrypt.WPF.Services;
 
@@ -16,13 +16,18 @@ public class DialogService : IDialogService
         dialog.ShowDialog();
     }
 
-    public void ShowProcessingResult(FileProcessingResult result, EncryptOperation operation, string sourceType)
+    public void ShowProcessingResult(
+        FileProcessingResult result,
+        EncryptOperation operation,
+        string sourceType
+    )
     {
         string operationText = operation == EncryptOperation.Encrypt ? "Encryption" : "Decryption";
         string title = $"{operationText} Complete";
-        MessageBoxImage icon = result.IsSuccess ? MessageBoxImage.Information :
-                              result.IsPartialSuccess ? MessageBoxImage.Warning :
-                              MessageBoxImage.Error;
+        MessageBoxImage icon =
+            result.IsSuccess ? MessageBoxImage.Information
+            : result.IsPartialSuccess ? MessageBoxImage.Warning
+            : MessageBoxImage.Error;
 
         StringBuilder message = new();
 
@@ -43,7 +48,9 @@ public class DialogService : IDialogService
 
         // Statistics
         message.AppendLine("📊 Statistics:");
-        message.AppendLine($"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}");
+        message.AppendLine(
+            $"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}"
+        );
 
         if (result.TotalFiles > 1)
         {
@@ -55,7 +62,9 @@ public class DialogService : IDialogService
 
         if (result.ElapsedTime.TotalSeconds > 0)
         {
-            message.AppendLine($"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s");
+            message.AppendLine(
+                $"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s"
+            );
 
             if (result.TotalFiles > 1)
             {
@@ -128,36 +137,46 @@ public class DialogService : IDialogService
         {
             Title = title,
             Filter = filter,
-            Multiselect = false
+            Multiselect = false,
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*")
+    public string[]? ShowOpenMultipleFilesDialog(
+        string title,
+        string filter = "All files (*.*)|*.*"
+    )
     {
         Microsoft.Win32.OpenFileDialog dialog = new()
         {
             Title = title,
             Filter = filter,
-            Multiselect = true
+            Multiselect = true,
         };
         return dialog.ShowDialog() == true ? dialog.FileNames : null;
     }
 
-    public string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "")
+    public string? ShowSaveFileDialog(
+        string title,
+        string filter = "All files (*.*)|*.*",
+        string defaultFileName = ""
+    )
     {
         Microsoft.Win32.SaveFileDialog dialog = new()
         {
             Title = title,
             Filter = filter,
-            FileName = defaultFileName
+            FileName = defaultFileName,
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
     private static string FormatBytes(long bytes)
     {
-        if (bytes == 0) return "0 B";
+        if (bytes == 0)
+        {
+            return "0 B";
+        }
 
         string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
         double size = Math.Abs(bytes);
@@ -174,15 +193,9 @@ public class DialogService : IDialogService
 
     private static string FormatDuration(TimeSpan duration)
     {
-        if (duration.TotalSeconds < 1)
-            return "< 1 second";
-
-        if (duration.TotalMinutes < 1)
-            return $"{duration.TotalSeconds:F1} seconds";
-
-        if (duration.TotalHours < 1)
-            return $"{duration.Minutes}:{duration.Seconds:D2}";
-
-        return $"{(int)duration.TotalHours}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+        return duration.TotalSeconds < 1 ? "< 1 second"
+            : duration.TotalMinutes < 1 ? $"{duration.TotalSeconds:F1} seconds"
+            : duration.TotalHours < 1 ? $"{duration.Minutes}:{duration.Seconds:D2}"
+            : $"{(int)duration.TotalHours}:{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
 }

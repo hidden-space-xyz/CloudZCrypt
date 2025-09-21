@@ -1,11 +1,19 @@
 using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Infrastructure.Services.FileSystem;
+
 public class FileOperationsService : IFileOperationsService
 {
-    public async Task<string[]> GetFilesAsync(string directoryPath, string searchPattern = "*.*", CancellationToken cancellationToken = default)
+    public async Task<string[]> GetFilesAsync(
+        string directoryPath,
+        string searchPattern = "*.*",
+        CancellationToken cancellationToken = default
+    )
     {
-        return await Task.Run(() => Directory.GetFiles(directoryPath, searchPattern, SearchOption.AllDirectories), cancellationToken);
+        return await Task.Run(
+            () => Directory.GetFiles(directoryPath, searchPattern, SearchOption.AllDirectories),
+            cancellationToken
+        );
     }
 
     public bool DirectoryExists(string directoryPath)
@@ -18,7 +26,10 @@ public class FileOperationsService : IFileOperationsService
         return File.Exists(filePath);
     }
 
-    public async Task CreateDirectoryAsync(string directoryPath, CancellationToken cancellationToken = default)
+    public async Task CreateDirectoryAsync(
+        string directoryPath,
+        CancellationToken cancellationToken = default
+    )
     {
         await Task.Run(() => Directory.CreateDirectory(directoryPath), cancellationToken);
     }

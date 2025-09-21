@@ -2,5 +2,6 @@
 
 public enum EncryptOperation
 {
-    Encrypt, Decrypt
+    Encrypt,
+    Decrypt,
 }

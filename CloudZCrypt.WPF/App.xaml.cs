@@ -1,11 +1,12 @@
+using System.Windows;
 using CloudZCrypt.Composition;
 using CloudZCrypt.WPF.Services;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
 
 namespace CloudZCrypt.WPF;
+
 public partial class App : System.Windows.Application
 {
     private readonly IServiceProvider serviceProvider;
@@ -30,10 +31,14 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         if (mainViewModel != null)
+        {
             mainViewModel.Dispose();
+        }
 
         if (serviceProvider is IDisposable disposable)
+        {
             disposable.Dispose();
+        }
 
         base.OnExit(e);
     }

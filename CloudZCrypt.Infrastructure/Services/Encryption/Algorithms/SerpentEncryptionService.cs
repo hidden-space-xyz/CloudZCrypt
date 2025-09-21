@@ -7,14 +7,22 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
-public class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory) : BaseEncryptionService(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+public class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : BaseEncryptionService(keyDerivationServiceFactory),
+        IEncryptionAlgorithmStrategy
 {
     public EncryptionAlgorithm Id => EncryptionAlgorithm.Serpent;
     public string DisplayName => "Serpent-256 GCM";
-    public string Description => "A conservative 128‑bit block cipher finalist from the AES competition, designed with a large security margin and a 256‑bit key option. Typically slower than AES and Camellia. When wrapped in GCM it provides AEAD, but performance costs make it niche for high-assurance or defense-in-depth scenarios.";
+    public string Description =>
+        "A conservative 128‑bit block cipher finalist from the AES competition, designed with a large security margin and a 256‑bit key option. Typically slower than AES and Camellia. When wrapped in GCM it provides AEAD, but performance costs make it niche for high-assurance or defense-in-depth scenarios.";
     public string Summary => "Best for high-security purposes (slow)";
 
-    protected override async Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
+    protected override async Task EncryptStreamAsync(
+        FileStream sourceStream,
+        FileStream destinationStream,
+        byte[] key,
+        byte[] nonce
+    )
     {
         SerpentEngine serpentEngine = new();
         GcmBlockCipher gcmCipher = new(serpentEngine);
@@ -24,7 +32,12 @@ public class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivation
         await ProcessFileWithCipherAsync(sourceStream, destinationStream, gcmCipher);
     }
 
-    protected override async Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce)
+    protected override async Task DecryptStreamAsync(
+        FileStream sourceStream,
+        FileStream destinationStream,
+        byte[] key,
+        byte[] nonce
+    )
     {
         SerpentEngine serpentEngine = new();
         GcmBlockCipher gcmCipher = new(serpentEngine);

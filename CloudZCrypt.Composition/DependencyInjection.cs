@@ -1,3 +1,4 @@
+using System.Reflection;
 using CloudZCrypt.Application.Common.Models;
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
@@ -10,7 +11,6 @@ using CloudZCrypt.Infrastructure.Services.FileSystem;
 using CloudZCrypt.Infrastructure.Services.KeyDerivation;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace CloudZCrypt.Composition;
 
@@ -18,7 +18,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
-        // Factories 
+        // Factories
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
         services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
 

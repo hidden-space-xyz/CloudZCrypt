@@ -1,13 +1,15 @@
+using System.Security.Cryptography;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
-using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
-public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+public abstract class BaseEncryptionService(
+    IKeyDerivationServiceFactory keyDerivationServiceFactory
+)
 {
     protected const int KeySize = 256;
     protected const int SaltSize = 32;
@@ -15,7 +17,12 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
     protected const int MacSize = 128;
     protected const int BufferSize = 4 * 1024;
 
-    public async Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm)
+    public async Task<bool> EncryptFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    )
     {
         try
         {
@@ -83,9 +90,13 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
                 try
                 {
                     if (File.Exists(destinationFilePath))
+                    {
                         File.Delete(destinationFilePath);
+                    }
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch
+                { /* Ignore cleanup errors */
+                }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
                 {
@@ -103,9 +114,13 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
                 try
                 {
                     if (File.Exists(destinationFilePath))
+                    {
                         File.Delete(destinationFilePath);
+                    }
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch
+                { /* Ignore cleanup errors */
+                }
 
                 throw new EncryptionCipherException("encryption", ex);
             }
@@ -122,7 +137,12 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         }
     }
 
-    public async Task<bool> DecryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm)
+    public async Task<bool> DecryptFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    )
     {
         try
         {
@@ -164,7 +184,9 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
             }
 
             // Read cryptographic materials and derive key
-            byte[] salt, nonce, key;
+            byte[] salt,
+                nonce,
+                key;
             try
             {
                 using FileStream sourceFile = File.OpenRead(sourceFilePath);
@@ -210,9 +232,13 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
                 try
                 {
                     if (File.Exists(destinationFilePath))
+                    {
                         File.Delete(destinationFilePath);
+                    }
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch
+                { /* Ignore cleanup errors */
+                }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
                 {
@@ -235,14 +261,20 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
                 try
                 {
                     if (File.Exists(destinationFilePath))
+                    {
                         File.Delete(destinationFilePath);
+                    }
                 }
-                catch { /* Ignore cleanup errors */ }
+                catch
+                { /* Ignore cleanup errors */
+                }
 
                 // Check if it might be a password issue
-                if (ex.Message.Contains("tag", StringComparison.OrdinalIgnoreCase) ||
-                    ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) ||
-                    ex.Message.Contains("mac", StringComparison.OrdinalIgnoreCase))
+                if (
+                    ex.Message.Contains("tag", StringComparison.OrdinalIgnoreCase)
+                    || ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase)
+                    || ex.Message.Contains("mac", StringComparison.OrdinalIgnoreCase)
+                )
                 {
                     throw new EncryptionInvalidPasswordException();
                 }
@@ -262,7 +294,10 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         }
     }
 
-    private static async Task ValidateDiskSpaceAsync(string sourceFilePath, string destinationFilePath)
+    private static async Task ValidateDiskSpaceAsync(
+        string sourceFilePath,
+        string destinationFilePath
+    )
     {
         try
         {
@@ -296,9 +331,19 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         await Task.CompletedTask;
     }
 
-    protected abstract Task EncryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce);
+    protected abstract Task EncryptStreamAsync(
+        FileStream sourceStream,
+        FileStream destinationStream,
+        byte[] key,
+        byte[] nonce
+    );
 
-    protected abstract Task DecryptStreamAsync(FileStream sourceStream, FileStream destinationStream, byte[] key, byte[] nonce);
+    protected abstract Task DecryptStreamAsync(
+        FileStream sourceStream,
+        FileStream destinationStream,
+        byte[] key,
+        byte[] nonce
+    );
 
     protected static byte[] GenerateSalt()
     {
@@ -320,9 +365,16 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         return nonce;
     }
 
-    protected byte[] DeriveKey(string password, byte[] salt, int keySize, KeyDerivationAlgorithm algorithm)
+    protected byte[] DeriveKey(
+        string password,
+        byte[] salt,
+        int keySize,
+        KeyDerivationAlgorithm algorithm
+    )
     {
-        IKeyDerivationAlgorithmStrategy keyDerivationService = keyDerivationServiceFactory.Create(algorithm);
+        IKeyDerivationAlgorithmStrategy keyDerivationService = keyDerivationServiceFactory.Create(
+            algorithm
+        );
         return keyDerivationService.DeriveKey(password, salt, keySize);
     }
 
@@ -350,7 +402,11 @@ public abstract class BaseEncryptionService(IKeyDerivationServiceFactory keyDeri
         return nonce;
     }
 
-    protected static async Task ProcessFileWithCipherAsync(FileStream sourceStream, FileStream destinationStream, IAeadCipher cipher)
+    protected static async Task ProcessFileWithCipherAsync(
+        FileStream sourceStream,
+        FileStream destinationStream,
+        IAeadCipher cipher
+    )
     {
         byte[] inputBuffer = new byte[BufferSize];
         byte[] outputBuffer = new byte[BufferSize];

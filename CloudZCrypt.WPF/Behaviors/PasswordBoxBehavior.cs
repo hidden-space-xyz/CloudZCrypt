@@ -10,20 +10,22 @@ public static class PasswordBoxBehavior
             "Password",
             typeof(string),
             typeof(PasswordBoxBehavior),
-            new FrameworkPropertyMetadata(string.Empty, OnPasswordPropertyChanged));
+            new FrameworkPropertyMetadata(string.Empty, OnPasswordPropertyChanged)
+        );
 
-    public static readonly DependencyProperty AttachProperty =
-        DependencyProperty.RegisterAttached(
-            "Attach",
-            typeof(bool),
-            typeof(PasswordBoxBehavior),
-            new PropertyMetadata(false, OnAttachChanged));
+    public static readonly DependencyProperty AttachProperty = DependencyProperty.RegisterAttached(
+        "Attach",
+        typeof(bool),
+        typeof(PasswordBoxBehavior),
+        new PropertyMetadata(false, OnAttachChanged)
+    );
 
     private static readonly DependencyProperty IsUpdatingProperty =
         DependencyProperty.RegisterAttached(
             "IsUpdating",
             typeof(bool),
-            typeof(PasswordBoxBehavior));
+            typeof(PasswordBoxBehavior)
+        );
 
     public static void SetAttach(DependencyObject dp, bool value)
     {
@@ -55,7 +57,10 @@ public static class PasswordBoxBehavior
         dp.SetValue(IsUpdatingProperty, value);
     }
 
-    private static void OnPasswordPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    private static void OnPasswordPropertyChanged(
+        DependencyObject sender,
+        DependencyPropertyChangedEventArgs e
+    )
     {
         if (sender is PasswordBox passwordBox && !GetIsUpdating(passwordBox))
         {
@@ -63,7 +68,10 @@ public static class PasswordBoxBehavior
         }
     }
 
-    private static void OnAttachChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    private static void OnAttachChanged(
+        DependencyObject sender,
+        DependencyPropertyChangedEventArgs e
+    )
     {
         if (sender is PasswordBox passwordBox)
         {

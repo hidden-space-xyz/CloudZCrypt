@@ -14,6 +14,16 @@ public interface IEncryptionAlgorithmStrategy
     string Description { get; }
     string Summary { get; }
 
-    Task<bool> EncryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm);
-    Task<bool> DecryptFileAsync(string sourceFilePath, string destinationFilePath, string password, KeyDerivationAlgorithm keyDerivationAlgorithm);
+    Task<bool> EncryptFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    );
+    Task<bool> DecryptFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    );
 }

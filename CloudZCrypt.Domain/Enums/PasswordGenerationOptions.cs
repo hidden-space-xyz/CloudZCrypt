@@ -1,4 +1,5 @@
 namespace CloudZCrypt.Domain.Enums;
+
 [Flags]
 public enum PasswordGenerationOptions
 {
@@ -7,5 +8,5 @@ public enum PasswordGenerationOptions
     IncludeLowercase = 2,
     IncludeNumbers = 4,
     IncludeSpecialCharacters = 8,
-    ExcludeSimilarCharacters = 16
+    ExcludeSimilarCharacters = 16,
 }

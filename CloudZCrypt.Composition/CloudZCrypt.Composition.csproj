@@ -1,14 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\CloudZCrypt.Application\CloudZCrypt.Application.csproj" />
     <ProjectReference Include="..\CloudZCrypt.Infrastructure\CloudZCrypt.Infrastructure.csproj" />
   </ItemGroup>
-
 </Project>

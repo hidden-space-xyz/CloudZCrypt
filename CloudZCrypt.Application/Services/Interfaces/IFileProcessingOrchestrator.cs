@@ -6,14 +6,21 @@ namespace CloudZCrypt.Application.Services.Interfaces;
 
 public interface IFileProcessingOrchestrator
 {
-    Task<IReadOnlyList<string>> ValidateAsync(FileProcessingOrchestratorRequest request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> ValidateAsync(
+        FileProcessingOrchestratorRequest request,
+        CancellationToken cancellationToken = default
+    );
 
-    Task<IReadOnlyList<string>> AnalyzeWarningsAsync(FileProcessingOrchestratorRequest request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
+        FileProcessingOrchestratorRequest request,
+        CancellationToken cancellationToken = default
+    );
 
     Task<Result<FileProcessingResult>> ExecuteAsync(
         FileProcessingOrchestratorRequest request,
         IProgress<FileProcessingStatus> progress,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }
 
 public sealed record FileProcessingOrchestratorRequest(
@@ -23,4 +30,5 @@ public sealed record FileProcessingOrchestratorRequest(
     string ConfirmPassword,
     EncryptionAlgorithm EncryptionAlgorithm,
     KeyDerivationAlgorithm KeyDerivationAlgorithm,
-    EncryptOperation Operation);
+    EncryptOperation Operation
+);

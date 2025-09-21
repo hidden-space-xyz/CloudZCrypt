@@ -1,5 +1,5 @@
-using CloudZCrypt.WPF.ViewModels;
 using System.Windows;
+using CloudZCrypt.WPF.ViewModels;
 
 namespace CloudZCrypt.WPF.Views;
 
@@ -12,7 +12,9 @@ public partial class ConfirmationDialog : Window
         DataContext = new MessageDialogViewModel(message, title, MessageBoxImage.Question);
 
         if (owner != null)
+        {
             Owner = owner;
+        }
 
         Loaded += (s, e) => YesButton.Focus();
     }

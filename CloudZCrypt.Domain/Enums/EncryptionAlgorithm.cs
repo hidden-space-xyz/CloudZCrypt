@@ -2,5 +2,9 @@
 
 public enum EncryptionAlgorithm
 {
-    Aes, Twofish, Serpent, ChaCha20, Camellia
+    Aes,
+    Twofish,
+    Serpent,
+    ChaCha20,
+    Camellia,
 }

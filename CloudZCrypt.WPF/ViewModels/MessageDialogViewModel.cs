@@ -22,15 +22,33 @@ public class MessageDialogViewModel
         (IconText, IconBrush, IconVisibility) = GetIconProperties(icon);
     }
 
-    private static (string iconText, MediaBrush iconBrush, Visibility visibility) GetIconProperties(MessageBoxImage icon)
+    private static (string iconText, MediaBrush iconBrush, Visibility visibility) GetIconProperties(
+        MessageBoxImage icon
+    )
     {
         return icon switch
         {
-            MessageBoxImage.Information => ("\uE946", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible),
-            MessageBoxImage.Warning => ("\uE7BA", new SolidColorBrush(MediaColor.FromRgb(255, 185, 0)), Visibility.Visible),
-            MessageBoxImage.Error => ("\uE783", new SolidColorBrush(MediaColor.FromRgb(232, 17, 35)), Visibility.Visible),
-            MessageBoxImage.Question => ("\uE9CE", new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)), Visibility.Visible),
-            _ => (string.Empty, MediaBrushes.Transparent, Visibility.Collapsed)
+            MessageBoxImage.Information => (
+                "\uE946",
+                new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)),
+                Visibility.Visible
+            ),
+            MessageBoxImage.Warning => (
+                "\uE7BA",
+                new SolidColorBrush(MediaColor.FromRgb(255, 185, 0)),
+                Visibility.Visible
+            ),
+            MessageBoxImage.Error => (
+                "\uE783",
+                new SolidColorBrush(MediaColor.FromRgb(232, 17, 35)),
+                Visibility.Visible
+            ),
+            MessageBoxImage.Question => (
+                "\uE9CE",
+                new SolidColorBrush(MediaColor.FromRgb(0, 120, 215)),
+                Visibility.Visible
+            ),
+            _ => (string.Empty, MediaBrushes.Transparent, Visibility.Collapsed),
         };
     }
 }
