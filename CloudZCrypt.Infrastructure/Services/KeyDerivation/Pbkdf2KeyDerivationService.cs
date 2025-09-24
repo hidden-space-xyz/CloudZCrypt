@@ -25,7 +25,7 @@ public class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
     /// The iteration count (work factor) applied when expanding the password.
     /// Higher values increase computational cost for both legitimate and adversarial use.
     /// </summary>
-    private const int Iterations = 100000;
+    private const int Iterations = 800000;
 
     /// <summary>
     /// Gets the enumeration identifier representing the PBKDF2 algorithm.

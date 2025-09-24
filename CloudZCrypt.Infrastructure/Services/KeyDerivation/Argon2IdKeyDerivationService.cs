@@ -18,11 +18,11 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// </remarks>
 public class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
 {
-    // Memory cost in KB (128 MB) for GPU resistance
-    private const int MemoryCost = 128 * 1024;
+    // Memory cost in KB (64 MB) for GPU resistance
+    private const int MemoryCost = 65536;
 
     // Number of iterations (time cost)
-    private const int Iterations = 5;
+    private const int Iterations = 4;
 
     // Parallel lanes (degree of parallelism)
     private const int Parallelism = 4;
