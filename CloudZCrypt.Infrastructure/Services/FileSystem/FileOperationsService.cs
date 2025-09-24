@@ -13,7 +13,7 @@ namespace CloudZCrypt.Infrastructure.Services.FileSystem;
 /// could be potentially long running. Input parameters are expected to be valid; callers should
 /// ensure arguments are not null or empty unless otherwise noted.
 /// </remarks>
-public class FileOperationsService : IFileOperationsService
+internal class FileOperationsService : IFileOperationsService
 {
     /// <summary>
     /// Asynchronously gets all files under the specified directory (recursively) that match the provided search pattern.

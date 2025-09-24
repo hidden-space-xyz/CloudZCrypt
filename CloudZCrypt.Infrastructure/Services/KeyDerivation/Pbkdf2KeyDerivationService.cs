@@ -1,5 +1,5 @@
 ﻿using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
@@ -19,7 +19,7 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// still make brute-force attempts costly. Use this implementation when interoperability or compliance
 /// outweighs the benefits of newer memory‑hard schemes.
 /// </remarks>
-public class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
+internal class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
 {
     /// <summary>
     /// The iteration count (work factor) applied when expanding the password.

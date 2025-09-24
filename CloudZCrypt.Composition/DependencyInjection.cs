@@ -4,6 +4,7 @@ using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Infrastructure.Factories;
 using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using CloudZCrypt.Infrastructure.Services.FileSystem;

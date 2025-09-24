@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 
 namespace CloudZCrypt.Infrastructure.Factories;
 
@@ -15,7 +15,7 @@ namespace CloudZCrypt.Infrastructure.Factories;
 /// registered results in an <see cref="ArgumentOutOfRangeException"/>.
 /// </remarks>
 /// <param name="strategies">The collection of available algorithm strategies. Must not contain duplicate identifiers.</param>
-public class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmStrategy> strategies)
+internal class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmStrategy> strategies)
     : IKeyDerivationServiceFactory
 {
     private readonly IReadOnlyDictionary<KeyDerivationAlgorithm, IKeyDerivationAlgorithmStrategy> strategies

@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 
 namespace CloudZCrypt.Infrastructure.Factories;
 
@@ -13,7 +13,7 @@ namespace CloudZCrypt.Infrastructure.Factories;
 /// and exposes a single method for retrieving the strategy that matches a requested algorithm. If a strategy
 /// has not been registered for the provided algorithm, an <see cref="ArgumentOutOfRangeException"/> is thrown.
 /// </remarks>
-public class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> strategies)
+internal class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> strategies)
     : IEncryptionServiceFactory
 {
     /// <summary>

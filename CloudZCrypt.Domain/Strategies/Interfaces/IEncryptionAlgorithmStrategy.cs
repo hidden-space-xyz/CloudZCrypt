@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 
-namespace CloudZCrypt.Domain.Services.Interfaces;
+namespace CloudZCrypt.Domain.Strategies.Interfaces;
 
 /// <summary>
 /// Defines a strategy contract for performing symmetric file encryption and decryption

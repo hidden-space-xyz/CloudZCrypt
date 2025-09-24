@@ -3,6 +3,7 @@ using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Diagnostics;
@@ -538,18 +539,23 @@ public sealed class FileProcessingOrchestrator(
     /// <param name="cancellationToken">Token that may signal cancellation before operation completion.</param>
     /// <returns>true when the file is processed successfully; otherwise false.</returns>
     /// <exception cref="NotSupportedException">Thrown when an unsupported <see cref="EncryptOperation"/> value is encountered.</exception>
-    private Task<bool> ProcessSingleFile(
+    private static Task<bool> ProcessSingleFile(
         IEncryptionAlgorithmStrategy encryptionService,
         string sourceFile,
         string destinationFile,
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken
-    ) => request.Operation switch
+    )
     {
-        EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
-        EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
-        _ => throw new NotSupportedException($"Unsupported operation: {request.Operation}"),
-    };
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return request.Operation switch
+        {
+            EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
+            EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
+            _ => throw new NotSupportedException($"Unsupported operation: {request.Operation}"),
+        };
+    }
 
     /// <summary>
     /// Attempts to normalize a raw path string to an absolute, fully expanded path while capturing validation errors.

@@ -1,5 +1,5 @@
 ﻿using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
@@ -16,7 +16,7 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// opinionated, security‑oriented defaults (memory cost, iterations, and parallelism) chosen to impose
 /// substantial computational and memory load on attackers while remaining practical for legitimate use.
 /// </remarks>
-public class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
+internal class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
 {
     // Memory cost in KB (64 MB) for GPU resistance
     private const int MemoryCost = 65536;

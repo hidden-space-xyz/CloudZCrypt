@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -18,9 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// confidentiality, integrity, and authenticity.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving concrete key derivation strategies for password-based key derivation.</param>
-public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : BaseEncryptionService(keyDerivationServiceFactory),
-        IEncryptionAlgorithmStrategy
+internal class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the unique <see cref="EncryptionAlgorithm"/> identifier representing Twofish.

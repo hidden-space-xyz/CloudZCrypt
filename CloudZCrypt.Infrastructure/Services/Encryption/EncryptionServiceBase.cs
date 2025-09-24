@@ -1,7 +1,7 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Cryptography;
 
@@ -17,9 +17,7 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption;
 /// translation into domain-specific <see cref="EncryptionException"/> types.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation strategy based on the selected <see cref="KeyDerivationAlgorithm"/>.</param>
-public abstract class BaseEncryptionService(
-    IKeyDerivationServiceFactory keyDerivationServiceFactory
-)
+internal abstract class EncryptionServiceBase(IKeyDerivationServiceFactory keyDerivationServiceFactory)
 {
     /// <summary>
     /// Size (in bits) of the symmetric encryption key produced from password derivation.

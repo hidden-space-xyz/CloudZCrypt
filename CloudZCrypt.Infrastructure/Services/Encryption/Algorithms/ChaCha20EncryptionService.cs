@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
@@ -18,9 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// (e.g., Argon2id, PBKDF2). The nonce must be unique per key; reuse compromises security.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving password-based key derivation strategies.</param>
-public class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : BaseEncryptionService(keyDerivationServiceFactory),
-        IEncryptionAlgorithmStrategy
+internal class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the <see cref="EncryptionAlgorithm"/> identifier for ChaCha20-Poly1305.

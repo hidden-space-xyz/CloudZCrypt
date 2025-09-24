@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -18,9 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// and ciphertext with the authentication tag implicitly managed by the GCM mode.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation algorithm strategy for password-based key derivation.</param>
-public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : BaseEncryptionService(keyDerivationServiceFactory),
-        IEncryptionAlgorithmStrategy
+internal class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the unique <see cref="EncryptionAlgorithm"/> identifier representing AES.

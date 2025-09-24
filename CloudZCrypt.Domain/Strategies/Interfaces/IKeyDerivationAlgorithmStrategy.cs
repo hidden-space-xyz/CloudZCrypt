@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 
-namespace CloudZCrypt.Domain.Services.Interfaces;
+namespace CloudZCrypt.Domain.Strategies.Interfaces;
 
 /// <summary>
 /// Strategy interface that exposes metadata for a key derivation algorithm.

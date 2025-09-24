@@ -13,7 +13,7 @@ namespace CloudZCrypt.Infrastructure.Services.FileSystem;
 /// (e.g. encryption pre-flight validation) without needing explicit exception handling for environmental issues
 /// like missing drives, invalid paths, or insufficient permissions.
 /// </remarks>
-public class SystemStorageService : ISystemStorageService
+internal class SystemStorageService : ISystemStorageService
 {
     /// <summary>
     /// Gets the root portion (e.g. C:\) of the specified absolute path.

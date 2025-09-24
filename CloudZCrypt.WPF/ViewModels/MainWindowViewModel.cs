@@ -1,9 +1,10 @@
-﻿using CloudZCrypt.Application.DataTransferObjects.Passwords;
-using CloudZCrypt.Application.Services.Interfaces;
+﻿using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.Password;
 using CloudZCrypt.WPF.Commands;
 using CloudZCrypt.WPF.Services.Interfaces;
 using System.Collections.ObjectModel;
@@ -104,7 +105,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref password, value))
             {
-                _ = UpdatePasswordStrengthAsync(value, false);
+                UpdatePasswordStrengthAsync(value, false);
                 RefreshProcessCommands();
             }
         }
@@ -121,7 +122,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref confirmPassword, value))
             {
-                _ = UpdatePasswordStrengthAsync(value, true);
+                UpdatePasswordStrengthAsync(value, true);
                 RefreshProcessCommands();
             }
         }
@@ -381,8 +382,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             keyDerivationStrategies
                 .OrderBy(a => a.DisplayName));
 
-        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First().Id;
-        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.Last().Id;
+        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms[0].Id;
+        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms[0].Id;
 
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);
@@ -433,7 +434,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// optionally copies it to the clipboard, and displays a confirmation dialog.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task GenerateStrongPassword()
+    private void GenerateStrongPassword()
     {
         try
         {
@@ -710,7 +711,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// <param name="pwd">The password value to analyze.</param>
     /// <param name="isConfirmField">Indicates whether the value belongs to the confirmation password field.</param>
     /// <returns>A task representing the asynchronous analysis operation.</returns>
-    private async Task UpdatePasswordStrengthAsync(string pwd, bool isConfirmField)
+    private void UpdatePasswordStrengthAsync(string pwd, bool isConfirmField)
     {
         if (string.IsNullOrEmpty(pwd))
         {
@@ -718,13 +719,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             return;
         }
 
-        Domain.ValueObjects.Password.PasswordStrengthAnalysis analysis = passwordService.AnalyzePasswordStrength(pwd);
-        ApplyStrengthResult(
-            isConfirmField,
-            new PasswordStrengthResult(
-                analysis.Strength,
-                analysis.Description,
-                analysis.Score));
+        PasswordStrengthAnalysis analysis = passwordService.AnalyzePasswordStrength(pwd);
+        ApplyStrengthResult(isConfirmField, analysis);
     }
 
     /// <summary>
@@ -732,7 +728,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     /// <param name="isConfirmField">If true, applies values to the confirmation password indicators; otherwise to the primary password.</param>
     /// <param name="strengthResult">The computed password strength result to display.</param>
-    private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthResult strengthResult)
+    private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthAnalysis strengthResult)
     {
         System.Windows.Media.Brush color = GetStrengthColor(strengthResult.Strength);
         if (isConfirmField)

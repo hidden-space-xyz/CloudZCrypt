@@ -1,6 +1,6 @@
 ﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.Services.Interfaces;
+using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -18,9 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// using a pluggable key derivation strategy, then applies Serpent within GCM for AEAD guarantees.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory responsible for resolving key derivation strategies.</param>
-public class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : BaseEncryptionService(keyDerivationServiceFactory),
-        IEncryptionAlgorithmStrategy
+internal class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the <see cref="EncryptionAlgorithm"/> identifier representing Serpent.
