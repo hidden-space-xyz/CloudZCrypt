@@ -19,9 +19,9 @@ namespace CloudZCrypt.Domain.Services.Interfaces
         /// <summary>
         /// Analyzes the supplied password and returns a structured assessment of its strength.
         /// </summary>
-        /// <param name="password">The password to evaluate. Must not be <c>null</c> or empty.</param>
+        /// <param name="password">The password to evaluate. Must not be null or empty.</param>
         /// <returns>A <see cref="PasswordStrengthAnalysis"/> instance containing strength classification and related metrics.</returns>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="password"/> is <c>null</c>, empty, or composed solely of whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="password"/> is null, empty, or composed solely of whitespace.</exception>
         PasswordStrengthAnalysis AnalyzePasswordStrength(string password);
 
         /// <summary>

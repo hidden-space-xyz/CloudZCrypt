@@ -72,7 +72,7 @@ public partial class App : System.Windows.Application
     /// Registers UI, domain, and application layer services with the provided service collection.
     /// </summary>
     /// <param name="services">The service collection to populate with application service registrations. Cannot be null.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is null.</exception>
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<MainWindow>();

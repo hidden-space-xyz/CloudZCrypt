@@ -16,17 +16,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// Combined with the Poly1305 authenticator, this service supplies confidentiality, integrity, and
 /// authenticity. A 256-bit key is derived from a password using a pluggable key derivation strategy
 /// (e.g., Argon2id, PBKDF2). The nonce must be unique per key; reuse compromises security.
-/// <para>
-/// Example usage (conceptual):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = new ChaCha20EncryptionService(keyDerivationFactory);
-/// bool ok = await strategy.EncryptFileAsync(
-///     sourceFilePath: "plain.bin",
-///     destinationFilePath: "secret.chacha20",
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving password-based key derivation strategies.</param>
 public class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)

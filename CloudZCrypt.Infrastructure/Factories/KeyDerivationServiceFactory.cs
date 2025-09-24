@@ -13,21 +13,12 @@ namespace CloudZCrypt.Infrastructure.Factories;
 /// through dependency injection. Each strategy exposes a unique <see cref="KeyDerivationAlgorithm"/> identifier
 /// that is used as the key for retrieval. Attempting to request an algorithm for which no strategy was
 /// registered results in an <see cref="ArgumentOutOfRangeException"/>.
-/// <para>
-/// Example usage:
-/// <code language="csharp"><![CDATA[
-/// IKeyDerivationServiceFactory factory = /* resolved via DI */;
-/// IKeyDerivationAlgorithmStrategy strategy = factory.Create(KeyDerivationAlgorithm.Argon2id);
-/// byte[] key = strategy.DeriveKey(password, salt, 32);
-/// ]]>
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="strategies">The collection of available algorithm strategies. Must not contain duplicate identifiers.</param>
 public class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmStrategy> strategies)
     : IKeyDerivationServiceFactory
 {
-    private readonly IReadOnlyDictionary<KeyDerivationAlgorithm,IKeyDerivationAlgorithmStrategy> strategies 
+    private readonly IReadOnlyDictionary<KeyDerivationAlgorithm, IKeyDerivationAlgorithmStrategy> strategies
         = strategies.ToDictionary(s => s.Id, s => s);
 
     /// <summary>

@@ -5,20 +5,12 @@ namespace CloudZCrypt.WPF.ViewModels;
 
 /// <summary>
 /// Provides a lightweight abstract base class that implements <see cref="INotifyPropertyChanged"/>,
-/// supplying a reusable <c>SetProperty</c> helper to simplify property change notification
+/// supplying a reusable SetProperty helper to simplify property change notification
 /// in view models.
 /// </summary>
 /// <remarks>
 /// Derive your WPF / MVVM view models from this class to reduce boilerplate when implementing
-/// properties. Typical usage:
-/// <code><![CDATA[
-/// private string _name;
-/// public string Name
-/// {
-///     get => _name;
-///     set => SetProperty(ref _name, value);
-/// }
-/// ]]></code>
+/// properties.
 /// The <see cref="SetProperty{T}(ref T, T, string?)"/> method performs an equality check and only
 /// raises <see cref="PropertyChanged"/> when the value actually changes, avoiding unnecessary UI updates.
 /// </remarks>
@@ -45,7 +37,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
     /// <param name="field">A reference to the backing field to update.</param>
     /// <param name="value">The new value to assign.</param>
     /// <param name="propertyName">The name of the property being set. Automatically supplied by the compiler when omitted.</param>
-    /// <returns><c>true</c> if the field value was changed and a notification was raised; otherwise <c>false</c> if the existing value was equal.</returns>
+    /// <returns>true if the field value was changed and a notification was raised; otherwise false if the existing value was equal.</returns>
     protected bool SetProperty<T>(
         ref T field,
         T value,

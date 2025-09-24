@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class.
     /// </summary>
-    /// <param name="viewModel">The view model that supplies state, commands, and interaction logic. Must not be <c>null</c>.</param>
+    /// <param name="viewModel">The view model that supplies state, commands, and interaction logic. Must not be null.</param>
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();

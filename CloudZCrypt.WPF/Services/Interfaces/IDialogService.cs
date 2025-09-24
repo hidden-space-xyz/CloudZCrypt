@@ -53,14 +53,14 @@ public interface IDialogService
     /// </summary>
     /// <param name="message">The confirmation question or instruction.</param>
     /// <param name="title">The dialog caption providing context.</param>
-    /// <returns><c>true</c> if the user confirms the action; otherwise, <c>false</c>.</returns>
+    /// <returns>true if the user confirms the action; otherwise, false.</returns>
     bool ShowConfirmation(string message, string title);
 
     /// <summary>
     /// Opens a folder selection dialog allowing the user to choose a directory.
     /// </summary>
     /// <param name="description">Optional descriptive guidance displayed within the dialog to assist the user.</param>
-    /// <returns>The full path of the selected folder, or <c>null</c> if the operation is canceled.</returns>
+    /// <returns>The full path of the selected folder, or null if the operation is canceled.</returns>
     string? ShowFolderDialog(string description);
 
     /// <summary>
@@ -68,7 +68,7 @@ public interface IDialogService
     /// </summary>
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string (e.g., "Text Files (*.txt)|*.txt"). Defaults to all files.</param>
-    /// <returns>The full path of the selected file, or <c>null</c> if the user cancels.</returns>
+    /// <returns>The full path of the selected file, or null if the user cancels.</returns>
     string? ShowOpenFileDialog(string title, string filter = "All files (*.*)|*.*");
 
     /// <summary>
@@ -76,7 +76,7 @@ public interface IDialogService
     /// </summary>
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string (e.g., "Images (*.png;*.jpg)|*.png;*.jpg"). Defaults to all files.</param>
-    /// <returns>An array of full file paths selected by the user, or <c>null</c> if the dialog is canceled.</returns>
+    /// <returns>An array of full file paths selected by the user, or null if the dialog is canceled.</returns>
     string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*");
 
     /// <summary>
@@ -85,7 +85,7 @@ public interface IDialogService
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string controlling selectable file extensions. Defaults to all files.</param>
     /// <param name="defaultFileName">An optional suggested file name pre-populated in the dialog input field.</param>
-    /// <returns>The full path chosen by the user for saving, or <c>null</c> if the dialog is canceled.</returns>
+    /// <returns>The full path chosen by the user for saving, or null if the dialog is canceled.</returns>
     string? ShowSaveFileDialog(
         string title,
         string filter = "All files (*.*)|*.*",

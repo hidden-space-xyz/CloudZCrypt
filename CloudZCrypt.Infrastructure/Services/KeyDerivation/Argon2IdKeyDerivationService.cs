@@ -15,11 +15,6 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// side‑channel resistance of Argon2i with the GPU/ASIC resistance of Argon2d. This strategy encapsulates
 /// opinionated, security‑oriented defaults (memory cost, iterations, and parallelism) chosen to impose
 /// substantial computational and memory load on attackers while remaining practical for legitimate use.
-/// <para>
-/// Use this strategy when modern, memory‑hard password stretching is preferred over maximum legacy
-/// interoperability. For environments with strict compliance requirements (e.g., FIPS‑only), PBKDF2 may be
-/// required instead.
-/// </para>
 /// </remarks>
 public class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
 {
@@ -57,8 +52,8 @@ public class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
     /// Derives a cryptographic key from the supplied password and salt using Argon2id with predefined
     /// memory, time, and parallelism parameters.
     /// </summary>
-    /// <param name="password">The user‑supplied passphrase. Must not be <c>null</c> or empty.</param>
-    /// <param name="salt">A cryptographically strong, unique salt (recommended minimum 16 bytes). Must not be <c>null</c>.</param>
+    /// <param name="password">The user‑supplied passphrase. Must not be null or empty.</param>
+    /// <param name="salt">A cryptographically strong, unique salt (recommended minimum 16 bytes). Must not be null.</param>
     /// <param name="keySize">The desired key size in bits. Must be a positive multiple of 8 suitable for the target cipher.</param>
     /// <returns>A byte array containing the derived key of length <paramref name="keySize"/> / 8.</returns>
     /// <exception cref="CryptographicException">Thrown when the underlying Argon2 computation fails.</exception>

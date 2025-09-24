@@ -16,22 +16,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// design and 32-round structure. While typically slower than AES or Camellia, it may be selected
 /// for defense-in-depth or diversity objectives. This service derives a 256-bit key from a password
 /// using a pluggable key derivation strategy, then applies Serpent within GCM for AEAD guarantees.
-/// <para>
-/// Performance trade‑offs should be considered in high-throughput environments; for most general use
-/// cases AES-GCM or ChaCha20-Poly1305 may perform better, but Serpent can be retained for specialized
-/// policy or assurance requirements.
-/// </para>
-/// <para>
-/// Example usage (conceptual):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = new SerpentEncryptionService(keyDerivationFactory);
-/// bool ok = await strategy.EncryptFileAsync(
-///     sourceFilePath: "plain.bin",
-///     destinationFilePath: "secret.serpent",
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory responsible for resolving key derivation strategies.</param>
 public class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)

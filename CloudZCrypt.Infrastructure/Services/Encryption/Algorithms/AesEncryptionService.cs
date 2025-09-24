@@ -16,21 +16,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// key derivation algorithm and performs streaming, chunk-based file encryption or decryption.
 /// The encryption format (written to the destination file) typically includes the salt, nonce,
 /// and ciphertext with the authentication tag implicitly managed by the GCM mode.
-/// <para>
-/// AES-GCM supplies confidentiality, integrity, and authenticity. Decryption will fail with a
-/// cryptographic exception if the password, derived key, nonce, or ciphertext is tampered with.
-/// </para>
-/// <para>
-/// Example usage (conceptual):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = new AesEncryptionService(keyDerivationFactory);
-/// bool ok = await strategy.EncryptFileAsync(
-///     sourceFilePath: "plain.bin",
-///     destinationFilePath: "secret.aes",
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation algorithm strategy for password-based key derivation.</param>
 public class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)

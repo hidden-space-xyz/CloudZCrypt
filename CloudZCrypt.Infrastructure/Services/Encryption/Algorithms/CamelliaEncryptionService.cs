@@ -16,21 +16,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// properties broadly comparable to AES. This service derives a 256-bit key from a password using
 /// a configurable key derivation strategy and applies Camellia within GCM to deliver confidentiality,
 /// integrity, and authenticity.
-/// <para>
-/// Camellia may be selected for regulatory, policy, or jurisdictional reasons where algorithmic
-/// diversity or non-U.S. origin is desirable while retaining strong security assurances.
-/// </para>
-/// <para>
-/// Example usage (conceptual):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = new CamelliaEncryptionService(keyDerivationFactory);
-/// bool ok = await strategy.EncryptFileAsync(
-///     sourceFilePath: "plain.bin",
-///     destinationFilePath: "secret.camellia",
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve password-based key derivation strategies.</param>
 public class CamelliaEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)

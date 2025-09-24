@@ -7,16 +7,10 @@ namespace CloudZCrypt.WPF.Commands;
 /// </summary>
 /// <remarks>
 /// This command can be constructed with either a synchronous <see cref="Action"/> or an asynchronous <see cref="Func{Task}"/>.
-/// Only one execution delegate is stored (sync or async). The optional <c>canExecute</c> delegate determines the current
+/// Only one execution delegate is stored (sync or async). The optional canExecute delegate determines the current
 /// availability of the command. The <see cref="CanExecute(object?)"/> method ignores the <paramref name="parameter"/> and
 /// delegates the decision exclusively to the supplied predicate (if any). <see cref="Execute(object?)"/> will await the
 /// asynchronous delegate when provided.
-/// Example usage:
-/// <code>
-/// SaveCommand = new RelayCommand(
-///     async () => await _documentService.SaveAsync(),
-///     () => !IsBusy && HasChanges);
-/// </code>
 /// </remarks>
 public sealed class RelayCommand : ICommand
 {
@@ -27,9 +21,9 @@ public sealed class RelayCommand : ICommand
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayCommand"/> class with a synchronous execute delegate.
     /// </summary>
-    /// <param name="execute">The synchronous action to invoke when the command is executed. Cannot be <c>null</c>.</param>
-    /// <param name="canExecute">Optional predicate that returns <c>true</c> when the command is allowed to execute; if <c>null</c>, the command is always executable.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="execute"/> is <c>null</c>.</exception>
+    /// <param name="execute">The synchronous action to invoke when the command is executed. Cannot be null.</param>
+    /// <param name="canExecute">Optional predicate that returns true when the command is allowed to execute; if null, the command is always executable.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="execute"/> is null.</exception>
     public RelayCommand(Action execute, Func<bool>? canExecute = null)
     {
         this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
@@ -39,9 +33,9 @@ public sealed class RelayCommand : ICommand
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayCommand"/> class with an asynchronous execute delegate.
     /// </summary>
-    /// <param name="execute">The asynchronous function to invoke when the command is executed. Cannot be <c>null</c>.</param>
-    /// <param name="canExecute">Optional predicate that returns <c>true</c> when the command is allowed to execute; if <c>null</c>, the command is always executable.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="execute"/> is <c>null</c>.</exception>
+    /// <param name="execute">The asynchronous function to invoke when the command is executed. Cannot be null.</param>
+    /// <param name="canExecute">Optional predicate that returns true when the command is allowed to execute; if null, the command is always executable.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="execute"/> is null.</exception>
     public RelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
     {
         asyncExecute = execute ?? throw new ArgumentNullException(nameof(execute));
@@ -57,7 +51,7 @@ public sealed class RelayCommand : ICommand
     /// Determines whether the command can execute in its current state.
     /// </summary>
     /// <param name="parameter">An optional parameter ignored by this implementation.</param>
-    /// <returns><c>true</c> if the command can execute; otherwise, <c>false</c>.</returns>
+    /// <returns>true if the command can execute; otherwise, false.</returns>
     public bool CanExecute(object? parameter)
     {
         return canExecute?.Invoke() ?? true;
@@ -69,7 +63,7 @@ public sealed class RelayCommand : ICommand
     /// <param name="parameter">An optional parameter ignored by this implementation.</param>
     /// <remarks>
     /// If an asynchronous delegate was supplied, it is awaited. Because WPF's <see cref="ICommand.Execute(object)"/>
-    /// signature is <c>void</c>, this method is declared <c>async void</c>; unhandled exceptions will propagate to the
+    /// signature is void, this method is declared async void; unhandled exceptions will propagate to the
     /// synchronization context. Consider handling exceptions within the provided delegate.
     /// </remarks>
     public async void Execute(object? parameter)

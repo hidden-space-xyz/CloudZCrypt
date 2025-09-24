@@ -15,18 +15,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption;
 /// This abstract base class encapsulates cross-cutting concerns such as input validation, disk space
 /// preflight checks, key derivation, salt and nonce handling, streaming I/O, and structured exception
 /// translation into domain-specific <see cref="EncryptionException"/> types.
-/// <para>
-/// Concrete encryption algorithm implementations (e.g., AES-GCM, ChaCha20-Poly1305) should inherit from
-/// this class and implement <see cref="EncryptStreamAsync"/> and <see cref="DecryptStreamAsync"/> to supply
-/// cipher-specific logic. Each derived class focuses solely on cryptographic transformation while this
-/// base handles orchestration and robustness.
-/// </para>
-/// <para>Typical usage (simplified):</para>
-/// <code language="csharp"><![CDATA[
-/// var service = encryptionServiceFactory.Create(EncryptionAlgorithm.AesGcm);
-/// await service.EncryptFileAsync(inputPath, outputPath, password, KeyDerivationAlgorithm.Argon2id);
-/// await service.DecryptFileAsync(outputPath, restoredPath, password, KeyDerivationAlgorithm.Argon2id);
-/// ]]></code>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation strategy based on the selected <see cref="KeyDerivationAlgorithm"/>.</param>
 public abstract class BaseEncryptionService(
@@ -66,7 +54,7 @@ public abstract class BaseEncryptionService(
     /// <param name="destinationFilePath">Full path where the encrypted file will be created or overwritten.</param>
     /// <param name="password">User-supplied secret used for key derivation. Must not be null or empty.</param>
     /// <param name="keyDerivationAlgorithm">The key derivation algorithm to use when transforming the password into a fixed-length key.</param>
-    /// <returns><c>true</c> if encryption completes successfully.</returns>
+    /// <returns>true if encryption completes successfully.</returns>
     /// <exception cref="EncryptionFileNotFoundException">Thrown when the source file does not exist.</exception>
     /// <exception cref="EncryptionAccessDeniedException">Thrown when read or write access is denied for source or destination paths.</exception>
     /// <exception cref="EncryptionInsufficientSpaceException">Thrown when the destination drive lacks sufficient free space.</exception>
@@ -194,7 +182,7 @@ public abstract class BaseEncryptionService(
     /// <param name="destinationFilePath">Full path where the decrypted plaintext file will be written or overwritten.</param>
     /// <param name="password">Password used originally for encryption; must match to authenticate and decrypt.</param>
     /// <param name="keyDerivationAlgorithm">The key derivation algorithm originally used during encryption.</param>
-    /// <returns><c>true</c> if decryption completes successfully.</returns>
+    /// <returns>true if decryption completes successfully.</returns>
     /// <exception cref="EncryptionFileNotFoundException">Thrown when the encrypted source file does not exist.</exception>
     /// <exception cref="EncryptionAccessDeniedException">Thrown when read or write access is denied.</exception>
     /// <exception cref="EncryptionCorruptedFileException">Thrown when the file is too small or structured metadata cannot be read.</exception>

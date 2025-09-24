@@ -16,22 +16,6 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// key-dependent S-box design philosophy. This service derives a 256-bit key from a password
 /// (through a selected key derivation strategy) and applies AEAD semantics using GCM to supply
 /// confidentiality, integrity, and authenticity.
-/// <para>
-/// Although GCM was not originally standardized around Twofish, its use here provides a familiar
-/// authenticated encryption construction; however, hardware acceleration is typically limited
-/// compared to AES, potentially affecting performance.
-/// </para>
-/// <para>
-/// Example usage (conceptual):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = new TwofishEncryptionService(keyDerivationFactory);
-/// bool ok = await strategy.EncryptFileAsync(
-///     sourceFilePath: "plain.bin",
-///     destinationFilePath: "secret.twofish",
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving concrete key derivation strategies for password-based key derivation.</param>
 public class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)

@@ -20,13 +20,7 @@ namespace CloudZCrypt.Composition;
 /// </summary>
 /// <remarks>
 /// These methods centralize the dependency injection configuration for the solution, grouping
-/// registrations by logical layer (Domain vs Application). Typical usage:
-/// <code>
-/// var services = new ServiceCollection();
-/// services
-///     .AddDomainServices()
-///     .AddApplicationServices();
-/// </code>
+/// registrations by logical layer (Domain vs Application).
 /// </remarks>
 public static class DependencyInjection
 {

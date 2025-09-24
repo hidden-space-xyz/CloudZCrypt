@@ -7,9 +7,9 @@ namespace CloudZCrypt.WPF.Converters;
 /// Converts a boolean value indicating visibility into a corresponding eye-themed emoji for UI presentation.
 /// </summary>
 /// <remarks>
-/// This converter is typically used in password reveal / conceal toggles. When the bound boolean value is <c>true</c>,
+/// This converter is typically used in password reveal / conceal toggles. When the bound boolean value is true,
 /// it returns the blocked eye emoji (🚫) to suggest that clicking will hide the currently visible content. When the value
-/// is <c>false</c>, it returns the standard eye emoji (👁️) to suggest that clicking will reveal hidden content.
+/// is false, it returns the standard eye emoji (👁️) to suggest that clicking will reveal hidden content.
 /// </remarks>
 public class BoolToEyeEmojiConverter : IValueConverter
 {
@@ -26,7 +26,7 @@ public class BoolToEyeEmojiConverter : IValueConverter
     /// <param name="parameter">An optional parameter supplied by the binding. Not used.</param>
     /// <param name="culture">The culture to use in the converter. Not used.</param>
     /// <returns>
-    /// Returns the string "🚫" when <paramref name="value"/> is a boolean <c>true</c>; otherwise returns "👁️".
+    /// Returns the string "🚫" when <paramref name="value"/> is a boolean true; otherwise returns "👁️".
     /// </returns>
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {

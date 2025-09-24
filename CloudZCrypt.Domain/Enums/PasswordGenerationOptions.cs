@@ -6,19 +6,7 @@ namespace CloudZCrypt.Domain.Enums;
 /// <remarks>
 /// This enumeration is decorated with the <see cref="System.FlagsAttribute"/>, allowing a bitwise combination of its
 /// members to specify multiple password generation behaviors simultaneously. Typical usage involves combining values
-/// with the bitwise OR operator (e.g., <c>IncludeUppercase | IncludeNumbers | ExcludeSimilarCharacters</c>).
-/// <para>
-/// The <see cref="ExcludeSimilarCharacters"/> option is intended to reduce ambiguity by excluding characters that are
-/// easily confused visually (for example: <c>O</c>, <c>0</c>, <c>I</c>, <c>l</c>, <c>1</c>, <c>S</c>, <c>5</c>, etc.).
-/// Implementations should define the exact exclusion set consistently across the application.
-/// </para>
-/// <para>Example:</para>
-/// <code>
-/// var options = PasswordGenerationOptions.IncludeUppercase |
-///               PasswordGenerationOptions.IncludeLowercase |
-///               PasswordGenerationOptions.IncludeNumbers |
-///               PasswordGenerationOptions.ExcludeSimilarCharacters;
-/// </code>
+/// with the bitwise OR operator (e.g., IncludeUppercase | IncludeNumbers | ExcludeSimilarCharacters).
 /// </remarks>
 [Flags]
 public enum PasswordGenerationOptions

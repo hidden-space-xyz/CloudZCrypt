@@ -8,21 +8,12 @@ namespace CloudZCrypt.WPF.Behaviors;
 /// </summary>
 /// <remarks>
 /// WPF's <see cref="PasswordBox.Password"/> property is not a <see cref="DependencyProperty"/>, which prevents direct data binding in MVVM scenarios.
-/// This behavior introduces an attachable <c>Password</c> property that mirrors the password text and keeps it synchronized with the control while avoiding recursive updates.
-/// <para>Example usage in XAML:</para>
-/// <code language="xaml"><![CDATA[
-/// <PasswordBox
-///     behaviors:PasswordBoxBehavior.Attach="True"
-///     behaviors:PasswordBoxBehavior.Password="{Binding UserPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-/// ]]></code>
-/// <para>
-/// Security note: Binding a plain text password introduces security considerations. Prefer using a secure mechanism (e.g., <see cref="System.Security.SecureString"/>) or limiting the exposure of the bound value.
-/// </para>
+/// This behavior introduces an attachable Password property that mirrors the password text and keeps it synchronized with the control while avoiding recursive updates.
 /// </remarks>
 public static class PasswordBoxBehavior
 {
     /// <summary>
-    /// Identifies the attached <c>Password</c> dependency property, which stores the current password text of an associated <see cref="PasswordBox"/> to enable binding.
+    /// Identifies the attached Password dependency property, which stores the current password text of an associated <see cref="PasswordBox"/> to enable binding.
     /// </summary>
     public static readonly DependencyProperty PasswordProperty =
         DependencyProperty.RegisterAttached(
@@ -33,7 +24,7 @@ public static class PasswordBoxBehavior
         );
 
     /// <summary>
-    /// Identifies the attached <c>Attach</c> dependency property. When set to <c>true</c>, the behavior hooks the <see cref="PasswordBox.PasswordChanged"/> event to maintain synchronization.
+    /// Identifies the attached Attach dependency property. When set to true, the behavior hooks the <see cref="PasswordBox.PasswordChanged"/> event to maintain synchronization.
     /// </summary>
     public static readonly DependencyProperty AttachProperty = DependencyProperty.RegisterAttached(
         "Attach",
@@ -43,7 +34,7 @@ public static class PasswordBoxBehavior
     );
 
     /// <summary>
-    /// Identifies the internal <c>IsUpdating</c> dependency property used to prevent recursive updates between the password value and the attached property.
+    /// Identifies the internal IsUpdating dependency property used to prevent recursive updates between the password value and the attached property.
     /// </summary>
     private static readonly DependencyProperty IsUpdatingProperty =
         DependencyProperty.RegisterAttached(
@@ -53,39 +44,39 @@ public static class PasswordBoxBehavior
         );
 
     /// <summary>
-    /// Sets the value of the attached <c>Attach</c> property on the specified dependency object.
+    /// Sets the value of the attached Attach property on the specified dependency object.
     /// </summary>
-    /// <param name="dp">The dependency object (expected to be a <see cref="PasswordBox"/>) on which to set the property. Must not be <c>null</c>.</param>
+    /// <param name="dp">The dependency object (expected to be a <see cref="PasswordBox"/>) on which to set the property. Must not be null.</param>
     public static void SetAttach(DependencyObject dp, bool value)
     {
         dp.SetValue(AttachProperty, value);
     }
 
     /// <summary>
-    /// Gets the value of the attached <c>Attach</c> property from the specified dependency object.
+    /// Gets the value of the attached Attach property from the specified dependency object.
     /// </summary>
-    /// <param name="dp">The dependency object from which to retrieve the property value. Must not be <c>null</c>.</param>
-    /// <returns><c>true</c> if the behavior is attached; otherwise, <c>false</c>.</returns>
+    /// <param name="dp">The dependency object from which to retrieve the property value. Must not be null.</param>
+    /// <returns>true if the behavior is attached; otherwise, false.</returns>
     public static bool GetAttach(DependencyObject dp)
     {
         return (bool)dp.GetValue(AttachProperty);
     }
 
     /// <summary>
-    /// Gets the value of the attached <c>Password</c> property from the specified dependency object.
+    /// Gets the value of the attached Password property from the specified dependency object.
     /// </summary>
-    /// <param name="dp">The dependency object from which to retrieve the password value. Must not be <c>null</c>.</param>
-    /// <returns>The current password text associated with the <see cref="PasswordBox"/>; never <c>null</c>, but may be empty.</returns>
+    /// <param name="dp">The dependency object from which to retrieve the password value. Must not be null.</param>
+    /// <returns>The current password text associated with the <see cref="PasswordBox"/>; never null, but may be empty.</returns>
     public static string GetPassword(DependencyObject dp)
     {
         return (string)dp.GetValue(PasswordProperty);
     }
 
     /// <summary>
-    /// Sets the value of the attached <c>Password</c> property on the specified dependency object.
+    /// Sets the value of the attached Password property on the specified dependency object.
     /// </summary>
-    /// <param name="dp">The dependency object (expected to be a <see cref="PasswordBox"/>) on which to set the password. Must not be <c>null</c>.</param>
-    /// <param name="value">The new password text to associate with the control. May be <c>null</c> or empty.</param>
+    /// <param name="dp">The dependency object (expected to be a <see cref="PasswordBox"/>) on which to set the password. Must not be null.</param>
+    /// <param name="value">The new password text to associate with the control. May be null or empty.</param>
     public static void SetPassword(DependencyObject dp, string value)
     {
         dp.SetValue(PasswordProperty, value);
@@ -94,8 +85,8 @@ public static class PasswordBoxBehavior
     /// <summary>
     /// Gets the internal flag indicating whether a password synchronization update is currently in progress.
     /// </summary>
-    /// <param name="dp">The dependency object to query. Must not be <c>null</c>.</param>
-    /// <returns><c>true</c> if an update is in progress; otherwise, <c>false</c>.</returns>
+    /// <param name="dp">The dependency object to query. Must not be null.</param>
+    /// <returns>true if an update is in progress; otherwise, false.</returns>
     private static bool GetIsUpdating(DependencyObject dp)
     {
         return (bool)dp.GetValue(IsUpdatingProperty);
@@ -104,7 +95,7 @@ public static class PasswordBoxBehavior
     /// <summary>
     /// Sets the internal flag that indicates whether a password synchronization update is currently in progress.
     /// </summary>
-    /// <param name="dp">The dependency object to update. Must not be <c>null</c>.</param>
+    /// <param name="dp">The dependency object to update. Must not be null.</param>
     /// <param name="value">The flag value indicating update state.</param>
     private static void SetIsUpdating(DependencyObject dp, bool value)
     {
@@ -112,7 +103,7 @@ public static class PasswordBoxBehavior
     }
 
     /// <summary>
-    /// Handles changes to the attached <c>Password</c> property, updating the underlying <see cref="PasswordBox.Password"/> when not already synchronizing.
+    /// Handles changes to the attached Password property, updating the underlying <see cref="PasswordBox.Password"/> when not already synchronizing.
     /// </summary>
     /// <param name="sender">The dependency object whose password property changed.</param>
     /// <param name="e">The event data describing the change.</param>
@@ -128,7 +119,7 @@ public static class PasswordBoxBehavior
     }
 
     /// <summary>
-    /// Handles changes to the attached <c>Attach</c> property, subscribing or unsubscribing from the <see cref="PasswordBox.PasswordChanged"/> event as appropriate.
+    /// Handles changes to the attached Attach property, subscribing or unsubscribing from the <see cref="PasswordBox.PasswordChanged"/> event as appropriate.
     /// </summary>
     /// <param name="sender">The dependency object whose attach state changed.</param>
     /// <param name="e">The event data describing the change.</param>
@@ -152,7 +143,7 @@ public static class PasswordBoxBehavior
     }
 
     /// <summary>
-    /// Handles the <see cref="PasswordBox.PasswordChanged"/> event, propagating the new password value to the attached <c>Password</c> property while preventing recursive updates.
+    /// Handles the <see cref="PasswordBox.PasswordChanged"/> event, propagating the new password value to the attached Password property while preventing recursive updates.
     /// </summary>
     /// <param name="sender">The <see cref="PasswordBox"/> whose password was modified.</param>
     /// <param name="e">The event data associated with the password change.</param>

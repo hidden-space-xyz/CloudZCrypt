@@ -6,15 +6,6 @@ namespace CloudZCrypt.Application.ValueObjects;
 /// <remarks>
 /// This non-generic result type is useful when an operation does not return a value but still needs to communicate
 /// whether it succeeded and, if not, why it failed.
-/// <para>Usage example:
-/// <code>
-/// var result = service.Execute();
-/// if (result.IsFailure)
-/// {
-///     // Handle errors (result.Errors)
-/// }
-/// </code>
-/// </para>
 /// </remarks>
 public class Result
 {
@@ -22,7 +13,7 @@ public class Result
     /// Initializes a new instance of the <see cref="Result"/> class.
     /// </summary>
     /// <param name="isSuccess">A value indicating whether the operation succeeded.</param>
-    /// <param name="errors">An array of error messages associated with a failed operation. Should be empty when <paramref name="isSuccess"/> is <c>true</c>.</param>
+    /// <param name="errors">An array of error messages associated with a failed operation. Should be empty when <paramref name="isSuccess"/> is true.</param>
     protected Result(bool isSuccess, string[] errors)
     {
         IsSuccess = isSuccess;
@@ -60,7 +51,7 @@ public class Result
     /// <summary>
     /// Creates a failed <see cref="Result"/> instance from an enumerable collection of error messages.
     /// </summary>
-    /// <param name="errors">The error messages describing the failure. Must not be <c>null</c>.</param>
+    /// <param name="errors">The error messages describing the failure. Must not be null.</param>
     /// <returns>A failed result containing the specified errors.</returns>
     public static Result Failure(IEnumerable<string> errors) => new(false, errors.ToArray());
 
@@ -78,19 +69,6 @@ public class Result
 /// <typeparam name="T">The type of the value returned on success.</typeparam>
 /// <remarks>
 /// Use this type when you need to propagate both a potential value and error information without throwing exceptions for flow control.
-/// <para>Usage example:
-/// <code>
-/// Result&lt;User&gt; result = userService.GetUser(id);
-/// if (result.IsSuccess)
-/// {
-///     var user = result.Value;
-/// }
-/// else
-/// {
-///     // Inspect result.Errors
-/// }
-/// </code>
-/// </para>
 /// </remarks>
 public class Result<T> : Result
 {
@@ -101,7 +79,7 @@ public class Result<T> : Result
     /// </summary>
     /// <param name="value">The value produced by the operation if successful; otherwise the default value of <typeparamref name="T"/>.</param>
     /// <param name="isSuccess">A value indicating whether the operation succeeded.</param>
-    /// <param name="errors">An array of error messages associated with a failed operation. Should be empty when <paramref name="isSuccess"/> is <c>true</c>.</param>
+    /// <param name="errors">An array of error messages associated with a failed operation. Should be empty when <paramref name="isSuccess"/> is true.</param>
     protected Result(T value, bool isSuccess, string[] errors) : base(isSuccess, errors)
     {
         _value = value;
@@ -132,7 +110,7 @@ public class Result<T> : Result
     /// <summary>
     /// Creates a failed <see cref="Result{T}"/> instance from an enumerable collection of error messages.
     /// </summary>
-    /// <param name="errors">The error messages describing the failure. Must not be <c>null</c>.</param>
+    /// <param name="errors">The error messages describing the failure. Must not be null.</param>
     /// <returns>A failed result containing the specified errors.</returns>
     public static new Result<T> Failure(IEnumerable<string> errors) => new(default!, false, errors.ToArray());
 

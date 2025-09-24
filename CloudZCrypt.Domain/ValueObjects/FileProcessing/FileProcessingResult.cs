@@ -8,11 +8,6 @@ namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 /// This value object aggregates operational metadata such as elapsed processing time, total bytes
 /// processed, file counts, throughput metrics, and error details. It is immutable and intended for
 /// reporting, auditing, telemetry, or downstream decision logic.
-/// <para>
-/// The <see cref="IsSuccess"/> property reflects the overall operation status as determined by the
-/// caller, while <see cref="HasErrors"/> and <see cref="IsPartialSuccess"/> provide finer-grained
-/// diagnostic context.
-/// </para>
 /// </remarks>
 public sealed record FileProcessingResult
 {
@@ -61,7 +56,7 @@ public sealed record FileProcessingResult
     /// <param name="totalBytes">The cumulative number of processed bytes. Must be greater than or equal to zero.</param>
     /// <param name="processedFiles">The number of files successfully processed. Must be between zero and <paramref name="totalFiles"/> inclusive.</param>
     /// <param name="totalFiles">The total number of files targeted for processing. Must be greater than or equal to zero.</param>
-    /// <param name="errors">A sequence of error messages encountered; may be <c>null</c> for no errors.</param>
+    /// <param name="errors">A sequence of error messages encountered; may be null for no errors.</param>
     /// <exception cref="ArgumentException">Thrown when any numeric argument violates its documented constraints.</exception>
     public FileProcessingResult(
         bool isSuccess,

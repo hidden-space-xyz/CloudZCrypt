@@ -24,12 +24,6 @@ namespace CloudZCrypt.WPF.ViewModels;
 /// execution, and UI state management (enabling/disabling controls, displaying progress, and surfacing
 /// warnings or errors). It exposes commands bound from the UI to encapsulate user actions while keeping
 /// business and infrastructure concerns decoupled.
-/// <para>
-/// Typical usage involves data binding from XAML to the public properties (e.g., <see cref="SourceFilePath"/>,
-/// <see cref="DestinationPath"/>, <see cref="Password"/>) and commands (e.g., <see cref="EncryptFileCommand"/>, 
-/// <see cref="DecryptFileCommand"/>). Password strength indicators are updated automatically as the
-/// password fields change.
-/// </para>
 /// </remarks>
 public class MainWindowViewModel : ObservableObject, IDisposable
 {
@@ -183,13 +177,13 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Gets the metadata view model describing the selected encryption algorithm or <c>null</c> if not resolved.
+    /// Gets the metadata view model describing the selected encryption algorithm or null if not resolved.
     /// </summary>
     public IEncryptionAlgorithmStrategy? SelectedEncryptionAlgorithmInfo =>
         AvailableEncryptionAlgorithms.FirstOrDefault(a => a.Id == selectedEncryptionAlgorithm);
 
     /// <summary>
-    /// Gets the metadata view model describing the selected key derivation algorithm or <c>null</c> if not resolved.
+    /// Gets the metadata view model describing the selected key derivation algorithm or null if not resolved.
     /// </summary>
     public IKeyDerivationAlgorithmStrategy? SelectedKeyDerivationAlgorithmInfo =>
         AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == selectedKeyDerivationAlgorithm);
@@ -476,8 +470,8 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Attempts to place the specified string value onto the system clipboard.
     /// </summary>
-    /// <param name="value">The text value to copy. Must not be <c>null</c>.</param>
-    /// <returns><c>true</c> if the clipboard update succeeds; otherwise <c>false</c>.</returns>
+    /// <param name="value">The text value to copy. Must not be null.</param>
+    /// <returns>true if the clipboard update succeeds; otherwise false.</returns>
     private static bool TryCopyToClipboard(string value)
     {
         try
@@ -527,7 +521,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// Validates and assigns the provided path to <see cref="SourceFilePath"/> if it exists.
     /// Displays a warning dialog if the path is no longer available.
     /// </summary>
-    /// <param name="selectedPath">The path selected by the user, or <c>null</c> if cancelled.</param>
+    /// <param name="selectedPath">The path selected by the user, or null if cancelled.</param>
     /// <param name="exists">A predicate used to test whether the selected path still exists.</param>
     private void SelectPath(string? selectedPath, Func<string, bool> exists)
     {
@@ -592,7 +586,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Determines whether the encryption/decryption command can currently execute based on required input fields and processing state.
     /// </summary>
-    /// <returns><c>true</c> if all required values are provided and no operation is running; otherwise <c>false</c>.</returns>
+    /// <returns>true if all required values are provided and no operation is running; otherwise false.</returns>
     private bool CanExecuteProcessFile()
     {
         return !IsProcessing &&
@@ -736,7 +730,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Applies the supplied strength analysis result to either the primary or confirmation password UI state.
     /// </summary>
-    /// <param name="isConfirmField">If <c>true</c>, applies values to the confirmation password indicators; otherwise to the primary password.</param>
+    /// <param name="isConfirmField">If true, applies values to the confirmation password indicators; otherwise to the primary password.</param>
     /// <param name="strengthResult">The computed password strength result to display.</param>
     private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthResult strengthResult)
     {
@@ -760,7 +754,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Hides the password strength indicators for the specified field.
     /// </summary>
-    /// <param name="isConfirmField">If <c>true</c>, hides the confirmation password indicator; otherwise hides the primary password indicator.</param>
+    /// <param name="isConfirmField">If true, hides the confirmation password indicator; otherwise hides the primary password indicator.</param>
     private void HideStrength(bool isConfirmField)
     {
         if (isConfirmField)

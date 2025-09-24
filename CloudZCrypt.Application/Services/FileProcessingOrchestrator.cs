@@ -536,7 +536,7 @@ public sealed class FileProcessingOrchestrator(
     /// <param name="destinationFile">The absolute path of the destination file to write.</param>
     /// <param name="request">The current request providing password, key derivation algorithm, and operation mode.</param>
     /// <param name="cancellationToken">Token that may signal cancellation before operation completion.</param>
-    /// <returns><c>true</c> when the file is processed successfully; otherwise <c>false</c>.</returns>
+    /// <returns>true when the file is processed successfully; otherwise false.</returns>
     /// <exception cref="NotSupportedException">Thrown when an unsupported <see cref="EncryptOperation"/> value is encountered.</exception>
     private Task<bool> ProcessSingleFile(
         IEncryptionAlgorithmStrategy encryptionService,
@@ -555,8 +555,8 @@ public sealed class FileProcessingOrchestrator(
     /// Attempts to normalize a raw path string to an absolute, fully expanded path while capturing validation errors.
     /// </summary>
     /// <param name="rawPath">The user-provided path (may contain environment variables or relative segments).</param>
-    /// <param name="error">Outputs an error message when the path is invalid; otherwise <c>null</c>.</param>
-    /// <returns>The normalized absolute path, an empty string when the input was null/whitespace, or <c>null</c> when invalid.</returns>
+    /// <param name="error">Outputs an error message when the path is invalid; otherwise null.</param>
+    /// <returns>The normalized absolute path, an empty string when the input was null/whitespace, or null when invalid.</returns>
     private static string? TryNormalizePath(string rawPath, out string? error)
     {
         error = null;

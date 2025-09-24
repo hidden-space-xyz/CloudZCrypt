@@ -14,10 +14,6 @@ namespace CloudZCrypt.WPF.ViewModels;
 /// This view model translates a <see cref="MessageBoxImage"/> enumeration value into a glyph,
 /// brush, and visibility state suitable for binding in XAML. Glyphs are Unicode values that
 /// assume an icon font such as Segoe Fluent Icons / Segoe MDL2 Assets is available.
-/// Example usage:
-/// <code>
-/// var vm = new MessageDialogViewModel("Operation completed successfully.", "Information", MessageBoxImage.Information);
-/// </code>
 /// </remarks>
 public class MessageDialogViewModel
 {
@@ -67,7 +63,7 @@ public class MessageDialogViewModel
     /// </summary>
     /// <param name="icon">The icon classification to translate.</param>
     /// <returns>
-    /// A tuple containing: <c>iconText</c> (Unicode glyph), <c>iconBrush</c> (color brush), and <c>visibility</c>
+    /// A tuple containing: iconText (Unicode glyph), iconBrush (color brush), and visibility
     /// indicating whether an icon should be shown.
     /// </returns>
     private static (string iconText, MediaBrush iconBrush, Visibility visibility) GetIconProperties(

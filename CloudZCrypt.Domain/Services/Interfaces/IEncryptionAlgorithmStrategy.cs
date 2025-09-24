@@ -11,25 +11,6 @@ namespace CloudZCrypt.Domain.Services.Interfaces;
 /// key size selection, nonces/IV handling, authentication tags (if applicable), and secure
 /// resource disposal. This interface is consumed by higher-level orchestrators or factories
 /// that resolve an algorithm at runtime based on user input or configuration.
-/// <para>
-/// Implementations should be:
-/// <list type="bullet">
-/// <item><description>Stateless or safely reusable across calls (thread-safe where possible).</description></item>
-/// <item><description>Explicit about any constraints (e.g., maximum file size, required entropy, platform dependencies).</description></item>
-/// <item><description>Resilient to partial failures (e.g., ensure temporary artifacts are cleaned up on exceptions).</description></item>
-/// </list>
-/// </para>
-/// <para>
-/// Example (conceptual usage):
-/// <code language="csharp">
-/// IEncryptionAlgorithmStrategy strategy = factory.Create(EncryptionAlgorithm.Aes);
-/// bool success = await strategy.EncryptFileAsync(
-///     sourceFilePath: inputPath,
-///     destinationFilePath: outputPath,
-///     password: userPassword,
-///     keyDerivationAlgorithm: KeyDerivationAlgorithm.Argon2id);
-/// </code>
-/// </para>
 /// </remarks>
 public interface IEncryptionAlgorithmStrategy
 {
@@ -71,7 +52,7 @@ public interface IEncryptionAlgorithmStrategy
     /// <param name="password">The user-supplied secret used to derive the encryption key. Must not be null or empty.</param>
     /// <param name="keyDerivationAlgorithm">The password-based key derivation function to apply when deriving the cryptographic key material.</param>
     /// <returns>
-    /// A task representing the asynchronous operation. The task result is <c>true</c> if the encryption succeeded; otherwise <c>false</c>.
+    /// A task representing the asynchronous operation. The task result is true if the encryption succeeded; otherwise false.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sourceFilePath"/>, <paramref name="destinationFilePath"/>, or <paramref name="password"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if paths are empty, whitespace, or invalid.</exception>
@@ -93,7 +74,7 @@ public interface IEncryptionAlgorithmStrategy
     /// <param name="password">The user-supplied secret used to derive or validate the decryption key. Must match the original encryption password.</param>
     /// <param name="keyDerivationAlgorithm">The password-based key derivation function expected for this encrypted artifact.</param>
     /// <returns>
-    /// A task representing the asynchronous operation. The task result is <c>true</c> if the decryption succeeded and integrity/authenticity checks (if any) passed; otherwise <c>false</c>.
+    /// A task representing the asynchronous operation. The task result is true if the decryption succeeded and integrity/authenticity checks (if any) passed; otherwise false.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sourceFilePath"/>, <paramref name="destinationFilePath"/>, or <paramref name="password"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if paths are empty, whitespace, or invalid.</exception>

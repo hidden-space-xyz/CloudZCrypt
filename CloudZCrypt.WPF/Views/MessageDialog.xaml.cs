@@ -8,12 +8,9 @@ namespace CloudZCrypt.WPF.Views;
 /// to the user along with an optional icon and title.
 /// </summary>
 /// <remarks>
-/// This dialog presents a single <c>OK</c> action to acknowledge the message. It can be
+/// This dialog presents a single OK action to acknowledge the message. It can be
 /// instantiated with an owner window to ensure it is centered and modal relative to
-/// that window. Example usage:
-/// <code>
-/// new MessageDialog("Operation completed successfully.", "Success", MessageBoxImage.Information, this).ShowDialog();
-/// </code>
+/// that window.
 /// </remarks>
 public partial class MessageDialog : Window
 {
@@ -21,10 +18,10 @@ public partial class MessageDialog : Window
     /// Initializes a new instance of the <see cref="MessageDialog"/> class with the specified
     /// message content, window title, icon, and optional owner window.
     /// </summary>
-    /// <param name="message">The textual content displayed to the user. Cannot be <c>null</c>; an empty string is allowed.</param>
+    /// <param name="message">The textual content displayed to the user. Cannot be null; an empty string is allowed.</param>
     /// <param name="title">The caption displayed in the dialog's title bar.</param>
     /// <param name="icon">The icon to visually indicate the nature of the message (e.g., information, warning, error).</param>
-    /// <param name="owner">An optional owner <see cref="Window"/> that this dialog will be modal to. May be <c>null</c>.</param>
+    /// <param name="owner">An optional owner <see cref="Window"/> that this dialog will be modal to. May be null.</param>
     public MessageDialog(string message, string title, MessageBoxImage icon, Window? owner = null)
     {
         InitializeComponent();
@@ -40,7 +37,7 @@ public partial class MessageDialog : Window
     }
 
     /// <summary>
-    /// Handles the click event of the OK button by setting the dialog result to <c>true</c>
+    /// Handles the click event of the OK button by setting the dialog result to true
     /// and closing the window.
     /// </summary>
     /// <param name="sender">The source of the event, typically the OK button.</param>

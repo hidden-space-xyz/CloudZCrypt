@@ -8,19 +8,6 @@ namespace CloudZCrypt.Domain.Exceptions;
 /// common root type that can be caught to handle any encryption failure scenario. More specific
 /// exception types derive from this class to express distinct failure categories (e.g., file system
 /// errors, invalid passwords, cryptographic failures, or environmental constraints).
-/// <para>
-/// Typical usage:
-/// <code>
-/// try
-/// {
-///     encryptor.EncryptFile(inputPath, outputPath, password);
-/// }
-/// catch (EncryptionException ex)
-/// {
-///     // Centralized logging / user notification
-/// }
-/// </code>
-/// </para>
 /// </remarks>
 public abstract class EncryptionException : Exception
 {
@@ -120,7 +107,7 @@ public class EncryptionKeyDerivationException(Exception innerException)
 /// Thrown when a cipher (encryption or decryption) operation fails during the specified phase.
 /// </summary>
 /// <remarks>
-/// The <c>operation</c> parameter should describe the failing stage (e.g., "encryption finalization", "decryption block read").
+/// The operation parameter should describe the failing stage (e.g., "encryption finalization", "decryption block read").
 /// </remarks>
 /// <param name="operation">A short description of the cipher operation phase that failed.</param>
 /// <param name="innerException">The underlying cryptographic or I/O exception that triggered this failure.</param>

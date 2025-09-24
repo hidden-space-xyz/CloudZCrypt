@@ -8,7 +8,7 @@ namespace CloudZCrypt.Application.DataTransferObjects.Passwords;
 /// </summary>
 /// <remarks>
 /// This data transfer object is typically produced by password analysis services and consumed by UI layers
-/// to provide feedback to users. The <c>Score</c> value is expected to be a normalized numeric representation
+/// to provide feedback to users. The Score value is expected to be a normalized numeric representation
 /// (e.g., on a 0–1 or 0–100 scale) of the evaluated password strength; callers should interpret it consistently
 /// with the producing component's contract.
 /// </remarks>

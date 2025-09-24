@@ -18,14 +18,6 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// susceptible to acceleration on specialized hardware (GPU / ASIC), sufficiently high iteration counts
 /// still make brute-force attempts costly. Use this implementation when interoperability or compliance
 /// outweighs the benefits of newer memory‑hard schemes.
-/// <para>
-/// Typical usage:
-/// <code language="csharp">
-/// var strategy = new Pbkdf2KeyDerivationService();
-/// byte[] salt = RandomNumberGenerator.GetBytes(32);
-/// byte[] key = strategy.DeriveKey(password, salt, 32); // 256-bit key
-/// </code>
-/// </para>
 /// </remarks>
 public class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
 {
@@ -60,11 +52,11 @@ public class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
     /// Derives a cryptographic key of the specified length (in bytes) from the provided password and salt
     /// using the PBKDF2 algorithm with HMAC-SHA256 and a fixed iteration count.
     /// </summary>
-    /// <param name="password">The user-supplied secret (passphrase). Must not be <c>null</c> or empty.</param>
-    /// <param name="salt">A cryptographically strong, unique salt. Must not be <c>null</c> and should be at least 16 bytes.</param>
+    /// <param name="password">The user-supplied secret (passphrase). Must not be null or empty.</param>
+    /// <param name="salt">A cryptographically strong, unique salt. Must not be null and should be at least 16 bytes.</param>
     /// <param name="keySize">The desired key length in bytes (e.g., 32 for a 256-bit key). Must be a positive integer.</param>
     /// <returns>A newly allocated byte array containing the derived key material of the requested length.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="password"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="password"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="password"/> is empty, <paramref name="salt"/> is empty, or <paramref name="keySize"/> is not positive.</exception>
     /// <exception cref="CryptographicException">Thrown when an error occurs during key derivation or underlying cryptographic processing.</exception>
     public byte[] DeriveKey(string password, byte[] salt, int keySize)

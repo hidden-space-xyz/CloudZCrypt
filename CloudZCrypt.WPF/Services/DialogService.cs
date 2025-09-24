@@ -17,15 +17,6 @@ namespace CloudZCrypt.WPF.Services;
 /// to simplify view model logic by abstracting UI-specific concerns. It leverages custom
 /// WPF dialog windows (e.g., <see cref="ConfirmationDialog"/>, <see cref="MessageDialog"/>)
 /// and standard Win32 dialogs for file system interactions.
-/// <para>
-/// Typical usage from a view model:
-/// <code>
-/// if (_dialogService.ShowConfirmation("Proceed with encryption?", "Confirm"))
-/// {
-///     // Execute operation
-/// }
-/// </code>
-/// </para>
 /// </remarks>
 public class DialogService : IDialogService
 {
@@ -34,7 +25,7 @@ public class DialogService : IDialogService
     /// </summary>
     /// <param name="message">The confirmation message to present to the user. Should be concise.</param>
     /// <param name="title">The window title describing the context of the confirmation.</param>
-    /// <returns><c>true</c> if the user confirms (e.g., OK/Yes); otherwise, <c>false</c>.</returns>
+    /// <returns>true if the user confirms (e.g., OK/Yes); otherwise, false.</returns>
     public bool ShowConfirmation(string message, string title)
     {
         Window? owner = System.Windows.Application.Current?.MainWindow;
@@ -164,7 +155,7 @@ public class DialogService : IDialogService
     /// Displays a folder selection dialog allowing the user to choose a directory.
     /// </summary>
     /// <param name="description">The helpful description text displayed within the dialog.</param>
-    /// <returns>The selected folder path if the user confirms; otherwise, <c>null</c>.</returns>
+    /// <returns>The selected folder path if the user confirms; otherwise, null.</returns>
     public string? ShowFolderDialog(string description)
     {
         using System.Windows.Forms.FolderBrowserDialog dialog = new() { Description = description };
@@ -176,7 +167,7 @@ public class DialogService : IDialogService
     /// </summary>
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string (e.g., "Text files (*.txt)|*.txt"). Defaults to all files.</param>
-    /// <returns>The fully qualified path of the selected file; otherwise, <c>null</c> if canceled.</returns>
+    /// <returns>The fully qualified path of the selected file; otherwise, null if canceled.</returns>
     public string? ShowOpenFileDialog(string title, string filter = "All files (*.*)|*.*")
     {
         Microsoft.Win32.OpenFileDialog dialog = new()
@@ -193,7 +184,7 @@ public class DialogService : IDialogService
     /// </summary>
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string (e.g., "Images (*.png;*.jpg)|*.png;*.jpg"). Defaults to all files.</param>
-    /// <returns>An array of selected file paths if confirmed; otherwise, <c>null</c>.</returns>
+    /// <returns>An array of selected file paths if confirmed; otherwise, null.</returns>
     public string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*")
     {
         Microsoft.Win32.OpenFileDialog dialog = new()
@@ -211,7 +202,7 @@ public class DialogService : IDialogService
     /// <param name="title">The dialog window title.</param>
     /// <param name="filter">The file type filter string controlling selectable file extensions. Defaults to all files.</param>
     /// <param name="defaultFileName">An optional default file name pre-populated in the dialog.</param>
-    /// <returns>The chosen file path if confirmed; otherwise, <c>null</c>.</returns>
+    /// <returns>The chosen file path if confirmed; otherwise, null.</returns>
     public string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "")
     {
         Microsoft.Win32.SaveFileDialog dialog = new()

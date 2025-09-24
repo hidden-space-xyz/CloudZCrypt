@@ -44,11 +44,11 @@ public interface IKeyDerivationAlgorithmStrategy
     /// <summary>
     /// Derives a cryptographic key from the supplied password and salt using the algorithm parameters embodied by this strategy.
     /// </summary>
-    /// <param name="password">The user-supplied secret (passphrase). Must not be <c>null</c> or empty.</param>
-    /// <param name="salt">A cryptographically strong, unique salt. Must not be <c>null</c> and should be at least 16 bytes.</param>
+    /// <param name="password">The user-supplied secret (passphrase). Must not be null or empty.</param>
+    /// <param name="salt">A cryptographically strong, unique salt. Must not be null and should be at least 16 bytes.</param>
     /// <param name="keySize">The desired length of the derived key in bytes. Must be a positive integer appropriate for the target cipher.</param>
     /// <returns>A byte array containing the derived key of the requested length.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="password"/> or <paramref name="salt"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="password"/> or <paramref name="salt"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="password"/> is empty, <paramref name="salt"/> is empty, or <paramref name="keySize"/> is not positive.</exception>
     byte[] DeriveKey(string password, byte[] salt, int keySize);
 }

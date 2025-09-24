@@ -12,13 +12,6 @@ namespace CloudZCrypt.Domain.Factories.Interfaces;
 /// strategy, helping clients remain agnostic of concrete implementation details. Implementations may
 /// leverage dependency injection, internal registries, or reflection-based discovery to resolve the
 /// correct strategy.
-/// <para>
-/// Example usage:
-/// <code><![CDATA[
-/// var strategy = encryptionServiceFactory.Create(EncryptionAlgorithm.Aes);
-/// bool success = await strategy.EncryptFileAsync(sourcePath, destinationPath, password, KeyDerivationAlgorithm.Argon2id);
-/// ]]></code>
-/// </para>
 /// </remarks>
 public interface IEncryptionServiceFactory
 {

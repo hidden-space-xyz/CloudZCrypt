@@ -12,14 +12,6 @@ namespace CloudZCrypt.Infrastructure.Factories;
 /// This factory leverages dependency injection to receive all available algorithm strategy implementations
 /// and exposes a single method for retrieving the strategy that matches a requested algorithm. If a strategy
 /// has not been registered for the provided algorithm, an <see cref="ArgumentOutOfRangeException"/> is thrown.
-/// <para>
-/// Typical usage:
-/// <code language="csharp"><![CDATA[
-/// IEncryptionServiceFactory factory = serviceProvider.GetRequiredService<IEncryptionServiceFactory>();
-/// IEncryptionAlgorithmStrategy aesStrategy = factory.Create(EncryptionAlgorithm.Aes);
-/// bool success = await aesStrategy.EncryptFileAsync(sourcePath, destinationPath, password, KeyDerivationAlgorithm.Argon2id);
-/// ]]></code>
-/// </para>
 /// </remarks>
 public class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> strategies)
     : IEncryptionServiceFactory
@@ -28,7 +20,7 @@ public class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> 
     /// Mapping of supported <see cref="EncryptionAlgorithm"/> values to their corresponding
     /// <see cref="IEncryptionAlgorithmStrategy"/> implementations. Populated from the injected strategies collection.
     /// </summary>
-    private readonly IReadOnlyDictionary<EncryptionAlgorithm,IEncryptionAlgorithmStrategy> strategies 
+    private readonly IReadOnlyDictionary<EncryptionAlgorithm, IEncryptionAlgorithmStrategy> strategies
         = strategies.ToDictionary(s => s.Id, s => s);
 
     /// <summary>

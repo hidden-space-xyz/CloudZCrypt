@@ -498,7 +498,7 @@ namespace CloudZCrypt.Domain.Services
         /// Determines whether the password contains obvious sequential fragments (forward or reverse).
         /// </summary>
         /// <param name="password">The password to inspect.</param>
-        /// <returns><c>true</c> if a sequence is detected; otherwise <c>false</c>.</returns>
+        /// <returns>true if a sequence is detected; otherwise false.</returns>
         private static bool HasObviousSequence(string password)
         {
             string lower = password.ToLowerInvariant();
@@ -515,7 +515,7 @@ namespace CloudZCrypt.Domain.Services
         /// Determines whether the password contains any immediate consecutive repeated characters.
         /// </summary>
         /// <param name="password">The password to evaluate.</param>
-        /// <returns><c>true</c> if at least one repeated consecutive character pair is found; otherwise <c>false</c>.</returns>
+        /// <returns>true if at least one repeated consecutive character pair is found; otherwise false.</returns>
         private static bool HasRepeats(string password)
         {
             for (int i = 1; i < password.Length; i++)

@@ -11,13 +11,6 @@ namespace CloudZCrypt.Domain.Factories.Interfaces;
 /// This abstraction decouples algorithm selection logic from consumers that require password-based key
 /// derivation (key stretching) functionality. It enables easy extension with additional algorithms while
 /// centralizing validation and instantiation concerns in implementing types.
-/// <para>
-/// Typical usage:
-/// <code language="csharp"><![CDATA[
-/// IKeyDerivationAlgorithmStrategy strategy = factory.Create(KeyDerivationAlgorithm.Argon2id);
-/// byte[] key = strategy.DeriveKey(password, salt, 32);
-/// ]]></code>
-/// </para>
 /// Implementations should be thread-safe if they are registered as singletons in a dependency injection container.
 /// </remarks>
 public interface IKeyDerivationServiceFactory
