@@ -31,10 +31,7 @@ internal class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmSt
     public IKeyDerivationAlgorithmStrategy Create(KeyDerivationAlgorithm algorithm)
     {
         return !strategies.TryGetValue(algorithm, out IKeyDerivationAlgorithmStrategy? strategy)
-            ? throw new ArgumentOutOfRangeException(
-                nameof(algorithm),
-                $"Key derivation algorithm '{algorithm}' no registrado."
-            )
+            ? throw new ArgumentOutOfRangeException(nameof(algorithm), $"Key derivation algorithm '{algorithm}' no registrado.")
             : strategy;
     }
 }

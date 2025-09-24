@@ -33,10 +33,7 @@ internal class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy
     public IEncryptionAlgorithmStrategy Create(EncryptionAlgorithm algorithm)
     {
         return !strategies.TryGetValue(algorithm, out IEncryptionAlgorithmStrategy? strategy)
-            ? throw new ArgumentOutOfRangeException(
-                nameof(algorithm),
-                $"Encryption algorithm '{algorithm}' no registrado."
-            )
+            ? throw new ArgumentOutOfRangeException(nameof(algorithm), $"Encryption algorithm '{algorithm}' no registrado.")
             : strategy;
     }
 }
