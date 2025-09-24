@@ -4,14 +4,12 @@ using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
-using CloudZCrypt.Domain.ValueObjects.Password;
 using CloudZCrypt.WPF.Commands;
 using CloudZCrypt.WPF.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
@@ -26,22 +24,11 @@ namespace CloudZCrypt.WPF.ViewModels;
 /// warnings or errors). It exposes commands bound from the UI to encapsulate user actions while keeping
 /// business and infrastructure concerns decoupled.
 /// </remarks>
-public class MainWindowViewModel : ObservableObject, IDisposable
+public class MainWindowViewModel : ObservableObjectBase, IDisposable
 {
     private readonly IDialogService dialogService;
     private readonly IFileProcessingOrchestrator orchestrator;
-    private readonly IPasswordService passwordService;
-
     private CancellationTokenSource? cancellationTokenSource;
-
-    private static readonly Dictionary<PasswordStrength, SolidColorBrush> strengthColorCache = new()
-    {
-        [PasswordStrength.VeryWeak] = new(System.Windows.Media.Color.FromRgb(220, 53, 69)),
-        [PasswordStrength.Weak] = new(System.Windows.Media.Color.FromRgb(255, 193, 7)),
-        [PasswordStrength.Fair] = new(System.Windows.Media.Color.FromRgb(255, 193, 7)),
-        [PasswordStrength.Good] = new(System.Windows.Media.Color.FromRgb(40, 167, 69)),
-        [PasswordStrength.Strong] = new(System.Windows.Media.Color.FromRgb(25, 135, 84)),
-    };
 
     private string sourceFilePath = string.Empty;
     private string destinationPath = string.Empty;
@@ -55,14 +42,11 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     private double progressValue;
     private string progressText = string.Empty;
     private bool areControlsEnabled = true;
-    private double passwordStrengthScore;
-    private string passwordStrengthText = string.Empty;
-    private System.Windows.Media.Brush passwordStrengthColor = System.Windows.Media.Brushes.Transparent;
-    private Visibility passwordStrengthVisibility = Visibility.Hidden;
-    private double confirmPasswordStrengthScore;
-    private string confirmPasswordStrengthText = string.Empty;
-    private System.Windows.Media.Brush confirmPasswordStrengthColor = System.Windows.Media.Brushes.Transparent;
-    private Visibility confirmPasswordStrengthVisibility = Visibility.Hidden;
+
+    /// <summary>
+    /// Exposes the password service for XAML bindings (behaviors, etc.).
+    /// </summary>
+    public IPasswordService PasswordService { get; }
 
     /// <summary>
     /// Gets or sets the absolute or relative path of the source file or directory to encrypt or decrypt.
@@ -96,7 +80,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Gets or sets the user-supplied password used to derive encryption/decryption keys.
-    /// Updates password strength indicators when modified.
     /// </summary>
     public string Password
     {
@@ -105,7 +88,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref password, value))
             {
-                UpdatePasswordStrengthAsync(value, false);
                 RefreshProcessCommands();
             }
         }
@@ -113,7 +95,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Gets or sets the confirmation password value, validated against <see cref="Password"/>.
-    /// Updates confirmation strength indicators when modified.
     /// </summary>
     public string ConfirmPassword
     {
@@ -122,7 +103,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
         {
             if (SetProperty(ref confirmPassword, value))
             {
-                UpdatePasswordStrengthAsync(value, true);
                 RefreshProcessCommands();
             }
         }
@@ -234,78 +214,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Gets or sets the numeric password strength score for the primary password field.
-    /// </summary>
-    public double PasswordStrengthScore
-    {
-        get => passwordStrengthScore;
-        set => SetProperty(ref passwordStrengthScore, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the descriptive password strength classification text for the primary password.
-    /// </summary>
-    public string PasswordStrengthText
-    {
-        get => passwordStrengthText;
-        set => SetProperty(ref passwordStrengthText, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the UI brush representing the password strength classification color.
-    /// </summary>
-    public System.Windows.Media.Brush PasswordStrengthColor
-    {
-        get => passwordStrengthColor;
-        set => SetProperty(ref passwordStrengthColor, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the visibility state of the primary password strength indicator.
-    /// </summary>
-    public Visibility PasswordStrengthVisibility
-    {
-        get => passwordStrengthVisibility;
-        set => SetProperty(ref passwordStrengthVisibility, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the numeric password strength score for the confirmation password field.
-    /// </summary>
-    public double ConfirmPasswordStrengthScore
-    {
-        get => confirmPasswordStrengthScore;
-        set => SetProperty(ref confirmPasswordStrengthScore, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the descriptive strength classification text for the confirmation password.
-    /// </summary>
-    public string ConfirmPasswordStrengthText
-    {
-        get => confirmPasswordStrengthText;
-        set => SetProperty(ref confirmPasswordStrengthText, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the UI brush representing the confirmation password strength classification color.
-    /// </summary>
-    public System.Windows.Media.Brush ConfirmPasswordStrengthColor
-    {
-        get => confirmPasswordStrengthColor;
-        set => SetProperty(ref confirmPasswordStrengthColor, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the visibility state of the confirmation password strength indicator.
-    /// </summary>
-    public Visibility ConfirmPasswordStrengthVisibility
-    {
-        get => confirmPasswordStrengthVisibility;
-        set => SetProperty(ref confirmPasswordStrengthVisibility, value);
-    }
-
-    /// <summary>
     /// Gets the collection of available encryption algorithm options displayed to the user.
     /// </summary>
     public ObservableCollection<IEncryptionAlgorithmStrategy> AvailableEncryptionAlgorithms { get; }
@@ -372,7 +280,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     {
         this.dialogService = dialogService;
         this.orchestrator = orchestrator;
-        this.passwordService = passwordService;
+        this.PasswordService = passwordService;
 
         AvailableEncryptionAlgorithms = new(
             encryptionStrategies
@@ -453,7 +361,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
                 PasswordGenerationOptions.IncludeNumbers |
                 PasswordGenerationOptions.IncludeSpecialCharacters;
 
-            string generated = passwordService.GeneratePassword(length, options);
+            string generated = PasswordService.GeneratePassword(length, options);
             Password = ConfirmPassword = generated;
 
             bool copied = TryCopyToClipboard(generated);
@@ -683,7 +591,7 @@ public class MainWindowViewModel : ObservableObject, IDisposable
     private void OnProgressUpdate(FileProcessingStatus update)
     {
         double progress = update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
-        double bytesPerSecond = update.ProcessedBytes / update.Elapsed.TotalSeconds;
+        double bytesPerSecond = update.Elapsed.TotalSeconds > 0 ? update.ProcessedBytes / update.Elapsed.TotalSeconds : 0;
         TimeSpan eta = update.TotalBytes > 0 && bytesPerSecond > 0
             ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
             : TimeSpan.Zero;
@@ -703,74 +611,6 @@ public class MainWindowViewModel : ObservableObject, IDisposable
             ProgressValue = 0;
             ProgressText = string.Empty;
         }
-    }
-
-    /// <summary>
-    /// Analyzes password strength asynchronously and applies the resulting classification to the appropriate UI fields.
-    /// </summary>
-    /// <param name="pwd">The password value to analyze.</param>
-    /// <param name="isConfirmField">Indicates whether the value belongs to the confirmation password field.</param>
-    /// <returns>A task representing the asynchronous analysis operation.</returns>
-    private void UpdatePasswordStrengthAsync(string pwd, bool isConfirmField)
-    {
-        if (string.IsNullOrEmpty(pwd))
-        {
-            HideStrength(isConfirmField);
-            return;
-        }
-
-        PasswordStrengthAnalysis analysis = passwordService.AnalyzePasswordStrength(pwd);
-        ApplyStrengthResult(isConfirmField, analysis);
-    }
-
-    /// <summary>
-    /// Applies the supplied strength analysis result to either the primary or confirmation password UI state.
-    /// </summary>
-    /// <param name="isConfirmField">If true, applies values to the confirmation password indicators; otherwise to the primary password.</param>
-    /// <param name="strengthResult">The computed password strength result to display.</param>
-    private void ApplyStrengthResult(bool isConfirmField, PasswordStrengthAnalysis strengthResult)
-    {
-        System.Windows.Media.Brush color = GetStrengthColor(strengthResult.Strength);
-        if (isConfirmField)
-        {
-            ConfirmPasswordStrengthScore = strengthResult.Score;
-            ConfirmPasswordStrengthText = strengthResult.Description;
-            ConfirmPasswordStrengthColor = color;
-            ConfirmPasswordStrengthVisibility = Visibility.Visible;
-        }
-        else
-        {
-            PasswordStrengthScore = strengthResult.Score;
-            PasswordStrengthText = strengthResult.Description;
-            PasswordStrengthColor = color;
-            PasswordStrengthVisibility = Visibility.Visible;
-        }
-    }
-
-    /// <summary>
-    /// Hides the password strength indicators for the specified field.
-    /// </summary>
-    /// <param name="isConfirmField">If true, hides the confirmation password indicator; otherwise hides the primary password indicator.</param>
-    private void HideStrength(bool isConfirmField)
-    {
-        if (isConfirmField)
-        {
-            ConfirmPasswordStrengthVisibility = Visibility.Hidden;
-        }
-        else
-        {
-            PasswordStrengthVisibility = Visibility.Hidden;
-        }
-    }
-
-    /// <summary>
-    /// Resolves a color brush corresponding to the specified password strength classification.
-    /// </summary>
-    /// <param name="strength">The strength classification.</param>
-    /// <returns>A brush representing the classification color, or transparent if undefined.</returns>
-    private static System.Windows.Media.Brush GetStrengthColor(PasswordStrength strength)
-    {
-        return strengthColorCache.GetValueOrDefault(strength, System.Windows.Media.Brushes.Transparent);
     }
 
     /// <summary>

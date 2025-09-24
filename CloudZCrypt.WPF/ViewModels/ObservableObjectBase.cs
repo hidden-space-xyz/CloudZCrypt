@@ -14,7 +14,7 @@ namespace CloudZCrypt.WPF.ViewModels;
 /// The <see cref="SetProperty{T}(ref T, T, string?)"/> method performs an equality check and only
 /// raises <see cref="PropertyChanged"/> when the value actually changes, avoiding unnecessary UI updates.
 /// </remarks>
-public abstract class ObservableObject : INotifyPropertyChanged
+public abstract class ObservableObjectBase : INotifyPropertyChanged
 {
     /// <summary>
     /// Occurs when a property value changes.

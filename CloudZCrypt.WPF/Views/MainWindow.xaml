@@ -207,6 +207,8 @@
                         Padding="5"
                         behaviors:PasswordBoxBehavior.Attach="True"
                         behaviors:PasswordBoxBehavior.Password="{Binding Password, Mode=TwoWay}"
+                        behaviors:PasswordBoxBehavior.AnalyzeStrength="True"
+                        behaviors:PasswordBoxBehavior.PasswordService="{Binding PasswordService}"
                         DockPanel.Dock="Top"
                         Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
@@ -222,19 +224,19 @@
                         Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
                 </DockPanel>
                 <!--  Password Strength Indicator  -->
-                <StackPanel Margin="0,2,0,10" Visibility="{Binding PasswordStrengthVisibility}">
+                <StackPanel Margin="0,2,0,10" Visibility="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthVisibility)}">
                     <ProgressBar
                         Height="5"
                         Background="Transparent"
                         BorderThickness="0"
-                        Foreground="{Binding PasswordStrengthColor}"
+                        Foreground="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthColor)}"
                         Maximum="100"
                         Minimum="0"
-                        Value="{Binding PasswordStrengthScore}" />
+                        Value="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthScore)}" />
                     <TextBlock
                         FontSize="11"
-                        Foreground="{Binding PasswordStrengthColor}"
-                        Text="{Binding PasswordStrengthText}" />
+                        Foreground="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthColor)}"
+                        Text="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthText)}" />
                 </StackPanel>
                 <!--  Confirm Password  -->
                 <TextBlock FontWeight="Bold" Text="Confirm Password:" />
@@ -254,6 +256,8 @@
                         Padding="5"
                         behaviors:PasswordBoxBehavior.Attach="True"
                         behaviors:PasswordBoxBehavior.Password="{Binding ConfirmPassword, Mode=TwoWay}"
+                        behaviors:PasswordBoxBehavior.AnalyzeStrength="True"
+                        behaviors:PasswordBoxBehavior.PasswordService="{Binding PasswordService}"
                         DockPanel.Dock="Top"
                         Foreground="LightGray"
                         IsEnabled="{Binding AreControlsEnabled}"
@@ -269,19 +273,19 @@
                         Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
                 </DockPanel>
                 <!--  Confirm Password Strength Indicator  -->
-                <StackPanel Margin="0,2,0,10" Visibility="{Binding ConfirmPasswordStrengthVisibility}">
+                <StackPanel Margin="0,2,0,10" Visibility="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthVisibility)}">
                     <ProgressBar
                         Height="5"
                         Background="Transparent"
                         BorderThickness="0"
-                        Foreground="{Binding ConfirmPasswordStrengthColor}"
+                        Foreground="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthColor)}"
                         Maximum="100"
                         Minimum="0"
-                        Value="{Binding ConfirmPasswordStrengthScore}" />
+                        Value="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthScore)}" />
                     <TextBlock
                         FontSize="11"
-                        Foreground="{Binding ConfirmPasswordStrengthColor}"
-                        Text="{Binding ConfirmPasswordStrengthText}" />
+                        Foreground="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthColor)}"
+                        Text="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthText)}" />
                 </StackPanel>
             </StackPanel>
             <!--  Action Buttons Section  -->
