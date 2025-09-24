@@ -264,6 +264,11 @@ public class MainWindowViewModel : ObservableObjectBase
     public ICommand DecryptFileCommand { get; }
 
     /// <summary>
+    /// Gets the command that cancels the ongoing processing operation.
+    /// </summary>
+    public ICommand CancelCommand { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
     /// </summary>
     /// <param name="dialogService">The dialog service used for user interaction (messages, confirmations, file pickers).</param>
@@ -321,6 +326,8 @@ public class MainWindowViewModel : ObservableObjectBase
                 catch (OperationCanceledException) { }
             },
             CanExecuteProcessFile);
+
+        CancelCommand = new RelayCommand(CancelProcessing, () => IsProcessing);
 
 #if DEBUG
         sourceFilePath = @"D:\WorkSpace\EncryptionTest\ToEncrypt";
@@ -574,6 +581,26 @@ public class MainWindowViewModel : ObservableObjectBase
     }
 
     /// <summary>
+    /// Requests cancellation of the current processing operation.
+    /// </summary>
+    private void CancelProcessing()
+    {
+        try
+        {
+            cancellationTokenSource?.Cancel();
+            ProgressText = "Cancelling...";
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex, "cancelling operation");
+        }
+        finally
+        {
+            ((RelayCommand)CancelCommand).NotifyCanExecuteChanged();
+        }
+    }
+
+    /// <summary>
     /// Updates UI-bound progress values and estimated completion time based on the latest processing status.
     /// </summary>
     /// <param name="update">The current file processing status snapshot.</param>
@@ -609,6 +636,7 @@ public class MainWindowViewModel : ObservableObjectBase
     {
         ((RelayCommand)EncryptFileCommand).NotifyCanExecuteChanged();
         ((RelayCommand)DecryptFileCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)CancelCommand).NotifyCanExecuteChanged();
     }
 
     /// <summary>

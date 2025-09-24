@@ -317,12 +317,21 @@
                         Foreground="LimeGreen" />
                     <Button
                         x:Name="DecryptButton"
+                        Margin="0,0,10,0"
                         Padding="20,10"
                         Command="{Binding DecryptFileCommand}"
                         Content="🔓 Decrypt"
                         FontSize="14"
                         FontWeight="SemiBold"
                         Foreground="LimeGreen" />
+                    <Button
+                        x:Name="CancelButton"
+                        Padding="20,10"
+                        Command="{Binding CancelCommand}"
+                        Content="❌ Cancel"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="OrangeRed" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>
