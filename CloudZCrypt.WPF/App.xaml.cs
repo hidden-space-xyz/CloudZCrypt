@@ -55,11 +55,6 @@ public partial class App : System.Windows.Application
     /// <param name="e">The exit event arguments supplied by the WPF framework.</param>
     protected override void OnExit(ExitEventArgs e)
     {
-        if (mainViewModel != null)
-        {
-            mainViewModel.Dispose();
-        }
-
         if (serviceProvider is IDisposable disposable)
         {
             disposable.Dispose();

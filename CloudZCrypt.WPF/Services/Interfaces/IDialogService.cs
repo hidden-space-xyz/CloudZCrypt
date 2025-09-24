@@ -29,11 +29,7 @@ public interface IDialogService
     /// <param name="result">The aggregate processing result containing metrics and error details.</param>
     /// <param name="operation">The cryptographic operation performed (encrypt or decrypt).</param>
     /// <param name="sourceType">A descriptive label of the processed source (e.g., "File", "Folder", or logical grouping).</param>
-    void ShowProcessingResult(
-        FileProcessingResult result,
-        EncryptOperation operation,
-        string sourceType
-    );
+    void ShowProcessingResult(FileProcessingResult result, EncryptOperation operation, string sourceType);
 
     /// <summary>
     /// Displays one or more validation error messages to the user in a consolidated form.
@@ -86,9 +82,5 @@ public interface IDialogService
     /// <param name="filter">The file type filter string controlling selectable file extensions. Defaults to all files.</param>
     /// <param name="defaultFileName">An optional suggested file name pre-populated in the dialog input field.</param>
     /// <returns>The full path chosen by the user for saving, or null if the dialog is canceled.</returns>
-    string? ShowSaveFileDialog(
-        string title,
-        string filter = "All files (*.*)|*.*",
-        string defaultFileName = ""
-    );
+    string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "");
 }

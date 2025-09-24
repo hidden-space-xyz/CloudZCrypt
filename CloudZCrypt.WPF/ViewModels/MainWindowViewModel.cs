@@ -24,7 +24,7 @@ namespace CloudZCrypt.WPF.ViewModels;
 /// warnings or errors). It exposes commands bound from the UI to encapsulate user actions while keeping
 /// business and infrastructure concerns decoupled.
 /// </remarks>
-public class MainWindowViewModel : ObservableObjectBase, IDisposable
+public class MainWindowViewModel : ObservableObjectBase
 {
     private readonly IDialogService dialogService;
     private readonly IFileProcessingOrchestrator orchestrator;
@@ -330,14 +330,6 @@ public class MainWindowViewModel : ObservableObjectBase, IDisposable
     }
 
     /// <summary>
-    /// Releases managed resources associated with this instance, including any active cancellation token source.
-    /// </summary>
-    public void Dispose()
-    {
-        cancellationTokenSource?.Dispose();
-    }
-
-    /// <summary>
     /// Generates a new strong password using all available character sets, updates the password fields,
     /// optionally copies it to the clipboard, and displays a confirmation dialog.
     /// </summary>
@@ -567,10 +559,7 @@ public class MainWindowViewModel : ObservableObjectBase, IDisposable
         }
         catch (OperationCanceledException)
         {
-            dialogService.ShowMessage(
-                $"{operationText} was cancelled by user.",
-                "Operation Cancelled",
-                MessageBoxImage.Information);
+            dialogService.ShowMessage($"{operationText} was cancelled by user.","Operation Cancelled",MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
