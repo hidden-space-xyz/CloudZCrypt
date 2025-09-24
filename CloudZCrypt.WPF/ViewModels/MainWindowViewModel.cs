@@ -566,7 +566,7 @@ public class MainWindowViewModel : ObservableObjectBase
         }
         catch (OperationCanceledException)
         {
-            dialogService.ShowMessage($"{operationText} was cancelled by user.","Operation Cancelled",MessageBoxImage.Information);
+            dialogService.ShowMessage($"{operationText} was cancelled by user.", "Operation Cancelled", MessageBoxImage.Information);
         }
         catch (Exception ex)
         {

@@ -1,6 +1,5 @@
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
@@ -9,9 +8,7 @@ using CloudZCrypt.Infrastructure.Factories;
 using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using CloudZCrypt.Infrastructure.Services.FileSystem;
 using CloudZCrypt.Infrastructure.Services.KeyDerivation;
-using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace CloudZCrypt.Composition;
 
@@ -65,10 +62,6 @@ public static class DependencyInjection
     /// </remarks>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        Assembly applicationAssembly = typeof(Result).Assembly;
-
-        services.AddValidatorsFromAssembly(applicationAssembly);
-
         services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
 
         return services;
