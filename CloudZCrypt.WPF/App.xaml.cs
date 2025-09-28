@@ -20,7 +20,6 @@ namespace CloudZCrypt.WPF;
 public partial class App : System.Windows.Application
 {
     private readonly IServiceProvider serviceProvider;
-    private MainWindowViewModel? mainViewModel;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class and configures the
@@ -41,8 +40,6 @@ public partial class App : System.Windows.Application
     /// <exception cref="InvalidOperationException">Thrown if required services such as <see cref="MainWindowViewModel"/> or <see cref="MainWindow"/> are not registered.</exception>
     protected override void OnStartup(StartupEventArgs e)
     {
-        mainViewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();
-
         serviceProvider.GetRequiredService<MainWindow>().Show();
 
         base.OnStartup(e);
