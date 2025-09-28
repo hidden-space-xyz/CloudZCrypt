@@ -1,17 +1,4 @@
-﻿
-# 🔐 CloudZCrypt
-
-## Your Personal File Vault for Windows
-
-<p align="center">  
-<img alt=".NET" src="https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white" />  
-<img alt="C#" src="https://img.shields.io/badge/C%23-13-239120?logo=csharp&logoColor=white" />  
-<img alt="WPF" src="https://img.shields.io/badge/WPF-Desktop-5C2D91?logo=windows&logoColor=white" />  
-<img alt="Windows" src="https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white" />  
-<img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />  
-</p>
-
----
+﻿# 🔐 CloudZCrypt
 
 **CloudZCrypt is a simple, powerful tool that helps you protect your sensitive files with military-grade encryption.**
 
@@ -70,56 +57,48 @@ CloudZCrypt is constantly evolving. Here's what we're planning for future releas
 
 We're committed to continuously improving CloudZCrypt based on user feedback and security best practices. Your suggestions are always welcome and will help shape the application's future.
 
+## 📸 Screenshots
+
+<p align="center">
+<img width="786" height="578" alt="image" src="https://github.com/user-attachments/assets/bf70aaeb-1da8-46ce-8cde-effa024830b6" />
+</p>
+
 ## 🧩 About the Name
 
 CloudZCrypt originated from its initial purpose: creating a tool that would encrypt files securely for cloud storage services. The name combines "Cloud" (representing cloud storage), "Z" (as a stylistic element), and "Crypt" (for encryption). While the application was originally designed for securing files before uploading them to any cloud storage service, it works equally well for encrypting files stored locally on your device, offering versatile protection regardless of where your files ultimately reside.
-
-## 👨‍💻 For Developers
-
-CloudZCrypt welcomes developer contributions! The project is built on modern technologies and follows clean architecture principles:
-
-- Modern .NET 9 and C# 13
-- Clean, layered architecture with separation of concerns
-- Well-documented code with clear patterns
-- Designed for easy extension with new algorithms
-
-### Architecture Overview
-
-CloudZCrypt uses a clean, modular architecture with these key components:
-
-- **Presentation:** WPF interface with MVVM pattern
-- **Application:** Orchestration layer connecting UI to core functionality
-- **Domain:** Core business logic and encryption strategy interfaces
-- **Infrastructure:** Concrete implementations of encryption algorithms
-
-The codebase emphasizes:
-- Strategy pattern for pluggable encryption algorithms
-- Factory pattern for runtime algorithm resolution
-- Dependency injection for testability
-- Clear separation of concerns
-
-### How to Contribute
-
-To contribute:
-1. Fork the repository
-2. Create a feature branch from `develop`
-3. Implement your changes with tests
-4. Submit a pull request
-
-We especially welcome contributions for UI and security improvements.
 
 ## 🔍 Security Notes
 
 - 🔑 Your security depends on your password strength - use long, complex passwords
 - 🔄 Keep your operating system and CloudZCrypt updated
 
----
+## 💡How to Contribute
 
-## 📝 About This Project
+- We welcome contributions from everyone, regardless of your technical background!
+- Every contribution matters and helps make this project better for everyone!
 
-CloudZCrypt is maintained with care for privacy and simplicity. It's free, open-source software designed to put you in control of your private information.
+#### For Non-Developers
+You can make valuable contributions too:
+- **Report Bugs**: Found something that doesn't work? Let us know by opening an issue.
+- **Suggest Features**: Have ideas for new features or improvements? We'd love to hear them.
+- **Translations**: Help translate the application into your language.
+- **Documentation**: Improve or clarify our documentation.
+- **Spread the Word**: Share the project on social media, blog about it, or tell your friends.
+- **User Testing**: Try new features and provide feedback.
 
-**Questions or suggestions?** Open an issue on our GitHub page.
+#### For Developers
 
-*Your privacy matters. Your files belong to you alone.*
-```
+1. Fork the repository
+2. Create a feature branch from `develop`
+3. Implement your changes with documentation and tests
+4. Submit a pull request
+
+We especially welcome contributions for UI and security improvements.
+
+<p align="center">
+<img alt=".NET" src="https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white" />  
+<img alt="C#" src="https://img.shields.io/badge/C%23-13-239120?logo=csharp&logoColor=white" />  
+<img alt="WPF" src="https://img.shields.io/badge/WPF-Desktop-5C2D91?logo=windows&logoColor=white" />  
+<img alt="Windows" src="https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white" />  
+<img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />  
+</p>
