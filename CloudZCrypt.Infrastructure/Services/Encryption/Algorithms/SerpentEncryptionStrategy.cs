@@ -18,8 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// using a pluggable key derivation strategy, then applies Serpent within GCM for AEAD guarantees.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory responsible for resolving key derivation strategies.</param>
-internal class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+internal class SerpentEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the <see cref="EncryptionAlgorithm"/> identifier representing Serpent.
@@ -35,7 +35,8 @@ internal class SerpentEncryptionService(IKeyDerivationServiceFactory keyDerivati
     /// Gets a detailed description of Serpent's characteristics and usage context.
     /// </summary>
     public string Description =>
-        "A conservative 128‑bit block cipher finalist from the AES competition, designed with a large security margin and a 256‑bit key option. Typically slower than AES and Camellia. When wrapped in GCM it provides AEAD, but performance costs make it niche for high-assurance or defense-in-depth scenarios.";
+        "A conservative 128‑bit block cipher finalist from the AES competition, designed with a large security margin and a 256‑bit key option. " +
+        "Typically slower than AES and Camellia. When wrapped in GCM it provides AEAD, but performance costs make it niche for high-assurance or defense-in-depth scenarios.";
 
     /// <summary>
     /// Gets a concise summary describing when Serpent may be preferred.

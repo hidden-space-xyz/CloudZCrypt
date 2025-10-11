@@ -19,7 +19,7 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// still make brute-force attempts costly. Use this implementation when interoperability or compliance
 /// outweighs the benefits of newer memory‑hard schemes.
 /// </remarks>
-internal class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
+internal class Pbkdf2KeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
 {
     /// <summary>
     /// The iteration count (work factor) applied when expanding the password.
@@ -41,7 +41,11 @@ internal class Pbkdf2KeyDerivationService : IKeyDerivationAlgorithmStrategy
     /// Gets a detailed description outlining characteristics, strengths, and trade-offs of PBKDF2.
     /// </summary>
     public string Description =>
-        "A widely standardized (PKCS #5, RFC 8018, FIPS 140 allowed) iterative, CPU‑bound key derivation function using repeated HMAC-SHA256 applications. Simple and broadly implemented in virtually all cryptographic libraries. Lacks intrinsic memory hardness, making it comparatively cheaper to accelerate on GPUs/ASICs versus Argon2id or scrypt. Still appropriate where regulatory, legacy platform, or FIPS compliance requirements dominate, or when only conservative primitives are permitted. Security hinges on high iteration counts (cost parameter) and high‑entropy passwords.";
+        "A widely standardized (PKCS #5, RFC 8018, FIPS 140 allowed) iterative, CPU‑bound key derivation function using repeated HMAC-SHA256 applications. " +
+        "Simple and broadly implemented in virtually all cryptographic libraries. " +
+        "Lacks intrinsic memory hardness, making it comparatively cheaper to accelerate on GPUs/ASICs versus Argon2id or scrypt. " +
+        "Still appropriate where regulatory, legacy platform, or FIPS compliance requirements dominate, or when only conservative primitives are permitted. " +
+        "Security hinges on high iteration counts (cost parameter) and high‑entropy passwords.";
 
     /// <summary>
     /// Gets a concise summary emphasizing the primary suitability of this algorithm.

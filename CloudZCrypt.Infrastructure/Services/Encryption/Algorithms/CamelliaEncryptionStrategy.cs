@@ -18,8 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// integrity, and authenticity.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve password-based key derivation strategies.</param>
-internal class CamelliaEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+internal class CamelliaEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the <see cref="EncryptionAlgorithm"/> identifier representing Camellia.
@@ -35,7 +35,9 @@ internal class CamelliaEncryptionService(IKeyDerivationServiceFactory keyDerivat
     /// Gets a descriptive overview of the Camellia cipher and its intended usage contexts.
     /// </summary>
     public string Description =>
-        "A 128‑bit block cipher with a 256‑bit key, jointly designed by NTT and Mitsubishi; performance and security margin comparable to AES. Supported in many international standards (RFCs, ISO/IEC) and suitable where non‑U.S.-origin algorithms or broader jurisdictional acceptance is desired. Used with GCM for AEAD.";
+        "A 128‑bit block cipher with a 256‑bit key, jointly designed by NTT and Mitsubishi; performance and security margin comparable to AES. " +
+        "Supported in many international standards (RFCs, ISO/IEC) and suitable where non‑U.S.-origin algorithms or broader jurisdictional acceptance is desired. " +
+        "Used with GCM for AEAD.";
 
     /// <summary>
     /// Gets a concise summary indicating when Camellia may be preferred.

@@ -8,6 +8,7 @@ using CloudZCrypt.Infrastructure.Factories;
 using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using CloudZCrypt.Infrastructure.Services.FileSystem;
 using CloudZCrypt.Infrastructure.Services.KeyDerivation;
+using CloudZCrypt.Infrastructure.Services.Obfuscation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudZCrypt.Composition;
@@ -33,15 +34,24 @@ public static class DependencyInjection
         // Factories
         services.AddSingleton<IKeyDerivationServiceFactory, KeyDerivationServiceFactory>();
         services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
+        services.AddSingleton<INameObfuscationServiceFactory, NameObfuscationServiceFactory>();
 
-        // Strategies
-        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Argon2IdKeyDerivationService>();
-        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Pbkdf2KeyDerivationService>();
-        services.AddSingleton<IEncryptionAlgorithmStrategy, AesEncryptionService>();
-        services.AddSingleton<IEncryptionAlgorithmStrategy, TwofishEncryptionService>();
-        services.AddSingleton<IEncryptionAlgorithmStrategy, SerpentEncryptionService>();
-        services.AddSingleton<IEncryptionAlgorithmStrategy, ChaCha20EncryptionService>();
-        services.AddSingleton<IEncryptionAlgorithmStrategy, CamelliaEncryptionService>();
+        // Key Derivation Strategies
+        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Argon2IdKeyDerivationStrategy>();
+        services.AddSingleton<IKeyDerivationAlgorithmStrategy, Pbkdf2KeyDerivationStrategy>();
+
+        // Encryption Strategies
+        services.AddSingleton<IEncryptionAlgorithmStrategy, AesEncryptionStrategy>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, TwofishEncryptionStrategy>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, SerpentEncryptionStrategy>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, ChaCha20EncryptionStrategy>();
+        services.AddSingleton<IEncryptionAlgorithmStrategy, CamelliaEncryptionStrategy>();
+
+        // Name Obfuscation Strategies
+        services.AddSingleton<INameObfuscationStrategy, NoObfuscationStrategy>();
+        services.AddSingleton<INameObfuscationStrategy, GuidObfuscationStrategy>();
+        services.AddSingleton<INameObfuscationStrategy, Sha256ObfuscationStrategy>();
+        services.AddSingleton<INameObfuscationStrategy, Sha512ObfuscationStrategy>();
 
         // Services
         services.AddSingleton<IPasswordService, PasswordService>();

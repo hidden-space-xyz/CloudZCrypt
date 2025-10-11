@@ -38,6 +38,7 @@ public class MainWindowViewModel : ObservableObjectBase
     private bool isConfirmPasswordVisible;
     private EncryptionAlgorithm selectedEncryptionAlgorithm;
     private KeyDerivationAlgorithm selectedKeyDerivationAlgorithm;
+    private NameObfuscationMode selectedNameObfuscationMode = NameObfuscationMode.None;
     private bool isProcessing;
     private double progressValue;
     private string progressText = string.Empty;
@@ -158,6 +159,22 @@ public class MainWindowViewModel : ObservableObjectBase
     }
 
     /// <summary>
+    /// Gets or sets the currently selected name obfuscation mode.
+    /// Changing the value updates the related metadata binding.
+    /// </summary>
+    public NameObfuscationMode SelectedNameObfuscationMode
+    {
+        get => selectedNameObfuscationMode;
+        set
+        {
+            if (SetProperty(ref selectedNameObfuscationMode, value))
+            {
+                OnPropertyChanged(nameof(SelectedNameObfuscationModeInfo));
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets the metadata view model describing the selected encryption algorithm or null if not resolved.
     /// </summary>
     public IEncryptionAlgorithmStrategy? SelectedEncryptionAlgorithmInfo =>
@@ -168,6 +185,12 @@ public class MainWindowViewModel : ObservableObjectBase
     /// </summary>
     public IKeyDerivationAlgorithmStrategy? SelectedKeyDerivationAlgorithmInfo =>
         AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == selectedKeyDerivationAlgorithm);
+
+    /// <summary>
+    /// Gets the metadata view model describing the selected name obfuscation mode or null if not resolved.
+    /// </summary>
+    public INameObfuscationStrategy? SelectedNameObfuscationModeInfo =>
+        AvailableNameObfuscationModes.FirstOrDefault(a => a.Id == selectedNameObfuscationMode);
 
     /// <summary>
     /// Gets or sets a value indicating whether a file processing operation is currently running.
@@ -224,6 +247,11 @@ public class MainWindowViewModel : ObservableObjectBase
     public ObservableCollection<IKeyDerivationAlgorithmStrategy> AvailableKeyDerivationAlgorithms { get; }
 
     /// <summary>
+    /// Gets the collection of available name obfuscation mode options displayed to the user.
+    /// </summary>
+    public ObservableCollection<INameObfuscationStrategy> AvailableNameObfuscationModes { get; }
+
+    /// <summary>
     /// Gets the command that generates a new strong password and optionally copies it to the clipboard.
     /// </summary>
     public ICommand GenerateStrongPasswordCommand { get; }
@@ -276,12 +304,14 @@ public class MainWindowViewModel : ObservableObjectBase
     /// <param name="passwordService">The password service used for analysis and generation operations.</param>
     /// <param name="encryptionStrategies">The collection of available encryption algorithm strategies.</param>
     /// <param name="keyDerivationStrategies">The collection of available key derivation algorithm strategies.</param>
+    /// <param name="nameObfuscationStrategies">The collection of available name obfuscation strategies.</param>
     public MainWindowViewModel(
         IDialogService dialogService,
         IFileProcessingOrchestrator orchestrator,
         IPasswordService passwordService,
         IEnumerable<IEncryptionAlgorithmStrategy> encryptionStrategies,
-        IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies)
+        IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies,
+        IEnumerable<INameObfuscationStrategy> nameObfuscationStrategies)
     {
         this.dialogService = dialogService;
         this.orchestrator = orchestrator;
@@ -295,8 +325,13 @@ public class MainWindowViewModel : ObservableObjectBase
             keyDerivationStrategies
                 .OrderBy(a => a.DisplayName));
 
+        AvailableNameObfuscationModes = new(
+            nameObfuscationStrategies
+                .OrderBy(a => a.Id));
+
         selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms[0].Id;
         selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms[0].Id;
+        selectedNameObfuscationMode = AvailableNameObfuscationModes[0].Id;
 
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);
@@ -518,7 +553,8 @@ public class MainWindowViewModel : ObservableObjectBase
             ConfirmPassword,
             SelectedEncryptionAlgorithm,
             SelectedKeyDerivationAlgorithm,
-            operation);
+            operation,
+            SelectedNameObfuscationMode);
 
         IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
         if (validationErrors.Any())

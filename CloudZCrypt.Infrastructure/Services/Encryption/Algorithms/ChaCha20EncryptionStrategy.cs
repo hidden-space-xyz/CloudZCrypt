@@ -18,8 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// (e.g., Argon2id, PBKDF2). The nonce must be unique per key; reuse compromises security.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving password-based key derivation strategies.</param>
-internal class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+internal class ChaCha20EncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the <see cref="EncryptionAlgorithm"/> identifier for ChaCha20-Poly1305.
@@ -35,7 +35,9 @@ internal class ChaCha20EncryptionService(IKeyDerivationServiceFactory keyDerivat
     /// Gets a descriptive overview of ChaCha20-Poly1305 and typical deployment scenarios.
     /// </summary>
     public string Description =>
-        "A modern ARX (Add-Rotate-XOR) stream cipher (ChaCha20) combined with the Poly1305 MAC to form a fast, timing‑attack‑resistant AEAD construction that performs especially well on devices lacking AES hardware acceleration. Standardized in RFC 8439 and widely deployed in TLS, SSH, QUIC, and WireGuard.";
+        "A modern ARX (Add-Rotate-XOR) stream cipher (ChaCha20) combined with the Poly1305 MAC to form a fast, " +
+        "timing‑attack‑resistant AEAD construction that performs especially well on devices lacking AES hardware acceleration. " +
+        "Standardized in RFC 8439 and widely deployed in TLS, SSH, QUIC, and WireGuard.";
 
     /// <summary>
     /// Gets a concise summary describing when ChaCha20-Poly1305 is preferred.

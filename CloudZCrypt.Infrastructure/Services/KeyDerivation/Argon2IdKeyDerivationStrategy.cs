@@ -16,7 +16,7 @@ namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
 /// opinionated, security‑oriented defaults (memory cost, iterations, and parallelism) chosen to impose
 /// substantial computational and memory load on attackers while remaining practical for legitimate use.
 /// </remarks>
-internal class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
+internal class Argon2IdKeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
 {
     // Memory cost in KB (64 MB) for GPU resistance
     private const int MemoryCost = 65536;
@@ -41,7 +41,12 @@ internal class Argon2IdKeyDerivationService : IKeyDerivationAlgorithmStrategy
     /// Gets a detailed description of the Argon2id algorithm, its security properties, and tuning dimensions.
     /// </summary>
     public string Description =>
-        "A modern memory‑hard password hashing and key derivation function (PHC winner). The “id” variant blends Argon2i (side‑channel resistant) and Argon2d (GPU/ASIC resistance) for balanced security. Tunable via: memory cost (m), iterations/time cost (t), and parallelism (p). Provides strong resistance to large‑scale brute force on GPUs, FPGAs, and ASICs by imposing substantial RAM requirements. Supports domain separation with distinct salt plus optional secret/data parameters. Recommended where modern security is prioritized over legacy compatibility.";
+        "A modern memory‑hard password hashing and key derivation function (PHC winner). " +
+        "The “id” variant blends Argon2i (side‑channel resistant) and Argon2d (GPU/ASIC resistance) for balanced security. " +
+        "Tunable via: memory cost (m), iterations/time cost (t), and parallelism (p). " +
+        "Provides strong resistance to large‑scale brute force on GPUs, FPGAs, and ASICs by imposing substantial RAM requirements. " +
+        "Supports domain separation with distinct salt plus optional secret/data parameters. " +
+        "Recommended where modern security is prioritized over legacy compatibility.";
 
     /// <summary>
     /// Gets a concise summary emphasizing the primary strength of Argon2id.

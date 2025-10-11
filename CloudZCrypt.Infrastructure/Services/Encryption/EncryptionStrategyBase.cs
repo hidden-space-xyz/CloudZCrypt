@@ -1,6 +1,7 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
+using CloudZCrypt.Domain.IO;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Cryptography;
@@ -17,7 +18,7 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption;
 /// translation into domain-specific <see cref="EncryptionException"/> types.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation strategy based on the selected <see cref="KeyDerivationAlgorithm"/>.</param>
-internal abstract class EncryptionServiceBase(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyDerivationServiceFactory)
 {
     /// <summary>
     /// Size (in bits) of the symmetric encryption key produced from password derivation.
@@ -116,6 +117,10 @@ internal abstract class EncryptionServiceBase(IKeyDerivationServiceFactory keyDe
 
                 await WriteSaltAsync(destinationFile, salt);
                 await WriteNonceAsync(destinationFile, nonce);
+                // Write a small header containing the original filename; downstream logic can choose to use it
+                string originalName = Path.GetFileName(sourceFilePath);
+                await EncryptedFileHeader.WriteAsync(destinationFile, originalName);
+
                 await EncryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }
             catch (IOException ex)
@@ -266,6 +271,8 @@ internal abstract class EncryptionServiceBase(IKeyDerivationServiceFactory keyDe
                 using FileStream destinationFile = File.Create(destinationFilePath);
 
                 await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
+                // Consume optional header (if present) before cipher data
+                _ = await EncryptedFileHeader.TryReadAsync(sourceFile);
 
                 await DecryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }

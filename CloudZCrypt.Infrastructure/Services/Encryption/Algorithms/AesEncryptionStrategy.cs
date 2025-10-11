@@ -18,8 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// and ciphertext with the authentication tag implicitly managed by the GCM mode.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation algorithm strategy for password-based key derivation.</param>
-internal class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the unique <see cref="EncryptionAlgorithm"/> identifier representing AES.
@@ -35,7 +35,8 @@ internal class AesEncryptionService(IKeyDerivationServiceFactory keyDerivationSe
     /// Gets a detailed description of the AES-256 GCM algorithm and its characteristics.
     /// </summary>
     public string Description =>
-        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
+        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. " +
+        "Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
 
     /// <summary>
     /// Gets a short summary describing when this algorithm is generally preferred.

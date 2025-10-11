@@ -18,8 +18,8 @@ namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 /// confidentiality, integrity, and authenticity.
 /// </remarks>
 /// <param name="keyDerivationServiceFactory">Factory resolving concrete key derivation strategies for password-based key derivation.</param>
-internal class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionServiceBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
 {
     /// <summary>
     /// Gets the unique <see cref="EncryptionAlgorithm"/> identifier representing Twofish.
@@ -35,7 +35,9 @@ internal class TwofishEncryptionService(IKeyDerivationServiceFactory keyDerivati
     /// Gets a descriptive text highlighting Twofish design characteristics and its positioning.
     /// </summary>
     public string Description =>
-        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. Less commonly hardware-accelerated or standardized for AEAD modes.";
+        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. " +
+        "Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. " +
+        "Less commonly hardware-accelerated or standardized for AEAD modes.";
 
     /// <summary>
     /// Gets a concise summary describing when this algorithm may be preferred.
