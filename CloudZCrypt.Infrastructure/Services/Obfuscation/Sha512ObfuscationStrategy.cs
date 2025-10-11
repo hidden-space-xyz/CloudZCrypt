@@ -29,17 +29,13 @@ internal class Sha512ObfuscationStrategy : INameObfuscationStrategy
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces filenames with SHA-512 hash digests of the file content (128 hexadecimal characters). " +
-        "Similar to SHA-256 but with stronger cryptographic properties and longer hash values. Provides " +
-        "content-based obfuscation where identical files generate identical names, enabling deduplication. " +
-        "The longer hash provides enhanced collision resistance and security margin. Note that filenames " +
-        "will be quite long (128 characters), which may approach filesystem path length limits in deeply " +
-        "nested directory structures.";
+        "Replaces the filename with a 128?character SHA?512 hexadecimal digest computed from the file content while preserving the original extension. " +
+        "Offers stronger collision resistance than SHA?256 at the cost of longer names; deterministic across identical content.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.
     /// </summary>
-    public string Summary => "Best for maximum hash security (longer names)";
+    public string Summary => "Best for maximum collision resistance (128-char digest)";
 
     /// <summary>
     /// Generates a SHA-512 hash-based filename from the file content while preserving the original file extension.

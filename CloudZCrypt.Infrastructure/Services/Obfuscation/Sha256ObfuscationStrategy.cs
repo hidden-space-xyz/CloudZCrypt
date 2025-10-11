@@ -29,16 +29,13 @@ internal class Sha256ObfuscationStrategy : INameObfuscationStrategy
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces filenames with SHA-256 hash digests of the file content (64 hexadecimal characters). " +
-        "This provides content-based obfuscation where identical files will always generate the same filename, " +
-        "enabling deduplication while maintaining privacy. The filename becomes a cryptographic fingerprint " +
-        "of the content, making it impossible to determine the original name but allowing identification " +
-        "of duplicate content. Suitable for archival scenarios where content-based naming is beneficial.";
+        "Replaces the filename with a 64?character SHA?256 hexadecimal digest computed from the file content while preserving the original extension. " +
+        "Deterministic across identical content, enabling deduplication and content-addressable naming without leaking the original filename.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.
     /// </summary>
-    public string Summary => "Best for content-based naming and deduplication";
+    public string Summary => "Best for content-addressed naming (64-char digest)";
 
     /// <summary>
     /// Generates a SHA-256 hash-based filename from the file content while preserving the original file extension.

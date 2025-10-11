@@ -26,14 +26,13 @@ internal class NoObfuscationStrategy : INameObfuscationStrategy
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Preserves the original filename without any modification. Files remain easily identifiable by their names, " +
-        "maintaining readability and organization structure. Choose this option when filename privacy is not a concern " +
-        "and you want to keep the original file organization intact.";
+        "Preserves the original filename unchanged, including case and extension. Use when filename privacy is not required " +
+        "and human-readable organization should be retained.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.
     /// </summary>
-    public string Summary => "Best for maintaining original filenames";
+    public string Summary => "Best if filename obfuscation is not needed";
 
     /// <summary>
     /// Returns the original filename unchanged.

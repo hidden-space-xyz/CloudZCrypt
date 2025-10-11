@@ -327,11 +327,11 @@ public class MainWindowViewModel : ObservableObjectBase
 
         AvailableNameObfuscationModes = new(
             nameObfuscationStrategies
-                .OrderBy(a => a.Id));
+                .OrderBy(a => a.DisplayName));
 
-        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms[0].Id;
-        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms[0].Id;
-        selectedNameObfuscationMode = AvailableNameObfuscationModes[0].Id;
+        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First(x => x.Id == EncryptionAlgorithm.Aes).Id;
+        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First(x => x.Id == KeyDerivationAlgorithm.Argon2id).Id;
+        selectedNameObfuscationMode = AvailableNameObfuscationModes.First(x => x.Id == NameObfuscationMode.Guid).Id;
 
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);

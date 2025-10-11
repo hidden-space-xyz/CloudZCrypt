@@ -26,15 +26,13 @@ internal class GuidObfuscationStrategy : INameObfuscationStrategy
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces filenames with randomly generated Globally Unique Identifiers (GUIDs). This provides excellent " +
-        "privacy as the generated names are completely unrelated to the original content and cannot be predicted " +
-        "or correlated. Each file gets a unique 32-character hexadecimal identifier. Ideal for maximum filename " +
-        "privacy while maintaining reasonable length and filesystem compatibility.";
+        "Replaces the filename with a randomly generated GUID while preserving the original extension. " +
+        "Provides strong privacy by producing non-predictable, non-correlatable names for each file.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.
     /// </summary>
-    public string Summary => "Best for maximum privacy";
+    public string Summary => "Best for maximum privacy (random GUID)";
 
     /// <summary>
     /// Generates a new GUID-based filename while preserving the original file extension.
