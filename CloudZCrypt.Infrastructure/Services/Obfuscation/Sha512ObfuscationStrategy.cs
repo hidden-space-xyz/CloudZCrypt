@@ -23,14 +23,14 @@ internal class Sha512ObfuscationStrategy : INameObfuscationStrategy
     /// <summary>
     /// Gets the human-readable display name for this strategy.
     /// </summary>
-    public string DisplayName => "SHA-512 Hash";
+    public string DisplayName => "SHA-512";
 
     /// <summary>
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces the filename with a 128?character SHA?512 hexadecimal digest computed from the file content while preserving the original extension. " +
-        "Offers stronger collision resistance than SHA?256 at the cost of longer names; deterministic across identical content.";
+        "Replaces the filename with a 128‑character SHA‑512 hexadecimal digest computed from the file content. " +
+        "Offers stronger collision resistance than SHA‑256 at the cost of longer names; deterministic across identical content.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.

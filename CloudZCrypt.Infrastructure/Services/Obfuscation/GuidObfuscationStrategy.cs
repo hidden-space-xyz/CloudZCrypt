@@ -20,19 +20,19 @@ internal class GuidObfuscationStrategy : INameObfuscationStrategy
     /// <summary>
     /// Gets the human-readable display name for this strategy.
     /// </summary>
-    public string DisplayName => "GUID Obfuscation";
+    public string DisplayName => "GUID";
 
     /// <summary>
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces the filename with a randomly generated GUID while preserving the original extension. " +
+        "Replaces the filename with a randomly generated GUID. " +
         "Provides strong privacy by producing non-predictable, non-correlatable names for each file.";
 
     /// <summary>
     /// Gets a concise summary describing when this strategy is appropriate.
     /// </summary>
-    public string Summary => "Best for maximum privacy (random GUID)";
+    public string Summary => "Best for maximum privacy (random)";
 
     /// <summary>
     /// Generates a new GUID-based filename while preserving the original file extension.

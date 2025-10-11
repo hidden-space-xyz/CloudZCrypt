@@ -23,13 +23,13 @@ internal class Sha256ObfuscationStrategy : INameObfuscationStrategy
     /// <summary>
     /// Gets the human-readable display name for this strategy.
     /// </summary>
-    public string DisplayName => "SHA-256 Hash";
+    public string DisplayName => "SHA-256";
 
     /// <summary>
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Replaces the filename with a 64?character SHA?256 hexadecimal digest computed from the file content while preserving the original extension. " +
+        "Replaces the filename with a 64‑character SHA‑256 hexadecimal digest computed from the file content. " +
         "Deterministic across identical content, enabling deduplication and content-addressable naming without leaking the original filename.";
 
     /// <summary>

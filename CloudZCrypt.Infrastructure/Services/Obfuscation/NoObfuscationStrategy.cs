@@ -20,13 +20,13 @@ internal class NoObfuscationStrategy : INameObfuscationStrategy
     /// <summary>
     /// Gets the human-readable display name for this strategy.
     /// </summary>
-    public string DisplayName => "No Obfuscation";
+    public string DisplayName => "None";
 
     /// <summary>
     /// Gets a detailed description of this obfuscation strategy.
     /// </summary>
     public string Description =>
-        "Preserves the original filename unchanged, including case and extension. Use when filename privacy is not required " +
+        "Preserves the original filename unchanged. Use when filename privacy is not required " +
         "and human-readable organization should be retained.";
 
     /// <summary>
