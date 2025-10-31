@@ -16,11 +16,11 @@ internal class Pbkdf2KeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
     public string DisplayName => "PBKDF2 (HMAC-SHA256)";
 
     public string Description =>
-        "A widely standardized (PKCS #5, RFC 8018, FIPS 140 allowed) iterative, CPU‑bound key derivation function using repeated HMAC-SHA256 applications. " +
-        "Simple and broadly implemented in virtually all cryptographic libraries. " +
-        "Lacks intrinsic memory hardness, making it comparatively cheaper to accelerate on GPUs/ASICs versus Argon2id or scrypt. " +
-        "Still appropriate where regulatory, legacy platform, or FIPS compliance requirements dominate, or when only conservative primitives are permitted. " +
-        "Security hinges on high iteration counts (cost parameter) and high‑entropy passwords.";
+        "A widely standardized (PKCS #5, RFC 8018, FIPS 140 allowed) iterative, CPU‑bound key derivation function using repeated HMAC-SHA256 applications. "
+        + "Simple and broadly implemented in virtually all cryptographic libraries. "
+        + "Lacks intrinsic memory hardness, making it comparatively cheaper to accelerate on GPUs/ASICs versus Argon2id or scrypt. "
+        + "Still appropriate where regulatory, legacy platform, or FIPS compliance requirements dominate, or when only conservative primitives are permitted. "
+        + "Security hinges on high iteration counts (cost parameter) and high‑entropy passwords.";
 
     public string Summary => "Best for maximum compatibility / legacy & compliance needs";
 

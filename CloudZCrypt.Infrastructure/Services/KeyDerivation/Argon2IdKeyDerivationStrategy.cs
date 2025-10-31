@@ -17,12 +17,12 @@ internal class Argon2IdKeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
     public string DisplayName => "Argon2id";
 
     public string Description =>
-        "A modern memory‑hard password hashing and key derivation function (PHC winner). " +
-        "The “id” variant blends Argon2i (side‑channel resistant) and Argon2d (GPU/ASIC resistance) for balanced security. " +
-        "Tunable via: memory cost (m), iterations/time cost (t), and parallelism (p). " +
-        "Provides strong resistance to large‑scale brute force on GPUs, FPGAs, and ASICs by imposing substantial RAM requirements. " +
-        "Supports domain separation with distinct salt plus optional secret/data parameters. " +
-        "Recommended where modern security is prioritized over legacy compatibility.";
+        "A modern memory‑hard password hashing and key derivation function (PHC winner). "
+        + "The “id” variant blends Argon2i (side‑channel resistant) and Argon2d (GPU/ASIC resistance) for balanced security. "
+        + "Tunable via: memory cost (m), iterations/time cost (t), and parallelism (p). "
+        + "Provides strong resistance to large‑scale brute force on GPUs, FPGAs, and ASICs by imposing substantial RAM requirements. "
+        + "Supports domain separation with distinct salt plus optional secret/data parameters. "
+        + "Recommended where modern security is prioritized over legacy compatibility.";
 
     public string Summary => "Best for maximum security / modern memory‑hard password hashing";
 

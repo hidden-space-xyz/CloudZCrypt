@@ -1,19 +1,16 @@
-using System.Text;
-using System.Text.Json;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using System.Text;
+using System.Text.Json;
 
 namespace CloudZCrypt.Application.Services;
-
 
 internal sealed class ManifestService : IManifestService
 {
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    
     public async Task<Dictionary<string, string>?> TryReadMapAsync(
         string sourceRoot,
         IEncryptionAlgorithmStrategy encryptionService,
@@ -29,22 +26,37 @@ internal sealed class ManifestService : IManifestService
                 return null;
             }
 
-            string tempJsonPath = Path.Combine(Path.GetTempPath(), $"czc-manifest-{Guid.NewGuid():N}.json");
-            bool ok = await encryptionService.DecryptFileAsync(encryptedManifestPath, tempJsonPath, request.Password, request.KeyDerivationAlgorithm);
+            string tempJsonPath = Path.Combine(
+                Path.GetTempPath(),
+                $"czc-manifest-{Guid.NewGuid():N}.json"
+            );
+            bool ok = await encryptionService.DecryptFileAsync(
+                encryptedManifestPath,
+                tempJsonPath,
+                request.Password,
+                request.KeyDerivationAlgorithm
+            );
             if (!ok)
             {
-                try { if (File.Exists(tempJsonPath)) File.Delete(tempJsonPath); } catch { }
+                try
+                {
+                    if (File.Exists(tempJsonPath))
+                        File.Delete(tempJsonPath);
+                }
+                catch { }
                 return null;
             }
 
             try
             {
                 await using FileStream fs = File.OpenRead(tempJsonPath);
-                List<NameMapEntry>? entries = await JsonSerializer.DeserializeAsync<List<NameMapEntry>>(fs, cancellationToken: cancellationToken);
+                List<NameMapEntry>? entries = await JsonSerializer.DeserializeAsync<
+                    List<NameMapEntry>
+                >(fs, cancellationToken: cancellationToken);
                 Dictionary<string, string> map = new(StringComparer.OrdinalIgnoreCase);
                 if (entries is not null)
                 {
-                    foreach (var e in entries)
+                    foreach (NameMapEntry e in entries)
                     {
                         // Key is obfuscated relative path, value is original relative path
                         map[e.ObfuscatedRelativePath] = e.OriginalRelativePath;
@@ -54,7 +66,12 @@ internal sealed class ManifestService : IManifestService
             }
             finally
             {
-                try { if (File.Exists(tempJsonPath)) File.Delete(tempJsonPath); } catch { }
+                try
+                {
+                    if (File.Exists(tempJsonPath))
+                        File.Delete(tempJsonPath);
+                }
+                catch { }
             }
         }
         catch
@@ -63,7 +80,6 @@ internal sealed class ManifestService : IManifestService
         }
     }
 
-    
     public async Task<IReadOnlyList<string>> WriteAsync(
         IReadOnlyList<NameMapEntry> entries,
         string destinationRoot,
@@ -82,7 +98,12 @@ internal sealed class ManifestService : IManifestService
         {
             byte[] manifestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(entries));
             string encryptedManifestPath = Path.Combine(destinationRoot, ManifestFileName);
-            bool manifestOk = await encryptionService.CreateEncryptedFileAsync(manifestBytes, encryptedManifestPath, request.Password, request.KeyDerivationAlgorithm);
+            bool manifestOk = await encryptionService.CreateEncryptedFileAsync(
+                manifestBytes,
+                encryptedManifestPath,
+                request.Password,
+                request.KeyDerivationAlgorithm
+            );
             if (!manifestOk)
             {
                 errors.Add($"Failed to create encrypted manifest at '{encryptedManifestPath}'.");

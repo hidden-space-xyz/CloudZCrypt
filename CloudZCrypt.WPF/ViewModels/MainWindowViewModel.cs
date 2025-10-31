@@ -135,7 +135,9 @@ public class MainWindowViewModel : ObservableObjectBase
         AvailableEncryptionAlgorithms.FirstOrDefault(a => a.Id == selectedEncryptionAlgorithm);
 
     public IKeyDerivationAlgorithmStrategy? SelectedKeyDerivationAlgorithmInfo =>
-        AvailableKeyDerivationAlgorithms.FirstOrDefault(a => a.Id == selectedKeyDerivationAlgorithm);
+        AvailableKeyDerivationAlgorithms.FirstOrDefault(a =>
+            a.Id == selectedKeyDerivationAlgorithm
+        );
 
     public INameObfuscationStrategy? SelectedNameObfuscationModeInfo =>
         AvailableNameObfuscationModes.FirstOrDefault(a => a.Id == selectedNameObfuscationMode);
@@ -201,34 +203,39 @@ public class MainWindowViewModel : ObservableObjectBase
         IPasswordService passwordService,
         IEnumerable<IEncryptionAlgorithmStrategy> encryptionStrategies,
         IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies,
-        IEnumerable<INameObfuscationStrategy> nameObfuscationStrategies)
+        IEnumerable<INameObfuscationStrategy> nameObfuscationStrategies
+    )
     {
         this.dialogService = dialogService;
         this.orchestrator = orchestrator;
         this.PasswordService = passwordService;
 
-        AvailableEncryptionAlgorithms = new(
-            encryptionStrategies
-                .OrderBy(a => a.DisplayName));
+        AvailableEncryptionAlgorithms = new(encryptionStrategies.OrderBy(a => a.DisplayName));
 
-        AvailableKeyDerivationAlgorithms = new(
-            keyDerivationStrategies
-                .OrderBy(a => a.DisplayName));
+        AvailableKeyDerivationAlgorithms = new(keyDerivationStrategies.OrderBy(a => a.DisplayName));
 
-        AvailableNameObfuscationModes = new(
-            nameObfuscationStrategies
-                .OrderBy(a => a.DisplayName));
+        AvailableNameObfuscationModes = new(nameObfuscationStrategies.OrderBy(a => a.DisplayName));
 
-        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms.First(x => x.Id == EncryptionAlgorithm.Aes).Id;
-        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms.First(x => x.Id == KeyDerivationAlgorithm.Argon2id).Id;
-        selectedNameObfuscationMode = AvailableNameObfuscationModes.First(x => x.Id == NameObfuscationMode.Guid).Id;
+        selectedEncryptionAlgorithm = AvailableEncryptionAlgorithms
+            .First(x => x.Id == EncryptionAlgorithm.Aes)
+            .Id;
+        selectedKeyDerivationAlgorithm = AvailableKeyDerivationAlgorithms
+            .First(x => x.Id == KeyDerivationAlgorithm.Argon2id)
+            .Id;
+        selectedNameObfuscationMode = AvailableNameObfuscationModes
+            .First(x => x.Id == NameObfuscationMode.Guid)
+            .Id;
 
         GenerateStrongPasswordCommand = new RelayCommand(GenerateStrongPassword);
         SelectSourceFileCommand = new RelayCommand(SelectSourceFile);
         SelectSourceDirectoryCommand = new RelayCommand(SelectSourceDirectory);
         SelectDestinationPathCommand = new RelayCommand(SelectDestinationPath);
-        TogglePasswordVisibilityCommand = new RelayCommand(() => IsPasswordVisible = !IsPasswordVisible);
-        ToggleConfirmPasswordVisibilityCommand = new RelayCommand(() => IsConfirmPasswordVisible = !IsConfirmPasswordVisible);
+        TogglePasswordVisibilityCommand = new RelayCommand(() =>
+            IsPasswordVisible = !IsPasswordVisible
+        );
+        ToggleConfirmPasswordVisibilityCommand = new RelayCommand(() =>
+            IsConfirmPasswordVisible = !IsConfirmPasswordVisible
+        );
 
         EncryptFileCommand = new RelayCommand(
             async () =>
@@ -239,7 +246,8 @@ public class MainWindowViewModel : ObservableObjectBase
                 }
                 catch (OperationCanceledException) { }
             },
-            CanExecuteProcessFile);
+            CanExecuteProcessFile
+        );
 
         DecryptFileCommand = new RelayCommand(
             async () =>
@@ -250,7 +258,8 @@ public class MainWindowViewModel : ObservableObjectBase
                 }
                 catch (OperationCanceledException) { }
             },
-            CanExecuteProcessFile);
+            CanExecuteProcessFile
+        );
 
         CancelCommand = new RelayCommand(CancelProcessing, () => IsProcessing);
 
@@ -265,20 +274,23 @@ public class MainWindowViewModel : ObservableObjectBase
     {
         try
         {
-            if (!string.IsNullOrEmpty(Password) &&
-                !dialogService.ShowConfirmation(
+            if (
+                !string.IsNullOrEmpty(Password)
+                && !dialogService.ShowConfirmation(
                     "This will replace your current password. Are you sure you want to generate a new one?",
-                    "Replace Password"))
+                    "Replace Password"
+                )
+            )
             {
                 return;
             }
 
             int length = 128;
             PasswordGenerationOptions options =
-                PasswordGenerationOptions.IncludeUppercase |
-                PasswordGenerationOptions.IncludeLowercase |
-                PasswordGenerationOptions.IncludeNumbers |
-                PasswordGenerationOptions.IncludeSpecialCharacters;
+                PasswordGenerationOptions.IncludeUppercase
+                | PasswordGenerationOptions.IncludeLowercase
+                | PasswordGenerationOptions.IncludeNumbers
+                | PasswordGenerationOptions.IncludeSpecialCharacters;
 
             string generated = PasswordService.GeneratePassword(length, options);
             Password = ConfirmPassword = generated;
@@ -287,7 +299,8 @@ public class MainWindowViewModel : ObservableObjectBase
             dialogService.ShowMessage(
                 BuildPasswordGeneratedMessage(copied),
                 "Password Generated",
-                MessageBoxImage.Information);
+                MessageBoxImage.Information
+            );
         }
         catch (Exception ex)
         {
@@ -310,13 +323,15 @@ public class MainWindowViewModel : ObservableObjectBase
 
     private static string BuildPasswordGeneratedMessage(bool clipboard)
     {
-        return "🔐 Strong password generated successfully!\n\n" +
-               "✅ 128 characters long\n" +
-               "✅ Includes uppercase, lowercase, numbers, and symbols\n" +
-               (clipboard
-                   ? "✅ Copied to clipboard for your convenience\n\n"
-                   : "⚠️ Could not copy to clipboard - please copy it manually\n\n") +
-               "⚠️ Please store this password securely - it cannot be recovered if lost!";
+        return "🔐 Strong password generated successfully!\n\n"
+            + "✅ 128 characters long\n"
+            + "✅ Includes uppercase, lowercase, numbers, and symbols\n"
+            + (
+                clipboard
+                    ? "✅ Copied to clipboard for your convenience\n\n"
+                    : "⚠️ Could not copy to clipboard - please copy it manually\n\n"
+            )
+            + "⚠️ Please store this password securely - it cannot be recovered if lost!";
     }
 
     private void SelectSourceFile()
@@ -326,7 +341,10 @@ public class MainWindowViewModel : ObservableObjectBase
 
     private void SelectSourceDirectory()
     {
-        SelectPath(dialogService.ShowFolderDialog("Select directory to encrypt/decrypt"), Directory.Exists);
+        SelectPath(
+            dialogService.ShowFolderDialog("Select directory to encrypt/decrypt"),
+            Directory.Exists
+        );
     }
 
     private void SelectPath(string? selectedPath, Func<string, bool> exists)
@@ -344,7 +362,8 @@ public class MainWindowViewModel : ObservableObjectBase
                     dialogService.ShowMessage(
                         "The selected path no longer exists.",
                         "Not Found",
-                        MessageBoxImage.Warning);
+                        MessageBoxImage.Warning
+                    );
                 }
             }
         }
@@ -364,7 +383,8 @@ public class MainWindowViewModel : ObservableObjectBase
                 string? selectedPath = dialogService.ShowSaveFileDialog(
                     "Select destination for processed file",
                     "All files (*.*)|*.*",
-                    defaultName);
+                    defaultName
+                );
 
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
@@ -373,7 +393,9 @@ public class MainWindowViewModel : ObservableObjectBase
             }
             else
             {
-                string? selectedPath = dialogService.ShowFolderDialog("Select destination directory");
+                string? selectedPath = dialogService.ShowFolderDialog(
+                    "Select destination directory"
+                );
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DestinationPath = selectedPath;
@@ -388,9 +410,10 @@ public class MainWindowViewModel : ObservableObjectBase
 
     private bool CanExecuteProcessFile()
     {
-        return !IsProcessing &&
-               new[] { SourceFilePath, DestinationPath, Password, ConfirmPassword }
-                   .All(s => !string.IsNullOrWhiteSpace(s));
+        return !IsProcessing
+            && new[] { SourceFilePath, DestinationPath, Password, ConfirmPassword }.All(s =>
+                !string.IsNullOrWhiteSpace(s)
+            );
     }
 
     private async Task ProcessFileAsync(EncryptOperation operation)
@@ -403,7 +426,8 @@ public class MainWindowViewModel : ObservableObjectBase
             SelectedEncryptionAlgorithm,
             SelectedKeyDerivationAlgorithm,
             operation,
-            SelectedNameObfuscationMode);
+            SelectedNameObfuscationMode
+        );
 
         IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
         if (validationErrors.Any())
@@ -415,12 +439,18 @@ public class MainWindowViewModel : ObservableObjectBase
         IReadOnlyList<string> warnings = await orchestrator.AnalyzeWarningsAsync(request);
         if (warnings.Any())
         {
-            string warningMessage = $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
-            if (!dialogService.ShowConfirmation(
+            string warningMessage =
+                $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
+            if (
+                !dialogService.ShowConfirmation(
                     $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
-                    "Confirm Operation"))
+                    "Confirm Operation"
+                )
+            )
             {
-                throw new OperationCanceledException("Operation cancelled by user due to warnings.");
+                throw new OperationCanceledException(
+                    "Operation cancelled by user due to warnings."
+                );
             }
         }
 
@@ -434,7 +464,8 @@ public class MainWindowViewModel : ObservableObjectBase
             Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(
                 request,
                 progress,
-                cancellationTokenSource.Token);
+                cancellationTokenSource.Token
+            );
 
             if (result.IsSuccess && result.Value != null)
             {
@@ -446,12 +477,17 @@ public class MainWindowViewModel : ObservableObjectBase
                 dialogService.ShowMessage(
                     $"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}",
                     "Error",
-                    MessageBoxImage.Error);
+                    MessageBoxImage.Error
+                );
             }
         }
         catch (OperationCanceledException)
         {
-            dialogService.ShowMessage($"{operationText} was cancelled by user.", "Operation Cancelled", MessageBoxImage.Information);
+            dialogService.ShowMessage(
+                $"{operationText} was cancelled by user.",
+                "Operation Cancelled",
+                MessageBoxImage.Information
+            );
         }
         catch (Exception ex)
         {
@@ -484,14 +520,20 @@ public class MainWindowViewModel : ObservableObjectBase
 
     private void OnProgressUpdate(FileProcessingStatus update)
     {
-        double progress = update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
-        double bytesPerSecond = update.Elapsed.TotalSeconds > 0 ? update.ProcessedBytes / update.Elapsed.TotalSeconds : 0;
-        TimeSpan eta = update.TotalBytes > 0 && bytesPerSecond > 0
-            ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
-            : TimeSpan.Zero;
+        double progress =
+            update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;
+        double bytesPerSecond =
+            update.Elapsed.TotalSeconds > 0
+                ? update.ProcessedBytes / update.Elapsed.TotalSeconds
+                : 0;
+        TimeSpan eta =
+            update.TotalBytes > 0 && bytesPerSecond > 0
+                ? TimeSpan.FromSeconds((update.TotalBytes - update.ProcessedBytes) / bytesPerSecond)
+                : TimeSpan.Zero;
 
         ProgressValue = progress;
-        ProgressText = $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
+        ProgressText =
+            $"Processing: {update.ProcessedFiles}/{update.TotalFiles} files ({progress:F1}%) - ETA: {eta:hh\\:mm\\:ss}";
     }
 
     private void UpdateControlState()
@@ -517,7 +559,11 @@ public class MainWindowViewModel : ObservableObjectBase
         dialogService.ShowMessage(message, title, MessageBoxImage.Error);
     }
 
-    private static (string Title, string Message) BuildErrorMessage(Exception ex, string context, EncryptOperation? operation)
+    private static (string Title, string Message) BuildErrorMessage(
+        Exception ex,
+        string context,
+        EncryptOperation? operation
+    )
     {
         string raw = ex.Message ?? "Unknown error.";
         string lower = raw.ToLowerInvariant();
@@ -525,16 +571,26 @@ public class MainWindowViewModel : ObservableObjectBase
 
         (string Title, string Advice)? rule = lower switch
         {
-            var s when s.Contains("access denied", casePolicy) =>
-                ("Access Denied", "Check file or folder permissions or run as administrator."),
-            var s when s.Contains("insufficient disk space", casePolicy) =>
-                ("Insufficient Disk Space", "Free disk space or choose another destination."),
-            var s when s.Contains("invalid password", casePolicy) =>
-                ("Invalid Password", "Verify the password and try again."),
-            var s when s.Contains("corrupted", casePolicy) =>
-                ("File Corruption", "The file may be damaged or not properly encrypted."),
-            var s when s.Contains("key derivation", casePolicy) =>
-                ("Key Derivation Error", "A problem occurred while deriving the encryption key."),
+            var s when s.Contains("access denied", casePolicy) => (
+                "Access Denied",
+                "Check file or folder permissions or run as administrator."
+            ),
+            var s when s.Contains("insufficient disk space", casePolicy) => (
+                "Insufficient Disk Space",
+                "Free disk space or choose another destination."
+            ),
+            var s when s.Contains("invalid password", casePolicy) => (
+                "Invalid Password",
+                "Verify the password and try again."
+            ),
+            var s when s.Contains("corrupted", casePolicy) => (
+                "File Corruption",
+                "The file may be damaged or not properly encrypted."
+            ),
+            var s when s.Contains("key derivation", casePolicy) => (
+                "Key Derivation Error",
+                "A problem occurred while deriving the encryption key."
+            ),
             _ => null,
         };
 
@@ -543,7 +599,9 @@ public class MainWindowViewModel : ObservableObjectBase
             return (r.Title, $"{raw}\n\n{r.Advice}");
         }
 
-        string opText = operation is null ? string.Empty : $" during {operation.Value.ToString().ToLower()}";
+        string opText = operation is null
+            ? string.Empty
+            : $" during {operation.Value.ToString().ToLower()}";
         return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
     }
 }

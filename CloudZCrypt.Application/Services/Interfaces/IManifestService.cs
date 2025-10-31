@@ -1,7 +1,5 @@
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
-using System.Text.Json;
 
 namespace CloudZCrypt.Application.Services.Interfaces;
 

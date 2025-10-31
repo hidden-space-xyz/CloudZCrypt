@@ -12,8 +12,8 @@ internal class Sha256ObfuscationStrategy : INameObfuscationStrategy
     public string DisplayName => "SHA-256";
 
     public string Description =>
-        "Replaces the filename with a 64‑character SHA‑256 hexadecimal digest computed from the file content. " +
-        "Deterministic across identical content, enabling deduplication and content-addressable naming without leaking the original filename.";
+        "Replaces the filename with a 64‑character SHA‑256 hexadecimal digest computed from the file content. "
+        + "Deterministic across identical content, enabling deduplication and content-addressable naming without leaking the original filename.";
 
     public string Summary => "Best for content-addressed naming (64-char digest)";
 

@@ -7,13 +7,18 @@ namespace CloudZCrypt.Infrastructure.Factories;
 internal class EncryptionServiceFactory(IEnumerable<IEncryptionAlgorithmStrategy> strategies)
     : IEncryptionServiceFactory
 {
-    private readonly IReadOnlyDictionary<EncryptionAlgorithm, IEncryptionAlgorithmStrategy> strategies
-        = strategies.ToDictionary(s => s.Id, s => s);
+    private readonly IReadOnlyDictionary<
+        EncryptionAlgorithm,
+        IEncryptionAlgorithmStrategy
+    > strategies = strategies.ToDictionary(s => s.Id, s => s);
 
     public IEncryptionAlgorithmStrategy Create(EncryptionAlgorithm algorithm)
     {
         return !strategies.TryGetValue(algorithm, out IEncryptionAlgorithmStrategy? strategy)
-            ? throw new ArgumentOutOfRangeException(nameof(algorithm), $"Encryption algorithm '{algorithm}' no registrado.")
+            ? throw new ArgumentOutOfRangeException(
+                nameof(algorithm),
+                $"Encryption algorithm '{algorithm}' no registrado."
+            )
             : strategy;
     }
 }

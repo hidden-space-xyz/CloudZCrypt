@@ -10,8 +10,8 @@ internal class GuidObfuscationStrategy : INameObfuscationStrategy
     public string DisplayName => "GUID";
 
     public string Description =>
-        "Replaces the filename with a randomly generated GUID. " +
-        "Provides strong privacy by producing non-predictable, non-correlatable names for each file.";
+        "Replaces the filename with a randomly generated GUID. "
+        + "Provides strong privacy by producing non-predictable, non-correlatable names for each file.";
 
     public string Summary => "Best for maximum privacy (random)";
 

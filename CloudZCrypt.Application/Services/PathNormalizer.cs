@@ -2,10 +2,8 @@ using CloudZCrypt.Application.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Services;
 
-
 internal sealed class PathNormalizer : IPathNormalizer
 {
-    
     public string? TryNormalize(string rawPath, out string? error)
     {
         error = null;

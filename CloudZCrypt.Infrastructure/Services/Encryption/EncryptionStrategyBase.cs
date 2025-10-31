@@ -7,7 +7,9 @@ using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
-internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+internal abstract class EncryptionStrategyBase(
+    IKeyDerivationServiceFactory keyDerivationServiceFactory
+)
 {
     protected const int KeySize = 256;
     protected const int SaltSize = 32;

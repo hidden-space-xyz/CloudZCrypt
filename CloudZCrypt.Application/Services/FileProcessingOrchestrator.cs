@@ -9,7 +9,6 @@ using System.Diagnostics;
 
 namespace CloudZCrypt.Application.Services;
 
-
 internal sealed class FileProcessingOrchestrator(
     IFileOperationsService fileOperations,
     IEncryptionServiceFactory encryptionServiceFactory,
@@ -23,19 +22,16 @@ internal sealed class FileProcessingOrchestrator(
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    
     public Task<IReadOnlyList<string>> ValidateAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
     ) => requestValidator.ValidateAsync(request, cancellationToken);
 
-    
     public Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
     ) => warningAnalyzer.AnalyzeAsync(request, cancellationToken);
 
-    
     public async Task<Result<FileProcessingResult>> ExecuteAsync(
         FileProcessingOrchestratorRequest request,
         IProgress<FileProcessingStatus> progress,
@@ -64,19 +60,35 @@ internal sealed class FileProcessingOrchestrator(
 
         try
         {
-            return await ProcessOperationAsync(sourcePath, destinationPath, request, progress, cancellationToken);
+            return await ProcessOperationAsync(
+                sourcePath,
+                destinationPath,
+                request,
+                progress,
+                cancellationToken
+            );
         }
         catch (OperationCanceledException)
         {
-            return Result<FileProcessingResult>.Success(new FileProcessingResult(false, TimeSpan.Zero, 0, 0, 0, ["Operation was cancelled."]));
+            return Result<FileProcessingResult>.Success(
+                new FileProcessingResult(
+                    false,
+                    TimeSpan.Zero,
+                    0,
+                    0,
+                    0,
+                    ["Operation was cancelled."]
+                )
+            );
         }
         catch (Exception ex)
         {
-            return Result<FileProcessingResult>.Failure($"An unexpected error occurred: {ex.Message}");
+            return Result<FileProcessingResult>.Failure(
+                $"An unexpected error occurred: {ex.Message}"
+            );
         }
     }
 
-    
     private async Task<Result<FileProcessingResult>> ProcessOperationAsync(
         string sourcePath,
         string destinationPath,
@@ -94,35 +106,81 @@ internal sealed class FileProcessingOrchestrator(
             return Result<FileProcessingResult>.Failure("Source path does not exist.");
         }
 
-        IEncryptionAlgorithmStrategy encryptionService = encryptionServiceFactory.Create(request.EncryptionAlgorithm);
-        INameObfuscationStrategy obfuscationService = nameObfuscationServiceFactory.Create(request.NameObfuscation);
+        IEncryptionAlgorithmStrategy encryptionService = encryptionServiceFactory.Create(
+            request.EncryptionAlgorithm
+        );
+        INameObfuscationStrategy obfuscationService = nameObfuscationServiceFactory.Create(
+            request.NameObfuscation
+        );
 
         if (isFile)
         {
             try
             {
                 // If decrypting a single file and it's the manifest, ignore it
-                if (request.Operation == EncryptOperation.Decrypt && string.Equals(Path.GetFileName(sourcePath), ManifestFileName, StringComparison.OrdinalIgnoreCase))
+                if (
+                    request.Operation == EncryptOperation.Decrypt
+                    && string.Equals(
+                        Path.GetFileName(sourcePath),
+                        ManifestFileName,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                 {
                     stopwatch.Stop();
-                    return Result<FileProcessingResult>.Success(new FileProcessingResult(true, stopwatch.Elapsed, 0, 0, 0, ["Manifest file ignored during decryption."]));
+                    return Result<FileProcessingResult>.Success(
+                        new FileProcessingResult(
+                            true,
+                            stopwatch.Elapsed,
+                            0,
+                            0,
+                            0,
+                            ["Manifest file ignored during decryption."]
+                        )
+                    );
                 }
 
                 string destFile = destinationPath;
                 if (request.Operation == EncryptOperation.Encrypt)
                 {
-                    destFile = ApplyObfuscationToDestination(destFile, sourcePath, obfuscationService);
+                    destFile = ApplyObfuscationToDestination(
+                        destFile,
+                        sourcePath,
+                        obfuscationService
+                    );
                 }
                 // Decrypt (single file): keep destination as chosen by user; no header-based rename
 
-                bool result = await ProcessSingleFile(encryptionService, sourcePath, destFile, request, cancellationToken);
+                bool result = await ProcessSingleFile(
+                    encryptionService,
+                    sourcePath,
+                    destFile,
+                    request,
+                    cancellationToken
+                );
                 long fileSize = 0;
-                try { fileSize = fileOperations.GetFileSize(sourcePath); }
-                catch { /* ignore */ }
+                try
+                {
+                    fileSize = fileOperations.GetFileSize(sourcePath);
+                }
+                catch
+                { /* ignore */
+                }
 
-                progress?.Report(new FileProcessingStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed));
+                progress?.Report(
+                    new FileProcessingStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed)
+                );
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Success(new FileProcessingResult(result, stopwatch.Elapsed, fileSize, result ? 1 : 0, 1, errors));
+                return Result<FileProcessingResult>.Success(
+                    new FileProcessingResult(
+                        result,
+                        stopwatch.Elapsed,
+                        fileSize,
+                        result ? 1 : 0,
+                        1,
+                        errors
+                    )
+                );
             }
             catch (Domain.Exceptions.EncryptionException ex)
             {
@@ -136,7 +194,16 @@ internal sealed class FileProcessingOrchestrator(
         if (files.Length == 0)
         {
             stopwatch.Stop();
-            return Result<FileProcessingResult>.Success(new FileProcessingResult(false, stopwatch.Elapsed, 0, 0, 0, ["No files found in the source directory."]));
+            return Result<FileProcessingResult>.Success(
+                new FileProcessingResult(
+                    false,
+                    stopwatch.Elapsed,
+                    0,
+                    0,
+                    0,
+                    ["No files found in the source directory."]
+                )
+            );
         }
 
         // Prepare optional manifest mapping for directory operations
@@ -146,18 +213,32 @@ internal sealed class FileProcessingOrchestrator(
         // If decrypting, try to decrypt manifest first to map original names
         if (request.Operation == EncryptOperation.Decrypt)
         {
-            manifestMap = await manifestService.TryReadMapAsync(sourcePath, encryptionService, request, cancellationToken);
+            manifestMap = await manifestService.TryReadMapAsync(
+                sourcePath,
+                encryptionService,
+                request,
+                cancellationToken
+            );
         }
 
         string manifestEncryptedAbsolute = Path.Combine(sourcePath, ManifestFileName);
-        string manifestEncryptedRelative = fileOperations.GetRelativePath(sourcePath, manifestEncryptedAbsolute);
+        string manifestEncryptedRelative = fileOperations.GetRelativePath(
+            sourcePath,
+            manifestEncryptedAbsolute
+        );
 
         // When decrypting, exclude the manifest from files to process
         string[] filesToProcess = files;
         if (request.Operation == EncryptOperation.Decrypt)
         {
             filesToProcess = files
-                .Where(f => !string.Equals(fileOperations.GetRelativePath(sourcePath, f), manifestEncryptedRelative, StringComparison.OrdinalIgnoreCase))
+                .Where(f =>
+                    !string.Equals(
+                        fileOperations.GetRelativePath(sourcePath, f),
+                        manifestEncryptedRelative,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                 .ToArray();
         }
 
@@ -171,7 +252,9 @@ internal sealed class FileProcessingOrchestrator(
         long processedBytes = 0;
         int processedFiles = 0;
 
-        progress?.Report(new FileProcessingStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero));
+        progress?.Report(
+            new FileProcessingStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero)
+        );
 
         for (int i = 0; i < filesToProcess.Length; i++)
         {
@@ -180,27 +263,41 @@ internal sealed class FileProcessingOrchestrator(
 
             string relativePath = fileOperations.GetRelativePath(sourcePath, file);
 
-            string destinationFilePath = request.Operation == EncryptOperation.Encrypt
-                ? fileOperations.CombinePath(destinationPath, relativePath + AppFileExtension)
-                : fileOperations.CombinePath(destinationPath, relativePath.Replace(AppFileExtension, ""));
+            string destinationFilePath =
+                request.Operation == EncryptOperation.Encrypt
+                    ? fileOperations.CombinePath(destinationPath, relativePath + AppFileExtension)
+                    : fileOperations.CombinePath(
+                        destinationPath,
+                        relativePath.Replace(AppFileExtension, "")
+                    );
 
             if (request.Operation == EncryptOperation.Encrypt)
             {
-                string dir = fileOperations.GetDirectoryName(destinationFilePath) ?? destinationPath;
+                string dir =
+                    fileOperations.GetDirectoryName(destinationFilePath) ?? destinationPath;
                 string name = Path.GetFileName(destinationFilePath);
                 string obfuscatedName = obfuscationService.ObfuscateFileName(file, name);
                 destinationFilePath = fileOperations.CombinePath(dir, obfuscatedName);
 
                 // Record manifest mapping: original relative path -> obfuscated relative path (under destination root)
-                string obfuscatedRelativePath = fileOperations.GetRelativePath(destinationPath, destinationFilePath);
+                string obfuscatedRelativePath = fileOperations.GetRelativePath(
+                    destinationPath,
+                    destinationFilePath
+                );
                 manifestEntries.Add(new NameMapEntry(relativePath, obfuscatedRelativePath));
             }
             else
             {
                 // Use manifest mapping exclusively when available; otherwise keep default deobfuscated path
-                if (manifestMap is not null && manifestMap.TryGetValue(relativePath, out string originalRelativePath))
+                if (
+                    manifestMap is not null
+                    && manifestMap.TryGetValue(relativePath, out string originalRelativePath)
+                )
                 {
-                    destinationFilePath = fileOperations.CombinePath(destinationPath, originalRelativePath);
+                    destinationFilePath = fileOperations.CombinePath(
+                        destinationPath,
+                        originalRelativePath
+                    );
                 }
             }
 
@@ -227,22 +324,30 @@ internal sealed class FileProcessingOrchestrator(
             catch (Domain.Exceptions.EncryptionAccessDeniedException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure($"Operation stopped due to access denied error: {ex.Message}");
+                return Result<FileProcessingResult>.Failure(
+                    $"Operation stopped due to access denied error: {ex.Message}"
+                );
             }
             catch (Domain.Exceptions.EncryptionInsufficientSpaceException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure($"Operation stopped due to insufficient disk space: {ex.Message}");
+                return Result<FileProcessingResult>.Failure(
+                    $"Operation stopped due to insufficient disk space: {ex.Message}"
+                );
             }
             catch (Domain.Exceptions.EncryptionInvalidPasswordException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure($"Operation stopped due to invalid password: {ex.Message}");
+                return Result<FileProcessingResult>.Failure(
+                    $"Operation stopped due to invalid password: {ex.Message}"
+                );
             }
             catch (Domain.Exceptions.EncryptionKeyDerivationException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure($"Operation stopped due to key derivation error: {ex.Message}");
+                return Result<FileProcessingResult>.Failure(
+                    $"Operation stopped due to key derivation error: {ex.Message}"
+                );
             }
             catch (Domain.Exceptions.EncryptionFileNotFoundException ex)
             {
@@ -262,17 +367,36 @@ internal sealed class FileProcessingOrchestrator(
             }
 
             long fileSize = 0;
-            try { fileSize = fileOperations.GetFileSize(file); }
-            catch { /* ignore */ }
+            try
+            {
+                fileSize = fileOperations.GetFileSize(file);
+            }
+            catch
+            { /* ignore */
+            }
 
             processedBytes += fileSize;
-            progress?.Report(new FileProcessingStatus(i + 1, filesToProcess.Length, processedBytes, totalBytes, stopwatch.Elapsed));
+            progress?.Report(
+                new FileProcessingStatus(
+                    i + 1,
+                    filesToProcess.Length,
+                    processedBytes,
+                    totalBytes,
+                    stopwatch.Elapsed
+                )
+            );
         }
 
         // If encrypting a directory, write and encrypt the manifest last
         if (request.Operation == EncryptOperation.Encrypt && manifestEntries.Count > 0)
         {
-            var manifestErrors = await manifestService.WriteAsync(manifestEntries, destinationPath, encryptionService, request, cancellationToken);
+            IReadOnlyList<string> manifestErrors = await manifestService.WriteAsync(
+                manifestEntries,
+                destinationPath,
+                encryptionService,
+                request,
+                cancellationToken
+            );
             if (manifestErrors.Count > 0)
             {
                 errors.AddRange(manifestErrors);
@@ -283,8 +407,19 @@ internal sealed class FileProcessingOrchestrator(
         bool isSuccess = errors.Count == 0 && processedFiles == filesToProcess.Length;
 
         return errors.Count > 0 && processedFiles == 0
-            ? Result<FileProcessingResult>.Failure($"Failed to process any files. Errors: {string.Join("; ", errors)}")
-            : Result<FileProcessingResult>.Success(new FileProcessingResult(isSuccess, stopwatch.Elapsed, totalBytes, processedFiles, filesToProcess.Length, errors));
+            ? Result<FileProcessingResult>.Failure(
+                $"Failed to process any files. Errors: {string.Join("; ", errors)}"
+            )
+            : Result<FileProcessingResult>.Success(
+                new FileProcessingResult(
+                    isSuccess,
+                    stopwatch.Elapsed,
+                    totalBytes,
+                    processedFiles,
+                    filesToProcess.Length,
+                    errors
+                )
+            );
     }
 
     private static Task<bool> ProcessSingleFile(
@@ -299,15 +434,31 @@ internal sealed class FileProcessingOrchestrator(
 
         return request.Operation switch
         {
-            EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
-            EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(sourceFile, destinationFile, request.Password, request.KeyDerivationAlgorithm),
+            EncryptOperation.Encrypt => encryptionService.EncryptFileAsync(
+                sourceFile,
+                destinationFile,
+                request.Password,
+                request.KeyDerivationAlgorithm
+            ),
+            EncryptOperation.Decrypt => encryptionService.DecryptFileAsync(
+                sourceFile,
+                destinationFile,
+                request.Password,
+                request.KeyDerivationAlgorithm
+            ),
             _ => throw new NotSupportedException($"Unsupported operation: {request.Operation}"),
         };
     }
 
-    private string ApplyObfuscationToDestination(string destinationFile, string sourceFile, INameObfuscationStrategy obfuscationService)
+    private string ApplyObfuscationToDestination(
+        string destinationFile,
+        string sourceFile,
+        INameObfuscationStrategy obfuscationService
+    )
     {
-        string dir = fileOperations.GetDirectoryName(destinationFile) ?? Path.GetDirectoryName(destinationFile)!;
+        string dir =
+            fileOperations.GetDirectoryName(destinationFile)
+            ?? Path.GetDirectoryName(destinationFile)!;
         string name = Path.GetFileName(destinationFile);
         string obfuscated = obfuscationService.ObfuscateFileName(sourceFile, name);
         return fileOperations.CombinePath(dir, obfuscated);

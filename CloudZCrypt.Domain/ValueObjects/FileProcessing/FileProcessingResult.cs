@@ -32,8 +32,10 @@ public sealed record FileProcessingResult
     public int FailedFiles => TotalFiles - ProcessedFiles;
     public double SuccessRate => TotalFiles == 0 ? 0.0 : (double)ProcessedFiles / TotalFiles;
     public bool IsPartialSuccess => ProcessedFiles > 0 && ProcessedFiles < TotalFiles;
-    public double BytesPerSecond =>ElapsedTime.TotalSeconds > 0 ? TotalBytes / ElapsedTime.TotalSeconds : 0;
-    public double FilesPerSecond =>ElapsedTime.TotalSeconds > 0 ? ProcessedFiles / ElapsedTime.TotalSeconds : 0;
+    public double BytesPerSecond =>
+        ElapsedTime.TotalSeconds > 0 ? TotalBytes / ElapsedTime.TotalSeconds : 0;
+    public double FilesPerSecond =>
+        ElapsedTime.TotalSeconds > 0 ? ProcessedFiles / ElapsedTime.TotalSeconds : 0;
 
     private static void ValidateInputs(
         TimeSpan elapsedTime,

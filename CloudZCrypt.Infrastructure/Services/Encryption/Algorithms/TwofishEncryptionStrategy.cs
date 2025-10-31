@@ -8,16 +8,17 @@ using Org.BouncyCastle.Crypto.Parameters;
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
 internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+    : EncryptionStrategyBase(keyDerivationServiceFactory),
+        IEncryptionAlgorithmStrategy
 {
     public EncryptionAlgorithm Id => EncryptionAlgorithm.Twofish;
 
     public string DisplayName => "Twofish-256 GCM";
 
     public string Description =>
-        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. " +
-        "Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. " +
-        "Less commonly hardware-accelerated or standardized for AEAD modes.";
+        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. "
+        + "Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. "
+        + "Less commonly hardware-accelerated or standardized for AEAD modes.";
 
     public string Summary => "Best for design diversity";
 

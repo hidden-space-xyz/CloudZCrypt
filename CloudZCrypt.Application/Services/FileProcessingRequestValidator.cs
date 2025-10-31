@@ -4,14 +4,12 @@ using CloudZCrypt.Domain.Services.Interfaces;
 
 namespace CloudZCrypt.Application.Services;
 
-
 internal sealed class FileProcessingRequestValidator(
     IFileOperationsService fileOperations,
     ISystemStorageService systemStorage,
     IPathNormalizer pathNormalizer
 ) : IFileProcessingRequestValidator
 {
-    
     public async Task<IReadOnlyList<string>> ValidateAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
@@ -19,8 +17,14 @@ internal sealed class FileProcessingRequestValidator(
     {
         List<string> errors = [];
 
-        string? sourcePath = pathNormalizer.TryNormalize(request.SourcePath, out string? sourceNormalizeError);
-        string? destinationPath = pathNormalizer.TryNormalize(request.DestinationPath, out string? destinationNormalizeError);
+        string? sourcePath = pathNormalizer.TryNormalize(
+            request.SourcePath,
+            out string? sourceNormalizeError
+        );
+        string? destinationPath = pathNormalizer.TryNormalize(
+            request.DestinationPath,
+            out string? destinationNormalizeError
+        );
 
         if (sourceNormalizeError is not null)
         {
@@ -39,7 +43,9 @@ internal sealed class FileProcessingRequestValidator(
         {
             errors.Add("Please select a source file or directory to process.");
         }
-        else if (!fileOperations.FileExists(sourcePath) && !fileOperations.DirectoryExists(sourcePath))
+        else if (
+            !fileOperations.FileExists(sourcePath) && !fileOperations.DirectoryExists(sourcePath)
+        )
         {
             errors.Add($"The selected source path does not exist: {sourcePath}");
         }
@@ -50,8 +56,13 @@ internal sealed class FileProcessingRequestValidator(
                 if (fileOperations.FileExists(sourcePath))
                 {
                     long fileSize = 0;
-                    try { fileSize = fileOperations.GetFileSize(sourcePath); }
-                    catch { /* ignore */ }
+                    try
+                    {
+                        fileSize = fileOperations.GetFileSize(sourcePath);
+                    }
+                    catch
+                    { /* ignore */
+                    }
 
                     if (fileSize == 0)
                     {
@@ -60,7 +71,11 @@ internal sealed class FileProcessingRequestValidator(
                 }
                 else if (fileOperations.DirectoryExists(sourcePath))
                 {
-                    string[] files = await fileOperations.GetFilesAsync(sourcePath, "*.*", cancellationToken);
+                    string[] files = await fileOperations.GetFilesAsync(
+                        sourcePath,
+                        "*.*",
+                        cancellationToken
+                    );
                     if (files.Length == 0)
                     {
                         errors.Add("The selected directory is empty - no files to process.");
@@ -69,7 +84,9 @@ internal sealed class FileProcessingRequestValidator(
             }
             catch (UnauthorizedAccessException)
             {
-                errors.Add("Access denied to the source path. Please check permissions or run as administrator.");
+                errors.Add(
+                    "Access denied to the source path. Please check permissions or run as administrator."
+                );
             }
             catch (Exception ex)
             {
@@ -95,16 +112,23 @@ internal sealed class FileProcessingRequestValidator(
 
                     if (!string.IsNullOrEmpty(drive) && !systemStorage.IsDriveReady(drive))
                     {
-                        errors.Add($"The destination drive '{drive}' does not exist or is not accessible.");
+                        errors.Add(
+                            $"The destination drive '{drive}' does not exist or is not accessible."
+                        );
                     }
 
                     try
                     {
-                        await fileOperations.CreateDirectoryAsync(destinationDir!, cancellationToken);
+                        await fileOperations.CreateDirectoryAsync(
+                            destinationDir!,
+                            cancellationToken
+                        );
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        errors.Add("Access denied to destination path. Please check permissions or run as administrator.");
+                        errors.Add(
+                            "Access denied to destination path. Please check permissions or run as administrator."
+                        );
                     }
                     catch (Exception ex)
                     {
@@ -142,9 +166,13 @@ internal sealed class FileProcessingRequestValidator(
         {
             errors.Add("Please confirm your password.");
         }
-        else if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        else if (
+            !string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal)
+        )
         {
-            errors.Add("Password and confirmation password do not match. Please check both fields.");
+            errors.Add(
+                "Password and confirmation password do not match. Please check both fields."
+            );
         }
 
         if (!string.IsNullOrWhiteSpace(sourcePath) && !string.IsNullOrWhiteSpace(destinationPath))
@@ -153,24 +181,54 @@ internal sealed class FileProcessingRequestValidator(
             {
                 if (fileOperations.FileExists(sourcePath))
                 {
-                    if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
+                    if (
+                        string.Equals(
+                            sourcePath,
+                            destinationPath,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
                     {
-                        errors.Add("Source and destination files cannot be the same. Please choose a different destination.");
+                        errors.Add(
+                            "Source and destination files cannot be the same. Please choose a different destination."
+                        );
                     }
                 }
                 else if (fileOperations.DirectoryExists(sourcePath))
                 {
-                    if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
+                    if (
+                        string.Equals(
+                            sourcePath,
+                            destinationPath,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
                     {
-                        errors.Add("Source and destination directories cannot be the same. Please choose a different destination.");
+                        errors.Add(
+                            "Source and destination directories cannot be the same. Please choose a different destination."
+                        );
                     }
-                    else if (destinationPath.StartsWith(sourcePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    else if (
+                        destinationPath.StartsWith(
+                            sourcePath + Path.DirectorySeparatorChar,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
                     {
-                        errors.Add("Destination directory cannot be inside the source directory. This would create a recursive operation.");
+                        errors.Add(
+                            "Destination directory cannot be inside the source directory. This would create a recursive operation."
+                        );
                     }
-                    else if (sourcePath.StartsWith(destinationPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    else if (
+                        sourcePath.StartsWith(
+                            destinationPath + Path.DirectorySeparatorChar,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
                     {
-                        errors.Add("Source directory cannot be inside the destination directory. Please choose a different path.");
+                        errors.Add(
+                            "Source directory cannot be inside the destination directory. Please choose a different path."
+                        );
                     }
                 }
             }

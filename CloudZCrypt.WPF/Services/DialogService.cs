@@ -42,7 +42,11 @@ public class DialogService : IDialogService
         ShowMessage(message.ToString(), "Validation Error", MessageBoxImage.Warning);
     }
 
-    public void ShowProcessingResult(FileProcessingResult result, EncryptOperation operation, string sourceType)
+    public void ShowProcessingResult(
+        FileProcessingResult result,
+        EncryptOperation operation,
+        string sourceType
+    )
     {
         string operationText = operation == EncryptOperation.Encrypt ? "Encryption" : "Decryption";
         string title = $"{operationText} Complete";
@@ -68,7 +72,9 @@ public class DialogService : IDialogService
 
         message.AppendLine();
         message.AppendLine("📊 Statistics:");
-        message.AppendLine($"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}");
+        message.AppendLine(
+            $"   • Files processed: {result.ProcessedFiles:N0} of {result.TotalFiles:N0}"
+        );
 
         if (result.TotalFiles > 1)
         {
@@ -80,7 +86,9 @@ public class DialogService : IDialogService
 
         if (result.ElapsedTime.TotalSeconds > 0)
         {
-            message.AppendLine($"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s");
+            message.AppendLine(
+                $"   • Processing speed: {FormatBytes((long)result.BytesPerSecond)}/s"
+            );
 
             if (result.TotalFiles > 1)
             {
@@ -116,7 +124,9 @@ public class DialogService : IDialogService
     public string? ShowFolderDialog(string description)
     {
         using System.Windows.Forms.FolderBrowserDialog dialog = new() { Description = description };
-        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK
+            ? dialog.SelectedPath
+            : null;
     }
 
     public string? ShowOpenFileDialog(string title, string filter = "All files (*.*)|*.*")
@@ -130,7 +140,10 @@ public class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*")
+    public string[]? ShowOpenMultipleFilesDialog(
+        string title,
+        string filter = "All files (*.*)|*.*"
+    )
     {
         Microsoft.Win32.OpenFileDialog dialog = new()
         {
@@ -141,7 +154,11 @@ public class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileNames : null;
     }
 
-    public string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "")
+    public string? ShowSaveFileDialog(
+        string title,
+        string filter = "All files (*.*)|*.*",
+        string defaultFileName = ""
+    )
     {
         Microsoft.Win32.SaveFileDialog dialog = new()
         {
@@ -171,6 +188,7 @@ public class DialogService : IDialogService
 
         return $"{size:F1} {suffixes[suffixIndex]}";
     }
+
     private static string FormatDuration(TimeSpan duration)
     {
         return duration.TotalSeconds < 1 ? "< 1 second"

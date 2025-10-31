@@ -20,14 +20,16 @@ public class Result<T> : Result
 {
     private readonly T? _value;
 
-    protected Result(T value, bool isSuccess, string[] errors) : base(isSuccess, errors)
+    protected Result(T value, bool isSuccess, string[] errors)
+        : base(isSuccess, errors)
     {
         _value = value;
     }
 
-    public T Value => IsSuccess
-        ? _value!
-        : throw new InvalidOperationException("Cannot access value of failed result");
+    public T Value =>
+        IsSuccess
+            ? _value!
+            : throw new InvalidOperationException("Cannot access value of failed result");
 
     public static Result<T> Success(T value) => new(value, true, Array.Empty<string>());
 

@@ -8,7 +8,11 @@ public interface IDialogService
 {
     void ShowMessage(string message, string title, MessageBoxImage icon);
 
-    void ShowProcessingResult(FileProcessingResult result, EncryptOperation operation, string sourceType);
+    void ShowProcessingResult(
+        FileProcessingResult result,
+        EncryptOperation operation,
+        string sourceType
+    );
 
     void ShowValidationErrors(IEnumerable<string> errors);
 
@@ -22,5 +26,9 @@ public interface IDialogService
 
     string[]? ShowOpenMultipleFilesDialog(string title, string filter = "All files (*.*)|*.*");
 
-    string? ShowSaveFileDialog(string title, string filter = "All files (*.*)|*.*", string defaultFileName = "");
+    string? ShowSaveFileDialog(
+        string title,
+        string filter = "All files (*.*)|*.*",
+        string defaultFileName = ""
+    );
 }

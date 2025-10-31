@@ -19,7 +19,9 @@ namespace CloudZCrypt.Domain.Services
         private static readonly Regex UpperCaseRegex = new(@"[A-Z]");
         private static readonly Regex LowerCaseRegex = new(@"[a-z]");
         private static readonly Regex NumberRegex = new(@"[0-9]");
-        private static readonly Regex SpecialCharRegex = new(@"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>\/?]");
+        private static readonly Regex SpecialCharRegex = new(
+            @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>\/?]"
+        );
         private static readonly Regex YearRegex = new(@"\b(19|20)\d{2}\b");
 
         private static readonly string[] CommonSubstrings =
@@ -60,7 +62,7 @@ namespace CloudZCrypt.Domain.Services
             ['$'] = 's',
             ['!'] = 'i',
         };
-        
+
         public PasswordStrengthAnalysis AnalyzePasswordStrength(string password)
         {
             if (string.IsNullOrEmpty(password))
@@ -87,7 +89,12 @@ namespace CloudZCrypt.Domain.Services
             double rawScore = entropy / MaxEntropyBits * 100.0;
             double score = Math.Max(0, Math.Min(100, rawScore));
 
-            if (score < 100 && compositionFlags.CategoryCount >= 4 && trimmed.Length >= 16 && entropy >= 90)
+            if (
+                score < 100
+                && compositionFlags.CategoryCount >= 4
+                && trimmed.Length >= 16
+                && entropy >= 90
+            )
             {
                 score = Math.Min(100, score + 5);
             }
@@ -98,17 +105,22 @@ namespace CloudZCrypt.Domain.Services
             return new PasswordStrengthAnalysis(strength, description, Math.Round(score, 2));
         }
 
-        
         public string GeneratePassword(int length, PasswordGenerationOptions options)
         {
             if (length <= 0)
             {
-                throw new ArgumentException("Password length must be greater than 0", nameof(length));
+                throw new ArgumentException(
+                    "Password length must be greater than 0",
+                    nameof(length)
+                );
             }
 
             if (options == PasswordGenerationOptions.None)
             {
-                throw new ArgumentException("At least one character type must be selected", nameof(options));
+                throw new ArgumentException(
+                    "At least one character type must be selected",
+                    nameof(options)
+                );
             }
 
             StringBuilder charSet = new();
@@ -137,12 +149,16 @@ namespace CloudZCrypt.Domain.Services
 
             if (options.HasFlag(PasswordGenerationOptions.ExcludeSimilarCharacters))
             {
-                availableChars = new string(availableChars.Where(c => !SimilarChars.Contains(c)).ToArray());
+                availableChars = new string(
+                    availableChars.Where(c => !SimilarChars.Contains(c)).ToArray()
+                );
             }
 
             if (string.IsNullOrEmpty(availableChars))
             {
-                throw new InvalidOperationException("No characters available for password generation with the given options");
+                throw new InvalidOperationException(
+                    "No characters available for password generation with the given options"
+                );
             }
 
             StringBuilder password = new(length);
@@ -293,7 +309,8 @@ namespace CloudZCrypt.Domain.Services
         private static double HomogeneousClassPenalty(PasswordComposition flags, string password)
         {
             return flags.CategoryCount <= 1 ? Math.Min(20, password.Length * 2)
-                : flags.CategoryCount == 2 && password.Length < 10 ? 10 : 0;
+                : flags.CategoryCount == 2 && password.Length < 10 ? 10
+                : 0;
         }
 
         private static string NormalizeLeet(string input)

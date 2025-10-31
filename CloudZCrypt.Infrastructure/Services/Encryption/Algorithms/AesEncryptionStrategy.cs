@@ -8,15 +8,16 @@ using Org.BouncyCastle.Crypto.Parameters;
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
 internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+    : EncryptionStrategyBase(keyDerivationServiceFactory),
+        IEncryptionAlgorithmStrategy
 {
     public EncryptionAlgorithm Id => EncryptionAlgorithm.Aes;
 
     public string DisplayName => "AES-256 GCM";
 
     public string Description =>
-        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. " +
-        "Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
+        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. "
+        + "Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
 
     public string Summary => "Best for general purposes (with hardware acceleration)";
 

@@ -7,16 +7,17 @@ using Org.BouncyCastle.Crypto.Parameters;
 namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 
 internal class ChaCha20EncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
-    : EncryptionStrategyBase(keyDerivationServiceFactory), IEncryptionAlgorithmStrategy
+    : EncryptionStrategyBase(keyDerivationServiceFactory),
+        IEncryptionAlgorithmStrategy
 {
     public EncryptionAlgorithm Id => EncryptionAlgorithm.ChaCha20;
 
     public string DisplayName => "ChaCha20-Poly1305";
 
     public string Description =>
-        "A modern ARX (Add-Rotate-XOR) stream cipher (ChaCha20) combined with the Poly1305 MAC to form a fast, " +
-        "timing‑attack‑resistant AEAD construction that performs especially well on devices lacking AES hardware acceleration. " +
-        "Standardized in RFC 8439 and widely deployed in TLS, SSH, QUIC, and WireGuard.";
+        "A modern ARX (Add-Rotate-XOR) stream cipher (ChaCha20) combined with the Poly1305 MAC to form a fast, "
+        + "timing‑attack‑resistant AEAD construction that performs especially well on devices lacking AES hardware acceleration. "
+        + "Standardized in RFC 8439 and widely deployed in TLS, SSH, QUIC, and WireGuard.";
 
     public string Summary => "Best for general purposes (without hardware acceleration)";
 

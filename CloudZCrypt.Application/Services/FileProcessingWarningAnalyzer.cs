@@ -5,7 +5,6 @@ using CloudZCrypt.Domain.Utilities;
 
 namespace CloudZCrypt.Application.Services;
 
-
 internal sealed class FileProcessingWarningAnalyzer(
     IFileOperationsService fileOperations,
     ISystemStorageService systemStorage,
@@ -13,7 +12,6 @@ internal sealed class FileProcessingWarningAnalyzer(
     IPathNormalizer pathNormalizer
 ) : IFileProcessingWarningAnalyzer
 {
-    
     public async Task<IReadOnlyList<string>> AnalyzeAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
@@ -33,31 +31,52 @@ internal sealed class FileProcessingWarningAnalyzer(
             if (fileOperations.DirectoryExists(sourcePath))
             {
                 string? destinationDrive = systemStorage.GetPathRoot(destinationPath);
-                if (!string.IsNullOrEmpty(destinationDrive) && systemStorage.IsDriveReady(destinationDrive))
+                if (
+                    !string.IsNullOrEmpty(destinationDrive)
+                    && systemStorage.IsDriveReady(destinationDrive)
+                )
                 {
-                    string[] sourceFiles = await fileOperations.GetFilesAsync(sourcePath, "*.*", cancellationToken);
+                    string[] sourceFiles = await fileOperations.GetFilesAsync(
+                        sourcePath,
+                        "*.*",
+                        cancellationToken
+                    );
                     long totalSize = sourceFiles.Sum(f =>
                     {
-                        try { return fileOperations.GetFileSize(f); }
-                        catch { return 0; }
+                        try
+                        {
+                            return fileOperations.GetFileSize(f);
+                        }
+                        catch
+                        {
+                            return 0;
+                        }
                     });
 
                     long requiredSpace = (long)(totalSize * 1.2);
                     long available = systemStorage.GetAvailableFreeSpace(destinationDrive);
                     if (available >= 0 && available < requiredSpace)
                     {
-                        warnings.Add($"Low disk space: Available {ByteSizeFormatter.Format(available)}, estimated need {ByteSizeFormatter.Format(requiredSpace)}");
+                        warnings.Add(
+                            $"Low disk space: Available {ByteSizeFormatter.Format(available)}, estimated need {ByteSizeFormatter.Format(requiredSpace)}"
+                        );
                     }
                 }
             }
 
             if (fileOperations.DirectoryExists(sourcePath))
             {
-                string[] files = await fileOperations.GetFilesAsync(sourcePath, "*.*", cancellationToken);
+                string[] files = await fileOperations.GetFilesAsync(
+                    sourcePath,
+                    "*.*",
+                    cancellationToken
+                );
                 int fileCount = files.Length;
                 if (fileCount > 10000)
                 {
-                    warnings.Add($"Large operation: {fileCount:N0} files will be processed. This may take considerable time.");
+                    warnings.Add(
+                        $"Large operation: {fileCount:N0} files will be processed. This may take considerable time."
+                    );
                 }
                 else if (fileCount > 1000)
                 {
@@ -75,7 +94,11 @@ internal sealed class FileProcessingWarningAnalyzer(
             }
             else if (fileOperations.DirectoryExists(destinationPath))
             {
-                string[] existingFiles = await fileOperations.GetFilesAsync(destinationPath, "*.*", cancellationToken);
+                string[] existingFiles = await fileOperations.GetFilesAsync(
+                    destinationPath,
+                    "*.*",
+                    cancellationToken
+                );
                 if (existingFiles.Length > 0)
                 {
                     hasExistingFiles = true;
@@ -85,13 +108,17 @@ internal sealed class FileProcessingWarningAnalyzer(
 
             if (hasExistingFiles)
             {
-                warnings.Add($"Destination contains {existingFileCount:N0} existing file(s) that may be overwritten.");
+                warnings.Add(
+                    $"Destination contains {existingFileCount:N0} existing file(s) that may be overwritten."
+                );
             }
 
-            var strength = passwordService.AnalyzePasswordStrength(request.Password);
+            Domain.ValueObjects.Password.PasswordStrengthAnalysis strength = passwordService.AnalyzePasswordStrength(request.Password);
             if (strength.Score < 60)
             {
-                warnings.Add("Password strength is below recommended level. Consider using a stronger password.");
+                warnings.Add(
+                    "Password strength is below recommended level. Consider using a stronger password."
+                );
             }
         }
         catch

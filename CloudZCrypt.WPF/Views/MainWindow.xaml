@@ -16,7 +16,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
         <!--  File/Directory Selection Section  -->
         <Grid Grid.Row="0" Margin="10">
             <Grid.RowDefinitions>
@@ -25,7 +24,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-
             <!--  Source File/Directory  -->
             <TextBlock
                 Grid.Row="0"
@@ -64,7 +62,6 @@
                     IsReadOnly="True"
                     Text="{Binding SourceFilePath}" />
             </DockPanel>
-
             <!--  Destination Path  -->
             <TextBlock
                 Grid.Row="2"
@@ -88,7 +85,6 @@
                     Text="{Binding DestinationPath}" />
             </DockPanel>
         </Grid>
-
         <!--  Encryption Settings Section  -->
         <Grid Grid.Row="1" Margin="10,0,10,10">
             <Grid.ColumnDefinitions>
@@ -96,7 +92,6 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-
             <Grid Grid.Column="0" Margin="0,0,10,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -167,7 +162,6 @@
                     </ComboBox.ToolTip>
                 </ComboBox>
             </Grid>
-
             <Grid Grid.Column="1" Margin="5,0,5,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -238,7 +232,6 @@
                     </ComboBox.ToolTip>
                 </ComboBox>
             </Grid>
-
             <!--  Name Obfuscation  -->
             <Grid Grid.Column="2" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
@@ -311,7 +304,6 @@
                 </ComboBox>
             </Grid>
         </Grid>
-
         <!--  Password Section  -->
         <Grid Grid.Row="2" Margin="10">
             <Grid.RowDefinitions>
@@ -322,7 +314,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-
             <!--  Password Input  -->
             <TextBlock
                 Grid.Row="0"
@@ -369,7 +360,6 @@
                     Text="{Binding Password, Mode=TwoWay}"
                     Visibility="{Binding IsPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
             </DockPanel>
-
             <!--  Password Strength Indicator  -->
             <Grid
                 Grid.Row="2"
@@ -394,7 +384,6 @@
                     Foreground="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthColor)}"
                     Text="{Binding ElementName=PasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthText)}" />
             </Grid>
-
             <!--  Confirm Password  -->
             <TextBlock
                 Grid.Row="3"
@@ -432,7 +421,6 @@
                     Text="{Binding ConfirmPassword, Mode=TwoWay}"
                     Visibility="{Binding IsConfirmPasswordVisible, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}" />
             </DockPanel>
-
             <!--  Confirm Password Strength Indicator  -->
             <Grid
                 Grid.Row="5"
@@ -458,14 +446,12 @@
                     Text="{Binding ElementName=ConfirmPasswordBox, Path=(behaviors:PasswordBoxBehavior.StrengthText)}" />
             </Grid>
         </Grid>
-
         <!--  Action Buttons Section  -->
         <Grid Grid.Row="3" Margin="10,0,10,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-
             <Grid Grid.Row="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -484,7 +470,6 @@
                     Foreground="LimeGreen"
                     Value="{Binding ProgressValue}" />
             </Grid>
-
             <Grid
                 Grid.Row="1"
                 Margin="0,15,0,0"

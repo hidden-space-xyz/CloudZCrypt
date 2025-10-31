@@ -22,7 +22,9 @@ public class EncryptionInsufficientSpaceException(string path)
 { }
 
 public class EncryptionInvalidPasswordException()
-    : EncryptionException("Invalid password or corrupted file. Please verify the password and file integrity.")
+    : EncryptionException(
+        "Invalid password or corrupted file. Please verify the password and file integrity."
+    )
 { }
 
 public class EncryptionCorruptedFileException(string filePath)

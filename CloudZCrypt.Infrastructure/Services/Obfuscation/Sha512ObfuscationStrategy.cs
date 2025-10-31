@@ -12,8 +12,8 @@ internal class Sha512ObfuscationStrategy : INameObfuscationStrategy
     public string DisplayName => "SHA-512";
 
     public string Description =>
-        "Replaces the filename with a 128‑character SHA‑512 hexadecimal digest computed from the file content. " +
-        "Offers stronger collision resistance than SHA‑256 at the cost of longer names; deterministic across identical content.";
+        "Replaces the filename with a 128‑character SHA‑512 hexadecimal digest computed from the file content. "
+        + "Offers stronger collision resistance than SHA‑256 at the cost of longer names; deterministic across identical content.";
 
     public string Summary => "Best for maximum collision resistance (128-char digest)";
 

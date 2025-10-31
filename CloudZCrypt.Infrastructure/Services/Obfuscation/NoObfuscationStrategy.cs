@@ -10,8 +10,8 @@ internal class NoObfuscationStrategy : INameObfuscationStrategy
     public string DisplayName => "None";
 
     public string Description =>
-        "Preserves the original filename unchanged. Use when filename privacy is not required " +
-        "and human-readable organization should be retained.";
+        "Preserves the original filename unchanged. Use when filename privacy is not required "
+        + "and human-readable organization should be retained.";
 
     public string Summary => "Best if filename obfuscation is not needed";
 
