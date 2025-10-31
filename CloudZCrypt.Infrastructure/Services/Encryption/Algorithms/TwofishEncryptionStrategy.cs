@@ -57,8 +57,8 @@ internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Raised if an internal encryption or finalization step fails unexpectedly.</exception>
     protected override async Task EncryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )
@@ -84,8 +84,8 @@ internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown when authentication fails or ciphertext is malformed.</exception>
     protected override async Task DecryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )

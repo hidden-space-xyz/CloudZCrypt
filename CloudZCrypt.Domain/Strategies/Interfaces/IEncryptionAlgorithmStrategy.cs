@@ -87,4 +87,32 @@ public interface IEncryptionAlgorithmStrategy
         string password,
         KeyDerivationAlgorithm keyDerivationAlgorithm
     );
+
+    /// <summary>
+    /// Creates an encrypted file from the provided plaintext data byte array.
+    /// </summary>
+    /// <param name="plaintextData">The byte array containing the plaintext data to encrypt.</param>
+    /// <param name="destinationFilePath">The target path where the encrypted file will be written. Will be overwritten if it exists.</param>
+    /// <param name="password">The user-supplied secret used to derive the encryption key. Must not be null or empty.</param>
+    /// <param name="keyDerivationAlgorithm">The password-based key derivation function to apply when deriving the cryptographic key material.</param>
+    /// <returns>A task representing the asynchronous operation. The task result is true if the file creation succeeded; otherwise false.</returns>
+    Task<bool> CreateEncryptedFileAsync(
+        byte[] plaintextData,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    );
+
+    /// <summary>
+    /// Reads and decrypts an encrypted file, returning the recovered plaintext data as a byte array.
+    /// </summary>
+    /// <param name="sourceFilePath">The absolute or relative path to the encrypted input file. Must exist and be readable.</param>
+    /// <param name="password">The user-supplied secret used to derive or validate the decryption key. Must match the original encryption password.</param>
+    /// <param name="keyDerivationAlgorithm">The password-based key derivation function expected for this encrypted artifact.</param>
+    /// <returns>A task representing the asynchronous operation. The task result is the decrypted plaintext data as a byte array.</returns>
+    Task<byte[]> ReadEncryptedFileAsync(
+        string sourceFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    );
 }

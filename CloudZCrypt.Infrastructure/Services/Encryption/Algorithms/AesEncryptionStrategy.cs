@@ -56,8 +56,8 @@ internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationS
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown if an internal cipher operation fails unexpectedly.</exception>
     protected override async Task EncryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )
@@ -84,8 +84,8 @@ internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationS
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown when authentication fails or ciphertext is malformed.</exception>
     protected override async Task DecryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )

@@ -2,12 +2,13 @@ using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.IO;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
 
 namespace CloudZCrypt.Application.Services;
 
@@ -29,6 +30,10 @@ public sealed class FileProcessingOrchestrator(
     INameObfuscationServiceFactory nameObfuscationServiceFactory
 ) : IFileProcessingOrchestrator
 {
+    private static string AppFileExtension => ".czc";
+    private static string ManifestFileName => "manifest" + AppFileExtension;
+
+
     /// <summary>
     /// Validates the supplied request for correctness and completeness before any processing occurs.
     /// </summary>
@@ -378,8 +383,7 @@ public sealed class FileProcessingOrchestrator(
     /// <returns>A result containing the processing outcome with detailed metrics and any errors.</returns>
     /// <remarks>
     /// This method differentiates between file and directory processing, handles name obfuscation during encryption,
-    /// attempts to restore original names during decryption, and provides comprehensive error handling for various
-    /// encryption-related exceptions.
+    /// attempts to restore original names during decryption strictly via the encrypted JSON manifest (no file headers).
     /// </remarks>
     private async Task<Result<FileProcessingResult>> ProcessOperationAsync(
         string sourcePath,
@@ -405,28 +409,19 @@ public sealed class FileProcessingOrchestrator(
         {
             try
             {
+                // If decrypting a single file and it's the manifest, ignore it
+                if (request.Operation == EncryptOperation.Decrypt && string.Equals(Path.GetFileName(sourcePath), ManifestFileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    stopwatch.Stop();
+                    return Result<FileProcessingResult>.Success(new FileProcessingResult(true, stopwatch.Elapsed, 0, 0, 0, ["Manifest file ignored during decryption."]));
+                }
+
                 string destFile = destinationPath;
                 if (request.Operation == EncryptOperation.Encrypt)
                 {
                     destFile = ApplyObfuscationToDestination(destFile, sourcePath, obfuscationService);
                 }
-                else
-                {
-                    // For decryption, restore original name from header when available
-                    string? originalName = await TryGetOriginalNameFromEncryptedFileAsync(sourcePath);
-                    if (!string.IsNullOrWhiteSpace(originalName))
-                    {
-                        string? dir = fileOperations.GetDirectoryName(destFile);
-                        if (!string.IsNullOrEmpty(dir))
-                        {
-                            destFile = fileOperations.CombinePath(dir, originalName);
-                        }
-                        else
-                        {
-                            destFile = originalName;
-                        }
-                    }
-                }
+                // Decrypt (single file): keep destination as chosen by user; no header-based rename
 
                 bool result = await ProcessSingleFile(encryptionService, sourcePath, destFile, request, cancellationToken);
                 long fileSize = 0;
@@ -452,21 +447,50 @@ public sealed class FileProcessingOrchestrator(
             return Result<FileProcessingResult>.Success(new FileProcessingResult(false, stopwatch.Elapsed, 0, 0, 0, ["No files found in the source directory."]));
         }
 
-        long totalBytes = files.Sum(fileOperations.GetFileSize);
+        // Prepare optional manifest mapping for directory operations
+        List<NameMapEntry> manifestEntries = [];
+        Dictionary<string, string>? manifestMap = null; // obfuscated relative path -> original relative path
+
+        // If decrypting, try to decrypt manifest first to map original names
+        if (request.Operation == EncryptOperation.Decrypt)
+        {
+            manifestMap = await TryDecryptAndLoadManifestAsync(sourcePath, encryptionService, request, cancellationToken);
+        }
+
+        string manifestEncryptedAbsolute = Path.Combine(sourcePath, ManifestFileName);
+        string manifestEncryptedRelative = fileOperations.GetRelativePath(sourcePath, manifestEncryptedAbsolute);
+
+        // When decrypting, exclude the manifest from files to process
+        string[] filesToProcess = files;
+        if (request.Operation == EncryptOperation.Decrypt)
+        {
+            filesToProcess = files
+                .Where(f => !string.Equals(fileOperations.GetRelativePath(sourcePath, f), manifestEncryptedRelative, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+        }
+
+        if (request.Operation == EncryptOperation.Encrypt)
+        {
+            // ensure destination root exists
+            await fileOperations.CreateDirectoryAsync(destinationPath, cancellationToken);
+        }
+
+        long totalBytes = filesToProcess.Sum(fileOperations.GetFileSize);
         long processedBytes = 0;
         int processedFiles = 0;
 
-        progress?.Report(new FileProcessingStatus(0, files.Length, 0, totalBytes, TimeSpan.Zero));
-        await fileOperations.CreateDirectoryAsync(destinationPath, cancellationToken);
+        progress?.Report(new FileProcessingStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero));
 
-        for (int i = 0; i < files.Length; i++)
+        for (int i = 0; i < filesToProcess.Length; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            string file = files[i];
+            string file = filesToProcess[i];
+
             string relativePath = fileOperations.GetRelativePath(sourcePath, file);
+
             string destinationFilePath = request.Operation == EncryptOperation.Encrypt
-                ? fileOperations.CombinePath(destinationPath, relativePath + ".encrypted")
-                : fileOperations.CombinePath(destinationPath, relativePath.Replace(".encrypted", ""));
+                ? fileOperations.CombinePath(destinationPath, relativePath + AppFileExtension)
+                : fileOperations.CombinePath(destinationPath, relativePath.Replace(AppFileExtension, ""));
 
             if (request.Operation == EncryptOperation.Encrypt)
             {
@@ -474,14 +498,17 @@ public sealed class FileProcessingOrchestrator(
                 string name = Path.GetFileName(destinationFilePath);
                 string obfuscatedName = obfuscationService.ObfuscateFileName(file, name);
                 destinationFilePath = fileOperations.CombinePath(dir, obfuscatedName);
+
+                // Record manifest mapping: original relative path -> obfuscated relative path (under destination root)
+                string obfuscatedRelativePath = fileOperations.GetRelativePath(destinationPath, destinationFilePath);
+                manifestEntries.Add(new NameMapEntry(relativePath, obfuscatedRelativePath));
             }
             else
             {
-                string dir = fileOperations.GetDirectoryName(destinationFilePath) ?? destinationPath;
-                string? originalName = await TryGetOriginalNameFromEncryptedFileAsync(file);
-                if (!string.IsNullOrWhiteSpace(originalName))
+                // Use manifest mapping exclusively when available; otherwise keep default deobfuscated path
+                if (manifestMap is not null && manifestMap.TryGetValue(relativePath, out string originalRelativePath))
                 {
-                    destinationFilePath = fileOperations.CombinePath(dir, originalName);
+                    destinationFilePath = fileOperations.CombinePath(destinationPath, originalRelativePath);
                 }
             }
 
@@ -547,15 +574,35 @@ public sealed class FileProcessingOrchestrator(
             catch { /* ignore */ }
 
             processedBytes += fileSize;
-            progress?.Report(new FileProcessingStatus(i + 1, files.Length, processedBytes, totalBytes, stopwatch.Elapsed));
+            progress?.Report(new FileProcessingStatus(i + 1, filesToProcess.Length, processedBytes, totalBytes, stopwatch.Elapsed));
+        }
+
+        // If encrypting a directory, write and encrypt the manifest last
+        if (request.Operation == EncryptOperation.Encrypt && manifestEntries.Count > 0)
+        {
+            try
+            {
+                byte[] manifestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(manifestEntries));
+                // Write the encrypted manifest into the destination root so it travels with the encrypted files
+                string encryptedManifestPath = fileOperations.CombinePath(destinationPath, ManifestFileName);
+                bool manifestOk = await encryptionService.CreateEncryptedFileAsync(manifestBytes, encryptedManifestPath, request.Password, request.KeyDerivationAlgorithm);
+                if (!manifestOk)
+                {
+                    errors.Add($"Failed to create encrypted manifest at '{encryptedManifestPath}'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Failed to write or encrypt manifest: {ex.Message}");
+            }
         }
 
         stopwatch.Stop();
-        bool isSuccess = errors.Count == 0 && processedFiles == files.Length;
+        bool isSuccess = errors.Count == 0 && processedFiles == filesToProcess.Length;
 
         return errors.Count > 0 && processedFiles == 0
             ? Result<FileProcessingResult>.Failure($"Failed to process any files. Errors: {string.Join("; ", errors)}")
-            : Result<FileProcessingResult>.Success(new FileProcessingResult(isSuccess, stopwatch.Elapsed, totalBytes, processedFiles, files.Length, errors));
+            : Result<FileProcessingResult>.Success(new FileProcessingResult(isSuccess, stopwatch.Elapsed, totalBytes, processedFiles, filesToProcess.Length, errors));
     }
 
     /// <summary>
@@ -603,23 +650,49 @@ public sealed class FileProcessingOrchestrator(
     }
 
     /// <summary>
-    /// Attempts to retrieve the original filename from an encrypted file's header information.
+    /// Attempts to decrypt and load the manifest stored at the directory root. Returns null if unavailable or on failure.
     /// </summary>
-    /// <param name="sourceFile">The path to the encrypted file to examine.</param>
-    /// <returns>The original filename if it can be successfully read from the encrypted file header; otherwise, null.</returns>
-    /// <remarks>
-    /// This method attempts to read the original filename that was stored in the encrypted file header during the encryption process.
-    /// It skips the salt and nonce sections to locate the header data. If the file is corrupted, not properly encrypted, 
-    /// or doesn't contain header information, null is returned.
-    /// </remarks>
-    private static async Task<string?> TryGetOriginalNameFromEncryptedFileAsync(string sourceFile)
+    private static async Task<Dictionary<string, string>?> TryDecryptAndLoadManifestAsync(
+        string sourceRoot,
+        IEncryptionAlgorithmStrategy encryptionService,
+        FileProcessingOrchestratorRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
-            using FileStream fs = File.OpenRead(sourceFile);
-            // Skip salt + nonce to get to the header
-            fs.Seek(EncryptedFileHeader.SaltSize + EncryptedFileHeader.NonceSize, SeekOrigin.Begin);
-            return await EncryptedFileHeader.TryReadAsync(fs);
+            string encryptedManifestPath = Path.Combine(sourceRoot, ManifestFileName);
+            if (!File.Exists(encryptedManifestPath))
+            {
+                return null;
+            }
+
+            string tempJsonPath = Path.Combine(Path.GetTempPath(), $"czc-manifest-{Guid.NewGuid():N}.json");
+            bool ok = await encryptionService.DecryptFileAsync(encryptedManifestPath, tempJsonPath, request.Password, request.KeyDerivationAlgorithm);
+            if (!ok)
+            {
+                try { if (File.Exists(tempJsonPath)) File.Delete(tempJsonPath); } catch { }
+                return null;
+            }
+
+            try
+            {
+                await using FileStream fs = File.OpenRead(tempJsonPath);
+                List<NameMapEntry>? entries = await JsonSerializer.DeserializeAsync<List<NameMapEntry>>(fs, cancellationToken: cancellationToken);
+                Dictionary<string, string> map = new(StringComparer.OrdinalIgnoreCase);
+                if (entries is not null)
+                {
+                    foreach (NameMapEntry e in entries)
+                    {
+                        // Key is obfuscated relative path, value is original relative path
+                        map[e.ObfuscatedRelativePath] = e.OriginalRelativePath;
+                    }
+                }
+                return map;
+            }
+            finally
+            {
+                try { if (File.Exists(tempJsonPath)) File.Delete(tempJsonPath); } catch { }
+            }
         }
         catch
         {

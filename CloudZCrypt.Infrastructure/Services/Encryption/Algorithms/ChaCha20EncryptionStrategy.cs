@@ -57,8 +57,8 @@ internal class ChaCha20EncryptionStrategy(IKeyDerivationServiceFactory keyDeriva
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown if encryption fails during finalization.</exception>
     protected override async Task EncryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )
@@ -83,8 +83,8 @@ internal class ChaCha20EncryptionStrategy(IKeyDerivationServiceFactory keyDeriva
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown when authentication fails or ciphertext is malformed.</exception>
     protected override async Task DecryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )

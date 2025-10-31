@@ -56,8 +56,8 @@ internal class SerpentEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown if encryption fails during finalization.</exception>
     protected override async Task EncryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )
@@ -83,8 +83,8 @@ internal class SerpentEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
     /// </remarks>
     /// <exception cref="Org.BouncyCastle.Crypto.InvalidCipherTextException">Thrown when authentication fails or data is malformed.</exception>
     protected override async Task DecryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     )

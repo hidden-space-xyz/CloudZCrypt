@@ -1,7 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
-using CloudZCrypt.Domain.IO;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Cryptography;
@@ -112,15 +111,13 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
 
             try
             {
-                using FileStream sourceFile = File.OpenRead(sourceFilePath);
-                using FileStream destinationFile = File.Create(destinationFilePath);
+                using Stream sourceFile = File.OpenRead(sourceFilePath);
+                using Stream destinationFile = File.Create(destinationFilePath);
 
                 await WriteSaltAsync(destinationFile, salt);
                 await WriteNonceAsync(destinationFile, nonce);
-                // Write a small header containing the original filename; downstream logic can choose to use it
-                string originalName = Path.GetFileName(sourceFilePath);
-                await EncryptedFileHeader.WriteAsync(destinationFile, originalName);
 
+                // No filename header is written. Ciphertext starts immediately after nonce.
                 await EncryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }
             catch (IOException ex)
@@ -209,7 +206,7 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
 
             try
             {
-                using FileStream testRead = File.OpenRead(sourceFilePath);
+                using Stream testRead = File.OpenRead(sourceFilePath);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -240,12 +237,11 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
                 key;
             try
             {
-                using FileStream sourceFile = File.OpenRead(sourceFilePath);
+                using Stream sourceFile = File.OpenRead(sourceFilePath);
                 salt = await ReadSaltAsync(sourceFile);
                 nonce = await ReadNonceAsync(sourceFile);
 
-                sourceFile.Seek(0, SeekOrigin.Begin);
-                await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
+                // Position is now right after salt+nonce
             }
             catch (EndOfStreamException)
             {
@@ -267,12 +263,11 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
 
             try
             {
-                using FileStream sourceFile = File.OpenRead(sourceFilePath);
-                using FileStream destinationFile = File.Create(destinationFilePath);
+                using Stream sourceFile = File.OpenRead(sourceFilePath);
+                using Stream destinationFile = File.Create(destinationFilePath);
 
+                // Skip salt + nonce to reach ciphertext start
                 await sourceFile.ReadExactlyAsync(new byte[SaltSize + NonceSize]);
-                // Consume optional header (if present) before cipher data
-                _ = await EncryptedFileHeader.TryReadAsync(sourceFile);
 
                 await DecryptStreamAsync(sourceFile, destinationFile, key, nonce);
             }
@@ -343,6 +338,158 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     }
 
     /// <summary>
+    /// Creates an encrypted file from the provided plaintext byte array by writing directly to the destination file
+    /// without using temporary files. Data stays in-memory until encrypted output is flushed to disk.
+    /// </summary>
+    /// <param name="plaintextData">Plaintext bytes to encrypt.</param>
+    /// <param name="destinationFilePath">Target encrypted file path.</param>
+    /// <param name="password">Password used for key derivation.</param>
+    /// <param name="keyDerivationAlgorithm">Key derivation algorithm to use.</param>
+    /// <returns>true if the encrypted file is created successfully.</returns>
+    public virtual async Task<bool> CreateEncryptedFileAsync(
+        byte[] plaintextData,
+        string destinationFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    )
+    {
+        ArgumentNullException.ThrowIfNull(plaintextData);
+
+        string? destinationDir = Path.GetDirectoryName(destinationFilePath);
+        if (!string.IsNullOrEmpty(destinationDir))
+        {
+            Directory.CreateDirectory(destinationDir);
+        }
+
+        byte[] salt = GenerateSalt();
+        byte[] nonce = GenerateNonce();
+
+        byte[] key;
+        try
+        {
+            key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
+        }
+        catch (Exception ex)
+        {
+            throw new EncryptionKeyDerivationException(ex);
+        }
+
+        try
+        {
+            using Stream destinationFile = File.Create(destinationFilePath);
+            await WriteSaltAsync(destinationFile, salt);
+            await WriteNonceAsync(destinationFile, nonce);
+
+            using Stream source = new MemoryStream(plaintextData, writable: false);
+            await EncryptStreamAsync(source, destinationFile, key, nonce);
+        }
+        catch (IOException ex)
+        {
+            try
+            {
+                if (File.Exists(destinationFilePath))
+                {
+                    File.Delete(destinationFilePath);
+                }
+            }
+            catch
+            {
+                /* Ignore cleanup errors */
+            }
+
+            if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new EncryptionInsufficientSpaceException(destinationFilePath);
+            }
+            throw new EncryptionCipherException("encryption", ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new EncryptionAccessDeniedException(destinationFilePath, ex);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                if (File.Exists(destinationFilePath))
+                {
+                    File.Delete(destinationFilePath);
+                }
+            }
+            catch
+            {
+                /* Ignore cleanup errors */
+            }
+            throw new EncryptionCipherException("encryption", ex);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Reads and decrypts an encrypted file into memory without using temporary files by streaming
+    /// from the encrypted source directly into a memory buffer.
+    /// </summary>
+    /// <param name="sourceFilePath">Path to the encrypted file.</param>
+    /// <param name="password">Password used for key derivation.</param>
+    /// <param name="keyDerivationAlgorithm">Key derivation algorithm expected for the file.</param>
+    /// <returns>Decrypted plaintext bytes.</returns>
+    public virtual async Task<byte[]> ReadEncryptedFileAsync(
+        string sourceFilePath,
+        string password,
+        KeyDerivationAlgorithm keyDerivationAlgorithm
+    )
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            throw new EncryptionFileNotFoundException(sourceFilePath);
+        }
+
+        try
+        {
+            using Stream source = File.OpenRead(sourceFilePath);
+
+            if (source.Length < SaltSize + NonceSize)
+            {
+                throw new EncryptionCorruptedFileException(sourceFilePath);
+            }
+
+            byte[] salt = await ReadSaltAsync(source);
+            byte[] nonce = await ReadNonceAsync(source);
+
+            byte[] key;
+            try
+            {
+                key = DeriveKey(password, salt, KeySize, keyDerivationAlgorithm);
+            }
+            catch (Exception ex)
+            {
+                throw new EncryptionKeyDerivationException(ex);
+            }
+
+            using MemoryStream plaintextBuffer = new();
+            await DecryptStreamAsync(source, plaintextBuffer, key, nonce);
+            return plaintextBuffer.ToArray();
+        }
+        catch (CryptographicException)
+        {
+            throw new EncryptionInvalidPasswordException();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new EncryptionAccessDeniedException(sourceFilePath, ex);
+        }
+        catch (EndOfStreamException)
+        {
+            throw new EncryptionCorruptedFileException(sourceFilePath);
+        }
+        catch (IOException ex)
+        {
+            throw new EncryptionCipherException("decryption", ex);
+        }
+    }
+
+    /// <summary>
     /// Encrypts data from a source stream into a destination stream using the provided derived key and nonce.
     /// Implemented by derived classes to supply the concrete AEAD cipher mechanics.
     /// </summary>
@@ -352,8 +499,8 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// <param name="nonce">Per-encryption unique nonce/IV.</param>
     /// <returns>A task representing the asynchronous encryption operation.</returns>
     protected abstract Task EncryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     );
@@ -368,8 +515,8 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// <param name="nonce">Nonce/IV extracted from the encrypted file header.</param>
     /// <returns>A task representing the asynchronous decryption operation.</returns>
     protected abstract Task DecryptStreamAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         byte[] key,
         byte[] nonce
     );
@@ -429,7 +576,7 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// </summary>
     /// <param name="stream">Writable file stream representing the encryption output target.</param>
     /// <param name="salt">Salt bytes to persist.</param>
-    protected static async Task WriteSaltAsync(FileStream stream, byte[] salt)
+    protected static async Task WriteSaltAsync(Stream stream, byte[] salt)
     {
         await stream.WriteAsync(salt);
     }
@@ -439,7 +586,7 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// </summary>
     /// <param name="stream">Readable file stream positioned at the start of the salt.</param>
     /// <returns>The salt byte array.</returns>
-    protected static async Task<byte[]> ReadSaltAsync(FileStream stream)
+    protected static async Task<byte[]> ReadSaltAsync(Stream stream)
     {
         byte[] salt = new byte[SaltSize];
         await stream.ReadExactlyAsync(salt);
@@ -451,7 +598,7 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// </summary>
     /// <param name="stream">Writable file stream representing the encryption output target.</param>
     /// <param name="nonce">Nonce bytes to persist.</param>
-    protected static async Task WriteNonceAsync(FileStream stream, byte[] nonce)
+    protected static async Task WriteNonceAsync(Stream stream, byte[] nonce)
     {
         await stream.WriteAsync(nonce);
     }
@@ -461,7 +608,7 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// </summary>
     /// <param name="stream">Readable file stream positioned at the start of the nonce.</param>
     /// <returns>The nonce byte array.</returns>
-    protected static async Task<byte[]> ReadNonceAsync(FileStream stream)
+    protected static async Task<byte[]> ReadNonceAsync(Stream stream)
     {
         byte[] nonce = new byte[NonceSize];
         await stream.ReadExactlyAsync(nonce);
@@ -478,8 +625,8 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
     /// <param name="cipher">Initialized AEAD cipher instance configured for encrypt or decrypt mode.</param>
     /// <returns>A task that completes when processing has finished.</returns>
     protected static async Task ProcessFileWithCipherAsync(
-        FileStream sourceStream,
-        FileStream destinationStream,
+        Stream sourceStream,
+        Stream destinationStream,
         IAeadCipher cipher
     )
     {
