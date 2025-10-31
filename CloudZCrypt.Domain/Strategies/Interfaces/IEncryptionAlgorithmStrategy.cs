@@ -2,63 +2,13 @@ using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Domain.Strategies.Interfaces;
 
-/// <summary>
-/// Defines a strategy contract for performing symmetric file encryption and decryption
-/// operations using a specific <see cref="EncryptionAlgorithm"/> implementation.
-/// </summary>
-/// <remarks>
-/// Implementations encapsulate the algorithm-specific details such as cipher mode, padding,
-/// key size selection, nonces/IV handling, authentication tags (if applicable), and secure
-/// resource disposal. This interface is consumed by higher-level orchestrators or factories
-/// that resolve an algorithm at runtime based on user input or configuration.
-/// </remarks>
 public interface IEncryptionAlgorithmStrategy
 {
-    /// <summary>
-    /// Gets the unique algorithm identifier corresponding to the underlying cryptographic primitive.
-    /// </summary>
-    /// <remarks>
-    /// This value is typically used for selection, logging, auditing, and serialization scenarios.
-    /// </remarks>
     EncryptionAlgorithm Id { get; }
-
-    /// <summary>
-    /// Gets a short, human-readable name for the encryption algorithm (e.g., "AES-256").
-    /// </summary>
-    /// <remarks>
-    /// Intended for display in UI elements, logs, or selection menus.
-    /// </remarks>
     string DisplayName { get; }
-
-    /// <summary>
-    /// Gets a descriptive text providing additional context about the algorithm's characteristics.
-    /// </summary>
-    /// <remarks>
-    /// This may include performance considerations, security posture, and applicable usage scenarios.
-    /// </remarks>
     string Description { get; }
-
-    /// <summary>
-    /// Gets a concise summary suitable for tooltip or compact display contexts.
-    /// </summary>
     string Summary { get; }
 
-    /// <summary>
-    /// Encrypts the specified source file using the algorithm strategy and writes the ciphertext
-    /// (and any required metadata) to the destination path.
-    /// </summary>
-    /// <param name="sourceFilePath">The absolute or relative path to the plaintext input file. Must exist and be readable.</param>
-    /// <param name="destinationFilePath">The target path where the encrypted file (or container) will be written. Will be overwritten if it exists.</param>
-    /// <param name="password">The user-supplied secret used to derive the encryption key. Must not be null or empty.</param>
-    /// <param name="keyDerivationAlgorithm">The password-based key derivation function to apply when deriving the cryptographic key material.</param>
-    /// <returns>
-    /// A task representing the asynchronous operation. The task result is true if the encryption succeeded; otherwise false.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sourceFilePath"/>, <paramref name="destinationFilePath"/>, or <paramref name="password"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if paths are empty, whitespace, or invalid.</exception>
-    /// <exception cref="FileNotFoundException">Thrown if the source file does not exist.</exception>
-    /// <exception cref="UnauthorizedAccessException">Thrown if read/write permissions are insufficient for the provided paths.</exception>
-    /// <exception cref="CryptographicException">Thrown if a cryptographic operation fails (e.g., key derivation or cipher initialization).</exception>
     Task<bool> EncryptFileAsync(
         string sourceFilePath,
         string destinationFilePath,
@@ -66,21 +16,6 @@ public interface IEncryptionAlgorithmStrategy
         KeyDerivationAlgorithm keyDerivationAlgorithm
     );
 
-    /// <summary>
-    /// Decrypts the specified encrypted source file and writes the recovered plaintext to the destination path.
-    /// </summary>
-    /// <param name="sourceFilePath">The absolute or relative path to the encrypted input file. Must exist and be readable.</param>
-    /// <param name="destinationFilePath">The target path where the decrypted plaintext file will be written. Will be overwritten if it exists.</param>
-    /// <param name="password">The user-supplied secret used to derive or validate the decryption key. Must match the original encryption password.</param>
-    /// <param name="keyDerivationAlgorithm">The password-based key derivation function expected for this encrypted artifact.</param>
-    /// <returns>
-    /// A task representing the asynchronous operation. The task result is true if the decryption succeeded and integrity/authenticity checks (if any) passed; otherwise false.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sourceFilePath"/>, <paramref name="destinationFilePath"/>, or <paramref name="password"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if paths are empty, whitespace, or invalid.</exception>
-    /// <exception cref="FileNotFoundException">Thrown if the source (encrypted) file does not exist.</exception>
-    /// <exception cref="UnauthorizedAccessException">Thrown if read/write permissions are insufficient for the provided paths.</exception>
-    /// <exception cref="CryptographicException">Thrown if decryption fails due to corrupted data, integrity/authentication failure, or incorrect password.</exception>
     Task<bool> DecryptFileAsync(
         string sourceFilePath,
         string destinationFilePath,
@@ -88,14 +23,6 @@ public interface IEncryptionAlgorithmStrategy
         KeyDerivationAlgorithm keyDerivationAlgorithm
     );
 
-    /// <summary>
-    /// Creates an encrypted file from the provided plaintext data byte array.
-    /// </summary>
-    /// <param name="plaintextData">The byte array containing the plaintext data to encrypt.</param>
-    /// <param name="destinationFilePath">The target path where the encrypted file will be written. Will be overwritten if it exists.</param>
-    /// <param name="password">The user-supplied secret used to derive the encryption key. Must not be null or empty.</param>
-    /// <param name="keyDerivationAlgorithm">The password-based key derivation function to apply when deriving the cryptographic key material.</param>
-    /// <returns>A task representing the asynchronous operation. The task result is true if the file creation succeeded; otherwise false.</returns>
     Task<bool> CreateEncryptedFileAsync(
         byte[] plaintextData,
         string destinationFilePath,
@@ -103,13 +30,6 @@ public interface IEncryptionAlgorithmStrategy
         KeyDerivationAlgorithm keyDerivationAlgorithm
     );
 
-    /// <summary>
-    /// Reads and decrypts an encrypted file, returning the recovered plaintext data as a byte array.
-    /// </summary>
-    /// <param name="sourceFilePath">The absolute or relative path to the encrypted input file. Must exist and be readable.</param>
-    /// <param name="password">The user-supplied secret used to derive or validate the decryption key. Must match the original encryption password.</param>
-    /// <param name="keyDerivationAlgorithm">The password-based key derivation function expected for this encrypted artifact.</param>
-    /// <returns>A task representing the asynchronous operation. The task result is the decrypted plaintext data as a byte array.</returns>
     Task<byte[]> ReadEncryptedFileAsync(
         string sourceFilePath,
         string password,

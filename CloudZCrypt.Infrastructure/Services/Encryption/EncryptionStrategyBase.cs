@@ -7,57 +7,14 @@ using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Services.Encryption;
 
-/// <summary>
-/// Provides a common, high-level framework for performing authenticated file encryption and decryption
-/// using password-derived keys and AEAD (Authenticated Encryption with Associated Data) ciphers.
-/// </summary>
-/// <remarks>
-/// This abstract base class encapsulates cross-cutting concerns such as input validation, disk space
-/// preflight checks, key derivation, salt and nonce handling, streaming I/O, and structured exception
-/// translation into domain-specific <see cref="EncryptionException"/> types.
-/// </remarks>
-/// <param name="keyDerivationServiceFactory">Factory used to resolve a concrete key derivation strategy based on the selected <see cref="KeyDerivationAlgorithm"/>.</param>
 internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyDerivationServiceFactory)
 {
-    /// <summary>
-    /// Size (in bits) of the symmetric encryption key produced from password derivation.
-    /// </summary>
     protected const int KeySize = 256;
-
-    /// <summary>
-    /// Size (in bytes) of the randomly generated salt prepended to encrypted files to enable key derivation during decryption.
-    /// </summary>
     protected const int SaltSize = 32;
-
-    /// <summary>
-    /// Size (in bytes) of the nonce (a.k.a. IV) used per encryption operation to ensure uniqueness and prevent replay.
-    /// </summary>
     protected const int NonceSize = 12;
-
-    /// <summary>
-    /// Size (in bits) of the authentication tag (MAC) produced by AEAD ciphers.
-    /// </summary>
     protected const int MacSize = 128;
-
-    /// <summary>
-    /// Size (in bytes) of the I/O buffer used for streaming encryption and decryption operations.
-    /// </summary>
     protected const int BufferSize = 4 * 1024;
 
-    /// <summary>
-    /// Encrypts a file using an AEAD cipher implementation provided by a derived class, writing salt and nonce metadata
-    /// ahead of the ciphertext so the operation can be reversed with the same password and algorithm selection.
-    /// </summary>
-    /// <param name="sourceFilePath">Full path to the plaintext source file. Must exist and be readable.</param>
-    /// <param name="destinationFilePath">Full path where the encrypted file will be created or overwritten.</param>
-    /// <param name="password">User-supplied secret used for key derivation. Must not be null or empty.</param>
-    /// <param name="keyDerivationAlgorithm">The key derivation algorithm to use when transforming the password into a fixed-length key.</param>
-    /// <returns>true if encryption completes successfully.</returns>
-    /// <exception cref="EncryptionFileNotFoundException">Thrown when the source file does not exist.</exception>
-    /// <exception cref="EncryptionAccessDeniedException">Thrown when read or write access is denied for source or destination paths.</exception>
-    /// <exception cref="EncryptionInsufficientSpaceException">Thrown when the destination drive lacks sufficient free space.</exception>
-    /// <exception cref="EncryptionKeyDerivationException">Thrown when key derivation fails (e.g., unsupported algorithm or internal error).</exception>
-    /// <exception cref="EncryptionCipherException">Thrown when a lower-level cryptographic or I/O failure occurs.</exception>
     public async Task<bool> EncryptFileAsync(
         string sourceFilePath,
         string destinationFilePath,
@@ -173,23 +130,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         }
     }
 
-    /// <summary>
-    /// Decrypts a file previously produced by <see cref="EncryptFileAsync"/>, restoring the original plaintext.
-    /// Validates basic structural integrity (presence of salt and nonce) and derives the appropriate key before invoking
-    /// the cipher-specific stream decryption implementation supplied by a derived class.
-    /// </summary>
-    /// <param name="sourceFilePath">Full path to the encrypted source file. Must exist and be readable.</param>
-    /// <param name="destinationFilePath">Full path where the decrypted plaintext file will be written or overwritten.</param>
-    /// <param name="password">Password used originally for encryption; must match to authenticate and decrypt.</param>
-    /// <param name="keyDerivationAlgorithm">The key derivation algorithm originally used during encryption.</param>
-    /// <returns>true if decryption completes successfully.</returns>
-    /// <exception cref="EncryptionFileNotFoundException">Thrown when the encrypted source file does not exist.</exception>
-    /// <exception cref="EncryptionAccessDeniedException">Thrown when read or write access is denied.</exception>
-    /// <exception cref="EncryptionCorruptedFileException">Thrown when the file is too small or structured metadata cannot be read.</exception>
-    /// <exception cref="EncryptionInvalidPasswordException">Thrown when authentication fails (e.g., wrong password or tampered data).</exception>
-    /// <exception cref="EncryptionInsufficientSpaceException">Thrown when the destination drive lacks required free space.</exception>
-    /// <exception cref="EncryptionKeyDerivationException">Thrown when key derivation fails for the supplied password and parameters.</exception>
-    /// <exception cref="EncryptionCipherException">Thrown for other unexpected I/O or cryptographic failures.</exception>
     public async Task<bool> DecryptFileAsync(
         string sourceFilePath,
         string destinationFilePath,
@@ -337,15 +277,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         }
     }
 
-    /// <summary>
-    /// Creates an encrypted file from the provided plaintext byte array by writing directly to the destination file
-    /// without using temporary files. Data stays in-memory until encrypted output is flushed to disk.
-    /// </summary>
-    /// <param name="plaintextData">Plaintext bytes to encrypt.</param>
-    /// <param name="destinationFilePath">Target encrypted file path.</param>
-    /// <param name="password">Password used for key derivation.</param>
-    /// <param name="keyDerivationAlgorithm">Key derivation algorithm to use.</param>
-    /// <returns>true if the encrypted file is created successfully.</returns>
     public virtual async Task<bool> CreateEncryptedFileAsync(
         byte[] plaintextData,
         string destinationFilePath,
@@ -426,14 +357,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return true;
     }
 
-    /// <summary>
-    /// Reads and decrypts an encrypted file into memory without using temporary files by streaming
-    /// from the encrypted source directly into a memory buffer.
-    /// </summary>
-    /// <param name="sourceFilePath">Path to the encrypted file.</param>
-    /// <param name="password">Password used for key derivation.</param>
-    /// <param name="keyDerivationAlgorithm">Key derivation algorithm expected for the file.</param>
-    /// <returns>Decrypted plaintext bytes.</returns>
     public virtual async Task<byte[]> ReadEncryptedFileAsync(
         string sourceFilePath,
         string password,
@@ -489,15 +412,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         }
     }
 
-    /// <summary>
-    /// Encrypts data from a source stream into a destination stream using the provided derived key and nonce.
-    /// Implemented by derived classes to supply the concrete AEAD cipher mechanics.
-    /// </summary>
-    /// <param name="sourceStream">Readable stream containing plaintext input.</param>
-    /// <param name="destinationStream">Writable stream receiving ciphertext output.</param>
-    /// <param name="key">Symmetric key derived from the user password.</param>
-    /// <param name="nonce">Per-encryption unique nonce/IV.</param>
-    /// <returns>A task representing the asynchronous encryption operation.</returns>
     protected abstract Task EncryptStreamAsync(
         Stream sourceStream,
         Stream destinationStream,
@@ -505,15 +419,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         byte[] nonce
     );
 
-    /// <summary>
-    /// Decrypts data from a source stream into a destination stream using the provided derived key and nonce.
-    /// Implemented by derived classes to supply the concrete AEAD cipher mechanics and authentication checks.
-    /// </summary>
-    /// <param name="sourceStream">Readable stream containing ciphertext input.</param>
-    /// <param name="destinationStream">Writable stream receiving plaintext output.</param>
-    /// <param name="key">Symmetric key derived from the user password.</param>
-    /// <param name="nonce">Nonce/IV extracted from the encrypted file header.</param>
-    /// <returns>A task representing the asynchronous decryption operation.</returns>
     protected abstract Task DecryptStreamAsync(
         Stream sourceStream,
         Stream destinationStream,
@@ -521,10 +426,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         byte[] nonce
     );
 
-    /// <summary>
-    /// Generates a cryptographically strong random salt suitable for password-based key derivation.
-    /// </summary>
-    /// <returns>A newly generated salt byte array of length <see cref="SaltSize"/>.</returns>
     protected static byte[] GenerateSalt()
     {
         byte[] salt = new byte[SaltSize];
@@ -535,10 +436,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return salt;
     }
 
-    /// <summary>
-    /// Generates a cryptographically strong random nonce (initialization vector) for use with an AEAD cipher.
-    /// </summary>
-    /// <returns>A newly generated nonce byte array of length <see cref="NonceSize"/>.</returns>
     protected static byte[] GenerateNonce()
     {
         byte[] nonce = new byte[NonceSize];
@@ -549,15 +446,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return nonce;
     }
 
-    /// <summary>
-    /// Derives a symmetric key from the supplied password and salt using the selected algorithm strategy.
-    /// </summary>
-    /// <param name="password">User-provided secret. Must not be null or empty.</param>
-    /// <param name="salt">Random salt used to introduce uniqueness and thwart precomputation attacks.</param>
-    /// <param name="keySize">Desired key size in bits.</param>
-    /// <param name="algorithm">The key derivation algorithm to employ.</param>
-    /// <returns>The derived key as a byte array of the requested size.</returns>
-    /// <exception cref="EncryptionKeyDerivationException">Indirectly thrown when algorithm strategy fails (wrapped higher up).</exception>
     protected byte[] DeriveKey(
         string password,
         byte[] salt,
@@ -571,21 +459,11 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return keyDerivationService.DeriveKey(password, salt, keySize);
     }
 
-    /// <summary>
-    /// Writes the salt to the destination stream as part of the file header.
-    /// </summary>
-    /// <param name="stream">Writable file stream representing the encryption output target.</param>
-    /// <param name="salt">Salt bytes to persist.</param>
     protected static async Task WriteSaltAsync(Stream stream, byte[] salt)
     {
         await stream.WriteAsync(salt);
     }
 
-    /// <summary>
-    /// Reads the salt from the current position in the supplied stream.
-    /// </summary>
-    /// <param name="stream">Readable file stream positioned at the start of the salt.</param>
-    /// <returns>The salt byte array.</returns>
     protected static async Task<byte[]> ReadSaltAsync(Stream stream)
     {
         byte[] salt = new byte[SaltSize];
@@ -593,21 +471,11 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return salt;
     }
 
-    /// <summary>
-    /// Writes the nonce to the destination stream following the salt in the file header.
-    /// </summary>
-    /// <param name="stream">Writable file stream representing the encryption output target.</param>
-    /// <param name="nonce">Nonce bytes to persist.</param>
     protected static async Task WriteNonceAsync(Stream stream, byte[] nonce)
     {
         await stream.WriteAsync(nonce);
     }
 
-    /// <summary>
-    /// Reads the nonce from the current position in the supplied stream.
-    /// </summary>
-    /// <param name="stream">Readable file stream positioned at the start of the nonce.</param>
-    /// <returns>The nonce byte array.</returns>
     protected static async Task<byte[]> ReadNonceAsync(Stream stream)
     {
         byte[] nonce = new byte[NonceSize];
@@ -615,15 +483,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         return nonce;
     }
 
-    /// <summary>
-    /// Processes the entire contents of the source stream through the provided AEAD cipher in a buffered manner,
-    /// writing the resulting output (ciphertext or plaintext) to the destination stream. Finalizes the cipher to
-    /// flush any buffered state and authentication tag.
-    /// </summary>
-    /// <param name="sourceStream">Readable input stream (plaintext for encryption, ciphertext for decryption).</param>
-    /// <param name="destinationStream">Writable output stream (ciphertext for encryption, plaintext for decryption).</param>
-    /// <param name="cipher">Initialized AEAD cipher instance configured for encrypt or decrypt mode.</param>
-    /// <returns>A task that completes when processing has finished.</returns>
     protected static async Task ProcessFileWithCipherAsync(
         Stream sourceStream,
         Stream destinationStream,
@@ -650,14 +509,6 @@ internal abstract class EncryptionStrategyBase(IKeyDerivationServiceFactory keyD
         }
     }
 
-    /// <summary>
-    /// Validates that there is sufficient free disk space on the target drive to perform encryption, applying a safety margin.
-    /// If disk information cannot be retrieved the method fails open and does not block the operation.
-    /// </summary>
-    /// <param name="sourceFilePath">Path to the source file whose size is used to estimate required space.</param>
-    /// <param name="destinationFilePath">Destination file path used to determine the target drive.</param>
-    /// <returns>A completed task once validation (or best-effort attempt) finishes.</returns>
-    /// <exception cref="EncryptionInsufficientSpaceException">Thrown when the available space is determined to be insufficient.</exception>
     private static async Task ValidateDiskSpaceAsync(
         string sourceFilePath,
         string destinationFilePath

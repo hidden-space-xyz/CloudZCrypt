@@ -7,19 +7,6 @@ using System.Text.RegularExpressions;
 
 namespace CloudZCrypt.Domain.Services
 {
-    /// <summary>
-    /// Provides services for evaluating password strength and generating random passwords
-    /// according to specified composition options.
-    /// </summary>
-    /// <remarks>
-    /// The analysis algorithm estimates entropy based on the effective character pool and length,
-    /// then subtracts heuristic penalties for common weaknesses such as repeated characters,
-    /// linear sequences, dictionary-like substrings (including basic leet variations), inclusion of
-    /// calendar years, and low character class diversity. The resulting score is mapped to a
-    /// qualitative <see cref="PasswordStrength"/> classification and accompanied by concise
-    /// improvement suggestions. Password generation uses a cryptographically secure random number
-    /// generator and honors inclusion / exclusion flags defined via <see cref="PasswordGenerationOptions"/>.
-    /// </remarks>
     internal class PasswordService : IPasswordService
     {
         private const double MaxEntropyBits = 120.0;
@@ -73,13 +60,7 @@ namespace CloudZCrypt.Domain.Services
             ['$'] = 's',
             ['!'] = 'i',
         };
-
-        /// <summary>
-        /// Analyzes the supplied password and returns an assessment including strength classification,
-        /// descriptive feedback, and a normalized score (0–100).
-        /// </summary>
-        /// <param name="password">The password to evaluate. May be empty or null, which yields a very weak result.</param>
-        /// <returns>A <see cref="PasswordStrengthAnalysis"/> describing the evaluated strength and guidance.</returns>
+        
         public PasswordStrengthAnalysis AnalyzePasswordStrength(string password)
         {
             if (string.IsNullOrEmpty(password))
@@ -112,19 +93,12 @@ namespace CloudZCrypt.Domain.Services
             }
 
             PasswordStrength strength = GetStrengthFromScore(score);
-            string description = BuildDescription(strength, score, entropy, compositionFlags, trimmed);
+            string description = BuildDescription(strength, entropy, compositionFlags, trimmed);
 
             return new PasswordStrengthAnalysis(strength, description, Math.Round(score, 2));
         }
 
-        /// <summary>
-        /// Generates a cryptographically secure random password using the specified length and generation options.
-        /// </summary>
-        /// <param name="length">Desired length of the password. Must be greater than zero.</param>
-        /// <param name="options">Bitwise combination of <see cref="PasswordGenerationOptions"/> controlling included character sets and exclusions.</param>
-        /// <returns>A randomly generated password string.</returns>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="length"/> is less than or equal to zero, or when <paramref name="options"/> is <see cref="PasswordGenerationOptions.None"/>.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when option filters remove all available characters.</exception>
+        
         public string GeneratePassword(int length, PasswordGenerationOptions options)
         {
             if (length <= 0)
@@ -185,12 +159,6 @@ namespace CloudZCrypt.Domain.Services
             return password.ToString();
         }
 
-        /// <summary>
-        /// Estimates the size of the effective character pool used in a password based on detected character classes.
-        /// </summary>
-        /// <param name="password">The password whose composition is being analyzed.</param>
-        /// <param name="flags">Outputs the detected composition flags describing character class presence.</param>
-        /// <returns>The approximate pool size used for entropy calculation.</returns>
         private static int EstimatePoolSize(string password, out PasswordComposition flags)
         {
             bool hasUpper = UpperCaseRegex.IsMatch(password);
@@ -231,11 +199,6 @@ namespace CloudZCrypt.Domain.Services
             return size;
         }
 
-        /// <summary>
-        /// Calculates an entropy penalty based on runs of identical consecutive characters.
-        /// </summary>
-        /// <param name="password">The password text to inspect for repeated character sequences.</param>
-        /// <returns>Penalty value (in bits) to subtract from base entropy.</returns>
         private static double RepetitionPenalty(string password)
         {
             double penalty = 0;
@@ -265,11 +228,6 @@ namespace CloudZCrypt.Domain.Services
             return penalty;
         }
 
-        /// <summary>
-        /// Calculates a penalty for linear ascending or descending character sequences (alphabetic, keyboard, numeric).
-        /// </summary>
-        /// <param name="password">The password to evaluate for sequential patterns.</param>
-        /// <returns>Penalty value (in bits) reflecting detected sequences.</returns>
         private static double SequencePenalty(string password)
         {
             double penalty = 0;
@@ -285,12 +243,6 @@ namespace CloudZCrypt.Domain.Services
             return penalty;
         }
 
-        /// <summary>
-        /// Scans the password for occurrences of a provided linear sequence and returns a cumulative penalty.
-        /// </summary>
-        /// <param name="passwordLower">Lower-cased password being analyzed.</param>
-        /// <param name="sequence">Canonical sequence to search for (e.g., alphabet fragment).</param>
-        /// <returns>Accumulated penalty for all matches of length three or greater.</returns>
         private static double SequenceScan(string passwordLower, string sequence)
         {
             double penalty = 0;
@@ -321,11 +273,6 @@ namespace CloudZCrypt.Domain.Services
             return penalty;
         }
 
-        /// <summary>
-        /// Calculates a penalty for common dictionary-like substrings and their leet-normalized equivalents.
-        /// </summary>
-        /// <param name="password">The password examined for common weak substrings.</param>
-        /// <returns>Penalty (in bits) applied for each matching substring.</returns>
         private static double PatternPenalty(string password)
         {
             double penalty = 0;
@@ -338,34 +285,17 @@ namespace CloudZCrypt.Domain.Services
             return penalty;
         }
 
-        /// <summary>
-        /// Calculates a penalty for four-digit years commonly used in passwords.
-        /// </summary>
-        /// <param name="password">The password text being inspected.</param>
-        /// <returns>Penalty (in bits) equal to a fixed amount per detected year.</returns>
         private static double YearPenalty(string password)
         {
             return YearRegex.Matches(password).Count * 4.0;
         }
 
-        /// <summary>
-        /// Applies a penalty when the password exhibits low diversity in character classes.
-        /// </summary>
-        /// <param name="flags">Composition flags indicating which character categories are present.</param>
-        /// <param name="password">Original password text (used for length-based scaling).</param>
-        /// <returns>Penalty (in bits) based on category count and length.</returns>
         private static double HomogeneousClassPenalty(PasswordComposition flags, string password)
         {
             return flags.CategoryCount <= 1 ? Math.Min(20, password.Length * 2)
-                : flags.CategoryCount == 2 && password.Length < 10 ? 10
-                : 0;
+                : flags.CategoryCount == 2 && password.Length < 10 ? 10 : 0;
         }
 
-        /// <summary>
-        /// Normalizes common leet-speak substitutions to their alphabetic counterparts for pattern detection.
-        /// </summary>
-        /// <param name="input">Password text to normalize.</param>
-        /// <returns>String with leet characters replaced by canonical letters where applicable.</returns>
         private static string NormalizeLeet(string input)
         {
             StringBuilder sb = new(input.Length);
@@ -385,11 +315,6 @@ namespace CloudZCrypt.Domain.Services
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Maps a numeric score to a qualitative <see cref="PasswordStrength"/> classification.
-        /// </summary>
-        /// <param name="score">Normalized score in the range 0–100.</param>
-        /// <returns>The corresponding <see cref="PasswordStrength"/> value.</returns>
         private static PasswordStrength GetStrengthFromScore(double score)
         {
             return score switch
@@ -402,18 +327,8 @@ namespace CloudZCrypt.Domain.Services
             };
         }
 
-        /// <summary>
-        /// Builds a human-readable description summarizing the password strength, entropy, and improvement suggestions.
-        /// </summary>
-        /// <param name="strength">Computed qualitative strength classification.</param>
-        /// <param name="score">Normalized strength score (0–100).</param>
-        /// <param name="entropy">Estimated entropy (in bits) after penalties.</param>
-        /// <param name="flags">Composition flags indicating character class usage.</param>
-        /// <param name="password">Original password string used for contextual suggestions.</param>
-        /// <returns>Formatted description string containing classification, entropy, and suggestions.</returns>
         private static string BuildDescription(
             PasswordStrength strength,
-            double score,
             double entropy,
             PasswordComposition flags,
             string password
@@ -494,11 +409,6 @@ namespace CloudZCrypt.Domain.Services
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Determines whether the password contains obvious sequential fragments (forward or reverse).
-        /// </summary>
-        /// <param name="password">The password to inspect.</param>
-        /// <returns>true if a sequence is detected; otherwise false.</returns>
         private static bool HasObviousSequence(string password)
         {
             string lower = password.ToLowerInvariant();
@@ -511,11 +421,6 @@ namespace CloudZCrypt.Domain.Services
                 });
         }
 
-        /// <summary>
-        /// Determines whether the password contains any immediate consecutive repeated characters.
-        /// </summary>
-        /// <param name="password">The password to evaluate.</param>
-        /// <returns>true if at least one repeated consecutive character pair is found; otherwise false.</returns>
         private static bool HasRepeats(string password)
         {
             for (int i = 1; i < password.Length; i++)

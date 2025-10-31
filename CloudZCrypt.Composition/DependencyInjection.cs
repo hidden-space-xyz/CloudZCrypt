@@ -13,22 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudZCrypt.Composition;
 
-/// <summary>
-/// Provides extension methods for registering CloudZCrypt domain and application level services
-/// with an <see cref="IServiceCollection"/>.
-/// </summary>
-/// <remarks>
-/// These methods centralize the dependency injection configuration for the solution, grouping
-/// registrations by logical layer (Domain vs Application).
-/// </remarks>
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Registers domain layer services, factories, and algorithm strategies required by the encryption
-    /// and key derivation subsystems.
-    /// </summary>
-    /// <param name="services">The service collection to add the registrations to. Must not be null.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> instance to allow fluent chaining.</returns>
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         // Factories
@@ -61,18 +47,13 @@ public static class DependencyInjection
         return services;
     }
 
-    /// <summary>
-    /// Registers application layer services including validators and orchestration components.
-    /// </summary>
-    /// <param name="services">The service collection to add the registrations to. Must not be null.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> instance to allow fluent chaining.</returns>
-    /// <remarks>
-    /// All FluentValidation validators contained in the Application assembly are automatically discovered
-    /// and registered through <see cref="ServiceCollectionExtensions.AddValidatorsFromAssembly(IServiceCollection, Assembly, ServiceLifetime, bool)"/>.
-    /// </remarks>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
+        services.AddSingleton<IFileProcessingRequestValidator, FileProcessingRequestValidator>();
+        services.AddSingleton<IFileProcessingWarningAnalyzer, FileProcessingWarningAnalyzer>();
+        services.AddSingleton<IPathNormalizer, PathNormalizer>();
+        services.AddSingleton<IManifestService, ManifestService>();
 
         return services;
     }
