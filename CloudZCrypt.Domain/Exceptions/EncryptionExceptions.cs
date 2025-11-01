@@ -12,7 +12,11 @@ public abstract class EncryptionException : Exception
         Code = code;
     }
 
-    protected EncryptionException(EncryptionErrorCode code, string? message, Exception innerException)
+    protected EncryptionException(
+        EncryptionErrorCode code,
+        string? message,
+        Exception innerException
+    )
         : base(message ?? code.ToString(), innerException)
     {
         Code = code;

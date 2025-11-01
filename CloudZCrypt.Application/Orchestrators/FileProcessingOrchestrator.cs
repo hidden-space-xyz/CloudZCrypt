@@ -30,40 +30,35 @@ internal sealed class FileProcessingOrchestrator(
     )
     {
         // First run validations
-        IReadOnlyList<string> errors = await fileProcessingRequestValidator.AnalyzeErrorsAsync(request, cancellationToken);
+        IReadOnlyList<string> errors = await fileProcessingRequestValidator.AnalyzeErrorsAsync(
+            request,
+            cancellationToken
+        );
         if (errors.Count > 0)
         {
             return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(
-                    false,
-                    TimeSpan.Zero,
-                    0,
-                    0,
-                    0,
-                    errors: errors
-                )
+                new FileProcessingResult(false, TimeSpan.Zero, 0, 0, 0, errors: errors)
             );
         }
 
-        IReadOnlyList<string> warnings = await fileProcessingRequestValidator.AnalyzeWarningsAsync(request, cancellationToken);
+        IReadOnlyList<string> warnings = await fileProcessingRequestValidator.AnalyzeWarningsAsync(
+            request,
+            cancellationToken
+        );
         if (warnings.Count > 0 && !request.ProceedOnWarnings)
         {
             // Return a result carrying warnings, letting caller decide to proceed
             return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(
-                    false,
-                    TimeSpan.Zero,
-                    0,
-                    0,
-                    0,
-                    warnings: warnings
-                )
+                new FileProcessingResult(false, TimeSpan.Zero, 0, 0, 0, warnings: warnings)
             );
         }
 
         // Normalize inputs using the dedicated service
         string? sourcePath = PathNormalizationHelper.TryNormalize(request.SourcePath, out _);
-        string? destinationPath = PathNormalizationHelper.TryNormalize(request.DestinationPath, out _);
+        string? destinationPath = PathNormalizationHelper.TryNormalize(
+            request.DestinationPath,
+            out _
+        );
         sourcePath ??= request.SourcePath;
         destinationPath ??= request.DestinationPath;
 
@@ -91,7 +86,10 @@ internal sealed class FileProcessingOrchestrator(
                 cancellationToken
             );
         }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             return Result<FileProcessingResult>.Failure(
@@ -263,6 +261,11 @@ internal sealed class FileProcessingOrchestrator(
         long processedBytes = 0;
         int processedFiles = 0;
 
+        // Track directory obfuscation mappings to avoid duplicates
+        Dictionary<string, string> directoryObfuscationCache = new(
+            StringComparer.OrdinalIgnoreCase
+        );
+
         progress?.Report(
             new FileProcessingStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero)
         );
@@ -274,23 +277,21 @@ internal sealed class FileProcessingOrchestrator(
 
             string relativePath = fileOperations.GetRelativePath(sourcePath, file);
 
-            string destinationFilePath =
-                request.Operation == EncryptOperation.Encrypt
-                    ? fileOperations.CombinePath(destinationPath, relativePath + AppFileExtension)
-                    : fileOperations.CombinePath(
-                        destinationPath,
-                        relativePath.Replace(AppFileExtension, "")
-                    );
+            string destinationFilePath;
 
             if (request.Operation == EncryptOperation.Encrypt)
             {
-                string dir =
-                    fileOperations.GetDirectoryName(destinationFilePath) ?? destinationPath;
-                string name = Path.GetFileName(destinationFilePath);
-                string obfuscatedName = obfuscationService.ObfuscateFileName(file, name);
-                destinationFilePath = fileOperations.CombinePath(dir, obfuscatedName);
+                // Obfuscate the entire path (directories + filename)
+                destinationFilePath = ObfuscateFullPath(
+                    sourcePath,
+                    file,
+                    relativePath,
+                    destinationPath,
+                    obfuscationService,
+                    directoryObfuscationCache
+                );
 
-                // Record manifest mapping: original relative path -> obfuscated relative path (under destination root)
+                // Record manifest mapping: original relative path -> obfuscated relative path
                 string obfuscatedRelativePath = fileOperations.GetRelativePath(
                     destinationPath,
                     destinationFilePath
@@ -299,6 +300,12 @@ internal sealed class FileProcessingOrchestrator(
             }
             else
             {
+                // Decrypt: remove the app extension first
+                destinationFilePath = fileOperations.CombinePath(
+                    destinationPath,
+                    relativePath.Replace(AppFileExtension, "")
+                );
+
                 // Use manifest mapping exclusively when available; otherwise keep default deobfuscated path
                 if (
                     manifestMap is not null
@@ -431,6 +438,65 @@ internal sealed class FileProcessingOrchestrator(
                     errors: errors
                 )
             );
+    }
+
+    private string ObfuscateFullPath(
+        string sourcePath,
+        string sourceFilePath,
+        string relativePath,
+        string destinationRoot,
+        INameObfuscationStrategy obfuscationService,
+        Dictionary<string, string> directoryCache
+    )
+    {
+        // Split the relative path into segments (directories + filename)
+        string[] segments = relativePath.Split(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar
+        );
+
+        List<string> obfuscatedSegments = new(segments.Length);
+        string currentSourcePath = sourcePath;
+
+        // Process each segment (directories first, then filename)
+        for (int i = 0; i < segments.Length; i++)
+        {
+            string segment = segments[i];
+            bool isLastSegment = i == segments.Length - 1;
+
+            if (isLastSegment)
+            {
+                // This is the filename - add extension and obfuscate
+                string filenameWithExtension = segment + AppFileExtension;
+                string obfuscatedFilename = obfuscationService.ObfuscateFileName(
+                    sourceFilePath,
+                    filenameWithExtension
+                );
+                obfuscatedSegments.Add(obfuscatedFilename);
+            }
+            else
+            {
+                // This is a directory segment
+                currentSourcePath = Path.Combine(currentSourcePath, segment);
+                string directoryKey = fileOperations.GetRelativePath(sourcePath, currentSourcePath);
+
+                if (!directoryCache.TryGetValue(directoryKey, out string? obfuscatedDirName))
+                {
+                    // Create a dummy file path for directory obfuscation
+                    // Using the directory path itself as the source since directories don't have content to hash
+                    obfuscatedDirName = obfuscationService.ObfuscateFileName(
+                        currentSourcePath,
+                        segment
+                    );
+                    directoryCache[directoryKey] = obfuscatedDirName;
+                }
+
+                obfuscatedSegments.Add(obfuscatedDirName);
+            }
+        }
+
+        // Combine all obfuscated segments with the destination root
+        return fileOperations.CombinePath([destinationRoot, .. obfuscatedSegments]);
     }
 
     private static Task<bool> ProcessSingleFile(

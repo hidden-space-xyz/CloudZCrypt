@@ -250,7 +250,9 @@ public class MainWindowViewModel : ObservableObjectBase
                 {
                     await ProcessFileAsync(EncryptOperation.Encrypt);
                 }
-                catch (OperationCanceledException) { /* ignore */ }
+                catch (OperationCanceledException)
+                { /* ignore */
+                }
             },
             CanExecuteProcessFile
         );
@@ -262,7 +264,9 @@ public class MainWindowViewModel : ObservableObjectBase
                 {
                     await ProcessFileAsync(EncryptOperation.Decrypt);
                 }
-                catch (OperationCanceledException) { /* ignore */ }
+                catch (OperationCanceledException)
+                { /* ignore */
+                }
             },
             CanExecuteProcessFile
         );
@@ -514,10 +518,13 @@ public class MainWindowViewModel : ObservableObjectBase
             string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
             dialogService.ShowProcessingResult(response, operation, sourceType);
         }
-        catch (OperationCanceledException) { /* ignore */ }
+        catch (OperationCanceledException)
+        { /* ignore */
+        }
         catch (Exception ex)
         {
-            string operationText = operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
+            string operationText =
+                operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
             ShowError(ex, operationText.ToLower(), operation);
         }
         finally
@@ -598,13 +605,34 @@ public class MainWindowViewModel : ObservableObjectBase
                 {
                     (string Title, string? Advice) = enc.Code switch
                     {
-                        EncryptionErrorCode.AccessDenied => ("Access Denied", "Check file or folder permissions or run as administrator."),
-                        EncryptionErrorCode.InsufficientDiskSpace => ("Insufficient Disk Space", "Free disk space or choose another destination."),
-                        EncryptionErrorCode.InvalidPassword => ("Invalid Password", "Verify the password and try again."),
-                        EncryptionErrorCode.FileCorruption => ("File Corruption", "The file may be damaged or not properly encrypted."),
-                        EncryptionErrorCode.KeyDerivationFailed => ("Key Derivation Error", "A problem occurred while deriving the encryption key."),
-                        EncryptionErrorCode.FileNotFound => ("File Not Found", "Ensure the file exists and is accessible."),
-                        EncryptionErrorCode.CipherOperationFailed => ("Encryption Error", "The cryptographic operation failed."),
+                        EncryptionErrorCode.AccessDenied => (
+                            "Access Denied",
+                            "Check file or folder permissions or run as administrator."
+                        ),
+                        EncryptionErrorCode.InsufficientDiskSpace => (
+                            "Insufficient Disk Space",
+                            "Free disk space or choose another destination."
+                        ),
+                        EncryptionErrorCode.InvalidPassword => (
+                            "Invalid Password",
+                            "Verify the password and try again."
+                        ),
+                        EncryptionErrorCode.FileCorruption => (
+                            "File Corruption",
+                            "The file may be damaged or not properly encrypted."
+                        ),
+                        EncryptionErrorCode.KeyDerivationFailed => (
+                            "Key Derivation Error",
+                            "A problem occurred while deriving the encryption key."
+                        ),
+                        EncryptionErrorCode.FileNotFound => (
+                            "File Not Found",
+                            "Ensure the file exists and is accessible."
+                        ),
+                        EncryptionErrorCode.CipherOperationFailed => (
+                            "Encryption Error",
+                            "The cryptographic operation failed."
+                        ),
                         _ => ("Operation Failed", null),
                     };
 
@@ -614,7 +642,9 @@ public class MainWindowViewModel : ObservableObjectBase
             case ValidationException val:
                 {
                     string title = "Validation Error";
-                    string msg = string.IsNullOrWhiteSpace(val.Message) ? val.Code.ToString() : val.Message;
+                    string msg = string.IsNullOrWhiteSpace(val.Message)
+                        ? val.Code.ToString()
+                        : val.Message;
                     return (title, msg);
                 }
             default:

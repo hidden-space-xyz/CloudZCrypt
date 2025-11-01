@@ -88,7 +88,9 @@ internal abstract class EncryptionStrategyBase(
                         File.Delete(destinationFilePath);
                     }
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
                 {
@@ -109,7 +111,9 @@ internal abstract class EncryptionStrategyBase(
                         File.Delete(destinationFilePath);
                     }
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
 
                 throw new EncryptionCipherException("encryption", ex);
             }
@@ -216,7 +220,9 @@ internal abstract class EncryptionStrategyBase(
                         File.Delete(destinationFilePath);
                     }
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
 
                 if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
                 {
@@ -241,7 +247,9 @@ internal abstract class EncryptionStrategyBase(
                         File.Delete(destinationFilePath);
                     }
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
 
                 if (
                     ex.Message.Contains("tag", StringComparison.OrdinalIgnoreCase)
@@ -313,7 +321,9 @@ internal abstract class EncryptionStrategyBase(
                     File.Delete(destinationFilePath);
                 }
             }
-            catch { /* ignore */ }
+            catch
+            { /* ignore */
+            }
 
             if (ex.Message.Contains("space", StringComparison.OrdinalIgnoreCase))
             {
@@ -334,7 +344,9 @@ internal abstract class EncryptionStrategyBase(
                     File.Delete(destinationFilePath);
                 }
             }
-            catch { /* ignore */ }
+            catch
+            { /* ignore */
+            }
 
             throw new EncryptionCipherException("encryption", ex);
         }

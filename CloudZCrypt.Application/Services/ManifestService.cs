@@ -43,7 +43,9 @@ internal sealed class ManifestService : IManifestService
                     if (File.Exists(tempJsonPath))
                         File.Delete(tempJsonPath);
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
                 return null;
             }
 
@@ -71,7 +73,9 @@ internal sealed class ManifestService : IManifestService
                     if (File.Exists(tempJsonPath))
                         File.Delete(tempJsonPath);
                 }
-                catch { /* ignore */ }
+                catch
+                { /* ignore */
+                }
             }
         }
         catch

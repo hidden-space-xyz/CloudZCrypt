@@ -9,5 +9,5 @@ public enum EncryptionErrorCode
     FileCorruption,
     KeyDerivationFailed,
     CipherOperationFailed,
-    Unknown
+    Unknown,
 }

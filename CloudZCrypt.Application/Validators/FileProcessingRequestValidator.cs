@@ -234,7 +234,9 @@ internal sealed class FileProcessingRequestValidator(
                     }
                 }
             }
-            catch { /* ignore */ }
+            catch
+            { /* ignore */
+            }
         }
 
         return errors;
@@ -248,7 +250,10 @@ internal sealed class FileProcessingRequestValidator(
         List<string> warnings = [];
 
         string? sourcePath = PathNormalizationHelper.TryNormalize(request.SourcePath, out _);
-        string? destinationPath = PathNormalizationHelper.TryNormalize(request.DestinationPath, out _);
+        string? destinationPath = PathNormalizationHelper.TryNormalize(
+            request.DestinationPath,
+            out _
+        );
         if (sourcePath is null || destinationPath is null)
         {
             return warnings;
@@ -341,7 +346,8 @@ internal sealed class FileProcessingRequestValidator(
                 );
             }
 
-            Domain.ValueObjects.Password.PasswordStrengthAnalysis strength = passwordService.AnalyzePasswordStrength(request.Password);
+            Domain.ValueObjects.Password.PasswordStrengthAnalysis strength =
+                passwordService.AnalyzePasswordStrength(request.Password);
             if (strength.Score < 60)
             {
                 warnings.Add(
@@ -349,7 +355,9 @@ internal sealed class FileProcessingRequestValidator(
                 );
             }
         }
-        catch { /* ignore */ }
+        catch
+        { /* ignore */
+        }
 
         return warnings;
     }
