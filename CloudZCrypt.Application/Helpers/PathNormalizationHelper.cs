@@ -1,10 +1,8 @@
-using CloudZCrypt.Application.Services.Interfaces;
+namespace CloudZCrypt.Application.Helpers;
 
-namespace CloudZCrypt.Application.Services;
-
-internal sealed class PathNormalizer : IPathNormalizer
+internal static class PathNormalizationHelper
 {
-    public string? TryNormalize(string rawPath, out string? error)
+    internal static string? TryNormalize(string rawPath, out string? error)
     {
         error = null;
         try
@@ -13,9 +11,9 @@ internal sealed class PathNormalizer : IPathNormalizer
             {
                 return string.Empty;
             }
+
             string expanded = Environment.ExpandEnvironmentVariables(rawPath.Trim());
-            string full = Path.GetFullPath(expanded);
-            return full;
+            return Path.GetFullPath(expanded);
         }
         catch (Exception ex)
         {

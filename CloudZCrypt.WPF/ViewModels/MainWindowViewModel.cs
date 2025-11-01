@@ -1,4 +1,4 @@
-﻿using CloudZCrypt.Application.Services.Interfaces;
+﻿using CloudZCrypt.Application.Orchestrators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Services.Interfaces;
@@ -16,18 +16,23 @@ namespace CloudZCrypt.WPF.ViewModels;
 public class MainWindowViewModel : ObservableObjectBase
 {
     private readonly IDialogService dialogService;
-    private readonly IFileProcessingOrchestrator orchestrator;
+    private readonly IFileProcessingOrchestrator fileProcessingOrchestrator;
+
     private CancellationTokenSource? cancellationTokenSource;
 
-    private string sourceFilePath = string.Empty;
-    private string destinationPath = string.Empty;
+    private string sourceFilePath;
+    private string destinationPath;
+
     private string password = string.Empty;
     private string confirmPassword = string.Empty;
+
     private bool isPasswordVisible;
     private bool isConfirmPasswordVisible;
+
     private EncryptionAlgorithm selectedEncryptionAlgorithm;
     private KeyDerivationAlgorithm selectedKeyDerivationAlgorithm;
-    private NameObfuscationMode selectedNameObfuscationMode = NameObfuscationMode.None;
+    private NameObfuscationMode selectedNameObfuscationMode;
+
     private bool isProcessing;
     private double progressValue;
     private string progressText = string.Empty;
@@ -207,7 +212,7 @@ public class MainWindowViewModel : ObservableObjectBase
     )
     {
         this.dialogService = dialogService;
-        this.orchestrator = orchestrator;
+        this.fileProcessingOrchestrator = orchestrator;
         this.PasswordService = passwordService;
 
         AvailableEncryptionAlgorithms = new(encryptionStrategies.OrderBy(a => a.DisplayName));
@@ -244,7 +249,7 @@ public class MainWindowViewModel : ObservableObjectBase
                 {
                     await ProcessFileAsync(EncryptOperation.Encrypt);
                 }
-                catch (OperationCanceledException) { }
+                catch (OperationCanceledException) { /* ignore */ }
             },
             CanExecuteProcessFile
         );
@@ -256,7 +261,7 @@ public class MainWindowViewModel : ObservableObjectBase
                 {
                     await ProcessFileAsync(EncryptOperation.Decrypt);
                 }
-                catch (OperationCanceledException) { }
+                catch (OperationCanceledException) { /* ignore */ }
             },
             CanExecuteProcessFile
         );
@@ -429,14 +434,14 @@ public class MainWindowViewModel : ObservableObjectBase
             SelectedNameObfuscationMode
         );
 
-        IReadOnlyList<string> validationErrors = await orchestrator.ValidateAsync(request);
+        IReadOnlyList<string> validationErrors = await fileProcessingOrchestrator.ValidateErrorsAsync(request);
         if (validationErrors.Any())
         {
             dialogService.ShowValidationErrors(validationErrors);
             return;
         }
 
-        IReadOnlyList<string> warnings = await orchestrator.AnalyzeWarningsAsync(request);
+        IReadOnlyList<string> warnings = await fileProcessingOrchestrator.ValidateWarningsAsync(request);
         if (warnings.Any())
         {
             string warningMessage =
@@ -461,7 +466,7 @@ public class MainWindowViewModel : ObservableObjectBase
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
             cancellationTokenSource = new();
-            Result<FileProcessingResult> result = await orchestrator.ExecuteAsync(
+            Result<FileProcessingResult> result = await fileProcessingOrchestrator.ExecuteAsync(
                 request,
                 progress,
                 cancellationTokenSource.Token

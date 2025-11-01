@@ -1,4 +1,8 @@
+using CloudZCrypt.Application.Helpers;
+using CloudZCrypt.Application.Orchestrators.Interfaces;
+using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.Validators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
@@ -7,30 +11,34 @@ using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using System.Diagnostics;
 
-namespace CloudZCrypt.Application.Services;
+namespace CloudZCrypt.Application.Orchestrators;
 
 internal sealed class FileProcessingOrchestrator(
-    IFileOperationsService fileOperations,
     IEncryptionServiceFactory encryptionServiceFactory,
     INameObfuscationServiceFactory nameObfuscationServiceFactory,
-    IFileProcessingRequestValidator requestValidator,
-    IFileProcessingWarningAnalyzer warningAnalyzer,
-    IPathNormalizer pathNormalizer,
+    IFileProcessingRequestValidator fileProcessingRequestValidator,
+    IFileOperationsService fileOperations,
     IManifestService manifestService
 ) : IFileProcessingOrchestrator
 {
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    public Task<IReadOnlyList<string>> ValidateAsync(
+    public async Task<IReadOnlyList<string>> ValidateErrorsAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
-    ) => requestValidator.ValidateAsync(request, cancellationToken);
+    )
+    {
+        return await fileProcessingRequestValidator.AnalyzeErrorsAsync(request, cancellationToken);
+    }
 
-    public Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
+    public async Task<IReadOnlyList<string>> ValidateWarningsAsync(
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken = default
-    ) => warningAnalyzer.AnalyzeAsync(request, cancellationToken);
+    )
+    {
+        return await fileProcessingRequestValidator.AnalyzeWarningsAsync(request, cancellationToken);
+    }
 
     public async Task<Result<FileProcessingResult>> ExecuteAsync(
         FileProcessingOrchestratorRequest request,
@@ -39,8 +47,8 @@ internal sealed class FileProcessingOrchestrator(
     )
     {
         // Normalize inputs using the dedicated service
-        string? sourcePath = pathNormalizer.TryNormalize(request.SourcePath, out _);
-        string? destinationPath = pathNormalizer.TryNormalize(request.DestinationPath, out _);
+        string? sourcePath = PathNormalizationHelper.TryNormalize(request.SourcePath, out _);
+        string? destinationPath = PathNormalizationHelper.TryNormalize(request.DestinationPath, out _);
         sourcePath ??= request.SourcePath;
         destinationPath ??= request.DestinationPath;
 
@@ -213,7 +221,7 @@ internal sealed class FileProcessingOrchestrator(
         // If decrypting, try to decrypt manifest first to map original names
         if (request.Operation == EncryptOperation.Decrypt)
         {
-            manifestMap = await manifestService.TryReadMapAsync(
+            manifestMap = await manifestService.TryReadManifestAsync(
                 sourcePath,
                 encryptionService,
                 request,
@@ -390,7 +398,7 @@ internal sealed class FileProcessingOrchestrator(
         // If encrypting a directory, write and encrypt the manifest last
         if (request.Operation == EncryptOperation.Encrypt && manifestEntries.Count > 0)
         {
-            IReadOnlyList<string> manifestErrors = await manifestService.WriteAsync(
+            IReadOnlyList<string> manifestErrors = await manifestService.TrySaveManifestAsync(
                 manifestEntries,
                 destinationPath,
                 encryptionService,

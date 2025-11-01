@@ -11,7 +11,7 @@ internal sealed class ManifestService : IManifestService
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    public async Task<Dictionary<string, string>?> TryReadMapAsync(
+    public async Task<Dictionary<string, string>?> TryReadManifestAsync(
         string sourceRoot,
         IEncryptionAlgorithmStrategy encryptionService,
         FileProcessingOrchestratorRequest request,
@@ -43,7 +43,7 @@ internal sealed class ManifestService : IManifestService
                     if (File.Exists(tempJsonPath))
                         File.Delete(tempJsonPath);
                 }
-                catch { }
+                catch { /* ignore */ }
                 return null;
             }
 
@@ -71,7 +71,7 @@ internal sealed class ManifestService : IManifestService
                     if (File.Exists(tempJsonPath))
                         File.Delete(tempJsonPath);
                 }
-                catch { }
+                catch { /* ignore */ }
             }
         }
         catch
@@ -80,7 +80,7 @@ internal sealed class ManifestService : IManifestService
         }
     }
 
-    public async Task<IReadOnlyList<string>> WriteAsync(
+    public async Task<IReadOnlyList<string>> TrySaveManifestAsync(
         IReadOnlyList<NameMapEntry> entries,
         string destinationRoot,
         IEncryptionAlgorithmStrategy encryptionService,

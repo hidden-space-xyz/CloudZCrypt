@@ -1,5 +1,9 @@
+using CloudZCrypt.Application.Orchestrators;
+using CloudZCrypt.Application.Orchestrators.Interfaces;
 using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.Validators;
+using CloudZCrypt.Application.Validators.Interfaces;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
@@ -51,8 +55,6 @@ public static class DependencyInjection
     {
         services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
         services.AddSingleton<IFileProcessingRequestValidator, FileProcessingRequestValidator>();
-        services.AddSingleton<IFileProcessingWarningAnalyzer, FileProcessingWarningAnalyzer>();
-        services.AddSingleton<IPathNormalizer, PathNormalizer>();
         services.AddSingleton<IManifestService, ManifestService>();
 
         return services;

@@ -5,14 +5,14 @@ namespace CloudZCrypt.Application.Services.Interfaces;
 
 public interface IManifestService
 {
-    Task<Dictionary<string, string>?> TryReadMapAsync(
+    Task<Dictionary<string, string>?> TryReadManifestAsync(
         string sourceRoot,
         IEncryptionAlgorithmStrategy encryptionService,
         FileProcessingOrchestratorRequest request,
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyList<string>> WriteAsync(
+    Task<IReadOnlyList<string>> TrySaveManifestAsync(
         IReadOnlyList<NameMapEntry> entries,
         string destinationRoot,
         IEncryptionAlgorithmStrategy encryptionService,
