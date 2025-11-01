@@ -1,4 +1,5 @@
 using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Security.Cryptography;
@@ -109,7 +110,8 @@ namespace CloudZCrypt.Domain.Services
         {
             if (length <= 0)
             {
-                throw new ArgumentException(
+                throw new ValidationException(
+                    ValidationErrorCode.PasswordLengthNonPositive,
                     "Password length must be greater than 0",
                     nameof(length)
                 );
@@ -117,7 +119,8 @@ namespace CloudZCrypt.Domain.Services
 
             if (options == PasswordGenerationOptions.None)
             {
-                throw new ArgumentException(
+                throw new ValidationException(
+                    ValidationErrorCode.PasswordOptionsNone,
                     "At least one character type must be selected",
                     nameof(options)
                 );
@@ -156,7 +159,8 @@ namespace CloudZCrypt.Domain.Services
 
             if (string.IsNullOrEmpty(availableChars))
             {
-                throw new InvalidOperationException(
+                throw new ValidationException(
+                    ValidationErrorCode.NoCharactersAvailableForGeneration,
                     "No characters available for password generation with the given options"
                 );
             }

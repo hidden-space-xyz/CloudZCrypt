@@ -1,6 +1,5 @@
 using CloudZCrypt.Application.Helpers;
 using CloudZCrypt.Application.Orchestrators.Interfaces;
-using CloudZCrypt.Application.Services;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.Validators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
@@ -303,7 +302,7 @@ internal sealed class FileProcessingOrchestrator(
                 // Use manifest mapping exclusively when available; otherwise keep default deobfuscated path
                 if (
                     manifestMap is not null
-                    && manifestMap.TryGetValue(relativePath, out string originalRelativePath)
+                    && manifestMap.TryGetValue(relativePath, out string? originalRelativePath)
                 )
                 {
                     destinationFilePath = fileOperations.CombinePath(

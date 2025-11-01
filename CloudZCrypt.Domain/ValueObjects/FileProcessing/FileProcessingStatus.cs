@@ -1,3 +1,5 @@
+using CloudZCrypt.Domain.Enums;
+
 namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 public sealed record FileProcessingStatus
@@ -18,7 +20,8 @@ public sealed record FileProcessingStatus
     {
         if (processedFiles < 0)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedFilesNegative,
                 "Processed files cannot be negative",
                 nameof(processedFiles)
             );
@@ -26,12 +29,17 @@ public sealed record FileProcessingStatus
 
         if (totalFiles < 0)
         {
-            throw new ArgumentException("Total files cannot be negative", nameof(totalFiles));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.TotalFilesNegative,
+                "Total files cannot be negative",
+                nameof(totalFiles)
+            );
         }
 
         if (processedBytes < 0)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedBytesNegative,
                 "Processed bytes cannot be negative",
                 nameof(processedBytes)
             );
@@ -39,17 +47,26 @@ public sealed record FileProcessingStatus
 
         if (totalBytes < 0)
         {
-            throw new ArgumentException("Total bytes cannot be negative", nameof(totalBytes));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.TotalBytesNegative,
+                "Total bytes cannot be negative",
+                nameof(totalBytes)
+            );
         }
 
         if (elapsed < TimeSpan.Zero)
         {
-            throw new ArgumentException("Elapsed time cannot be negative", nameof(elapsed));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ElapsedNegative,
+                "Elapsed time cannot be negative",
+                nameof(elapsed)
+            );
         }
 
         if (processedFiles > totalFiles)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedFilesExceedTotalFiles,
                 "Processed files cannot exceed total files",
                 nameof(processedFiles)
             );
@@ -57,7 +74,8 @@ public sealed record FileProcessingStatus
 
         if (processedBytes > totalBytes)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedBytesExceedTotalBytes,
                 "Processed bytes cannot exceed total bytes",
                 nameof(processedBytes)
             );

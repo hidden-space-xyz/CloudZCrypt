@@ -1,6 +1,7 @@
 ﻿using CloudZCrypt.Application.Orchestrators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
@@ -437,7 +438,7 @@ public class MainWindowViewModel : ObservableObjectBase
         );
 
         IsProcessing = true;
-        
+
         try
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
@@ -591,43 +592,39 @@ public class MainWindowViewModel : ObservableObjectBase
         EncryptOperation? operation
     )
     {
-        string raw = ex.Message ?? "Unknown error.";
-        string lower = raw.ToLowerInvariant();
-        StringComparison casePolicy = StringComparison.InvariantCultureIgnoreCase;
-
-        (string Title, string Advice)? rule = lower switch
+        switch (ex)
         {
-            var s when s.Contains("access denied", casePolicy) => (
-                "Access Denied",
-                "Check file or folder permissions or run as administrator."
-            ),
-            var s when s.Contains("insufficient disk space", casePolicy) => (
-                "Insufficient Disk Space",
-                "Free disk space or choose another destination."
-            ),
-            var s when s.Contains("invalid password", casePolicy) => (
-                "Invalid Password",
-                "Verify the password and try again."
-            ),
-            var s when s.Contains("corrupted", casePolicy) => (
-                "File Corruption",
-                "The file may be damaged or not properly encrypted."
-            ),
-            var s when s.Contains("key derivation", casePolicy) => (
-                "Key Derivation Error",
-                "A problem occurred while deriving the encryption key."
-            ),
-            _ => null,
-        };
+            case EncryptionException enc:
+                {
+                    (string Title, string? Advice) = enc.Code switch
+                    {
+                        EncryptionErrorCode.AccessDenied => ("Access Denied", "Check file or folder permissions or run as administrator."),
+                        EncryptionErrorCode.InsufficientDiskSpace => ("Insufficient Disk Space", "Free disk space or choose another destination."),
+                        EncryptionErrorCode.InvalidPassword => ("Invalid Password", "Verify the password and try again."),
+                        EncryptionErrorCode.FileCorruption => ("File Corruption", "The file may be damaged or not properly encrypted."),
+                        EncryptionErrorCode.KeyDerivationFailed => ("Key Derivation Error", "A problem occurred while deriving the encryption key."),
+                        EncryptionErrorCode.FileNotFound => ("File Not Found", "Ensure the file exists and is accessible."),
+                        EncryptionErrorCode.CipherOperationFailed => ("Encryption Error", "The cryptographic operation failed."),
+                        _ => ("Operation Failed", null),
+                    };
 
-        if (rule is { } r)
-        {
-            return (r.Title, $"{raw}\n\n{r.Advice}");
+                    string msg = enc.Message ?? enc.Code.ToString();
+                    return (Title, Advice is null ? msg : $"{msg}\n\n{Advice}");
+                }
+            case ValidationException val:
+                {
+                    string title = "Validation Error";
+                    string msg = string.IsNullOrWhiteSpace(val.Message) ? val.Code.ToString() : val.Message;
+                    return (title, msg);
+                }
+            default:
+                {
+                    string opText = operation is null
+                        ? string.Empty
+                        : $" during {operation.Value.ToString().ToLower()}";
+                    string raw = ex.Message ?? "Unknown error.";
+                    return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
+                }
         }
-
-        string opText = operation is null
-            ? string.Empty
-            : $" during {operation.Value.ToString().ToLower()}";
-        return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
     }
 }

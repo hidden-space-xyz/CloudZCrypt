@@ -1,3 +1,5 @@
+using CloudZCrypt.Domain.Enums;
+
 namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 public sealed record FileProcessingResult
@@ -50,17 +52,26 @@ public sealed record FileProcessingResult
     {
         if (elapsedTime < TimeSpan.Zero)
         {
-            throw new ArgumentException("Elapsed time cannot be negative", nameof(elapsedTime));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ElapsedTimeNegative,
+                "Elapsed time cannot be negative",
+                nameof(elapsedTime)
+            );
         }
 
         if (totalBytes < 0)
         {
-            throw new ArgumentException("Total bytes cannot be negative", nameof(totalBytes));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.TotalBytesNegative,
+                "Total bytes cannot be negative",
+                nameof(totalBytes)
+            );
         }
 
         if (processedFiles < 0)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedFilesNegative,
                 "Processed files cannot be negative",
                 nameof(processedFiles)
             );
@@ -68,12 +79,17 @@ public sealed record FileProcessingResult
 
         if (totalFiles < 0)
         {
-            throw new ArgumentException("Total files cannot be negative", nameof(totalFiles));
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.TotalFilesNegative,
+                "Total files cannot be negative",
+                nameof(totalFiles)
+            );
         }
 
         if (processedFiles > totalFiles)
         {
-            throw new ArgumentException(
+            throw new Exceptions.ValidationException(
+                ValidationErrorCode.ProcessedFilesExceedTotalFiles,
                 "Processed files cannot exceed total files",
                 nameof(processedFiles)
             );
