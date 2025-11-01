@@ -24,28 +24,44 @@ internal sealed class FileProcessingOrchestrator(
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    public async Task<IReadOnlyList<string>> ValidateErrorsAsync(
-        FileProcessingOrchestratorRequest request,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await fileProcessingRequestValidator.AnalyzeErrorsAsync(request, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<string>> ValidateWarningsAsync(
-        FileProcessingOrchestratorRequest request,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await fileProcessingRequestValidator.AnalyzeWarningsAsync(request, cancellationToken);
-    }
-
     public async Task<Result<FileProcessingResult>> ExecuteAsync(
         FileProcessingOrchestratorRequest request,
         IProgress<FileProcessingStatus> progress,
         CancellationToken cancellationToken = default
     )
     {
+        // First run validations
+        IReadOnlyList<string> errors = await fileProcessingRequestValidator.AnalyzeErrorsAsync(request, cancellationToken);
+        if (errors.Count > 0)
+        {
+            return Result<FileProcessingResult>.Success(
+                new FileProcessingResult(
+                    false,
+                    TimeSpan.Zero,
+                    0,
+                    0,
+                    0,
+                    errors: errors
+                )
+            );
+        }
+
+        IReadOnlyList<string> warnings = await fileProcessingRequestValidator.AnalyzeWarningsAsync(request, cancellationToken);
+        if (warnings.Count > 0 && !request.ProceedOnWarnings)
+        {
+            // Return a result carrying warnings, letting caller decide to proceed
+            return Result<FileProcessingResult>.Success(
+                new FileProcessingResult(
+                    false,
+                    TimeSpan.Zero,
+                    0,
+                    0,
+                    0,
+                    warnings: warnings
+                )
+            );
+        }
+
         // Normalize inputs using the dedicated service
         string? sourcePath = PathNormalizationHelper.TryNormalize(request.SourcePath, out _);
         string? destinationPath = PathNormalizationHelper.TryNormalize(request.DestinationPath, out _);
@@ -76,19 +92,7 @@ internal sealed class FileProcessingOrchestrator(
                 cancellationToken
             );
         }
-        catch (OperationCanceledException)
-        {
-            return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(
-                    false,
-                    TimeSpan.Zero,
-                    0,
-                    0,
-                    0,
-                    ["Operation was cancelled."]
-                )
-            );
-        }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             return Result<FileProcessingResult>.Failure(
@@ -143,7 +147,7 @@ internal sealed class FileProcessingOrchestrator(
                             0,
                             0,
                             0,
-                            ["Manifest file ignored during decryption."]
+                            errors: ["Manifest file ignored during decryption."]
                         )
                     );
                 }
@@ -209,7 +213,7 @@ internal sealed class FileProcessingOrchestrator(
                     0,
                     0,
                     0,
-                    ["No files found in the source directory."]
+                    errors: ["No files found in the source directory."]
                 )
             );
         }
@@ -425,7 +429,7 @@ internal sealed class FileProcessingOrchestrator(
                     totalBytes,
                     processedFiles,
                     filesToProcess.Length,
-                    errors
+                    errors: errors
                 )
             );
     }

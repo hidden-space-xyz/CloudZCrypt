@@ -423,7 +423,8 @@ public class MainWindowViewModel : ObservableObjectBase
 
     private async Task ProcessFileAsync(EncryptOperation operation)
     {
-        FileProcessingOrchestratorRequest request = new(
+        // Compose base request
+        FileProcessingOrchestratorRequest baseRequest = new(
             SourceFilePath,
             DestinationPath,
             Password,
@@ -431,71 +432,91 @@ public class MainWindowViewModel : ObservableObjectBase
             SelectedEncryptionAlgorithm,
             SelectedKeyDerivationAlgorithm,
             operation,
-            SelectedNameObfuscationMode
+            SelectedNameObfuscationMode,
+            ProceedOnWarnings: false
         );
 
-        IReadOnlyList<string> validationErrors = await fileProcessingOrchestrator.ValidateErrorsAsync(request);
-        if (validationErrors.Any())
-        {
-            dialogService.ShowValidationErrors(validationErrors);
-            return;
-        }
-
-        IReadOnlyList<string> warnings = await fileProcessingOrchestrator.ValidateWarningsAsync(request);
-        if (warnings.Any())
-        {
-            string warningMessage =
-                $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", warnings.Select(w => $"• {w}"))}";
-            if (
-                !dialogService.ShowConfirmation(
-                    $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
-                    "Confirm Operation"
-                )
-            )
-            {
-                throw new OperationCanceledException(
-                    "Operation cancelled by user due to warnings."
-                );
-            }
-        }
-
         IsProcessing = true;
-        string operationText = operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
-
+        
         try
         {
             Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
             cancellationTokenSource = new();
+
+            // First call: perform validations and possibly process if no warnings
             Result<FileProcessingResult> result = await fileProcessingOrchestrator.ExecuteAsync(
-                request,
+                baseRequest,
                 progress,
                 cancellationTokenSource.Token
             );
 
-            if (result.IsSuccess && result.Value != null)
-            {
-                string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
-                dialogService.ShowProcessingResult(result.Value, operation, sourceType);
-            }
-            else
+            if (!result.IsSuccess)
             {
                 dialogService.ShowMessage(
                     $"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}",
                     "Error",
                     MessageBoxImage.Error
                 );
+                return;
             }
+
+            FileProcessingResult response = result.Value;
+
+            // Handle validation errors
+            if (response.HasErrors && response.TotalFiles == 0 && response.ProcessedFiles == 0)
+            {
+                dialogService.ShowValidationErrors(response.Errors);
+                return;
+            }
+
+            // Handle warnings: ask user to proceed
+            if (response.HasWarnings && !baseRequest.ProceedOnWarnings)
+            {
+                string warningMessage =
+                    $"⚠️ Please review the following concerns:\n\n{string.Join("\n\n", response.Warnings.Select(w => $"• {w}"))}";
+                bool proceed = dialogService.ShowConfirmation(
+                    $"{warningMessage}\n\nDo you want to continue with the {operation.ToString().ToLower()} operation?",
+                    "Confirm Operation"
+                );
+
+                if (!proceed)
+                {
+                    throw new OperationCanceledException();
+                }
+
+                // Re-run with permission to proceed
+                FileProcessingOrchestratorRequest proceedRequest = baseRequest with
+                {
+                    ProceedOnWarnings = true,
+                };
+
+                result = await fileProcessingOrchestrator.ExecuteAsync(
+                    proceedRequest,
+                    progress,
+                    cancellationTokenSource.Token
+                );
+
+                if (!result.IsSuccess)
+                {
+                    dialogService.ShowMessage(
+                        $"Failed to {operation.ToString().ToLower()}: {string.Join(", ", result.Errors)}",
+                        "Error",
+                        MessageBoxImage.Error
+                    );
+                    return;
+                }
+
+                response = result.Value;
+            }
+
+            // Show final processing result
+            string sourceType = File.Exists(SourceFilePath) ? "file" : "directory";
+            dialogService.ShowProcessingResult(response, operation, sourceType);
         }
-        catch (OperationCanceledException)
-        {
-            dialogService.ShowMessage(
-                $"{operationText} was cancelled by user.",
-                "Operation Cancelled",
-                MessageBoxImage.Information
-            );
-        }
+        catch (OperationCanceledException) { /* ignore */ }
         catch (Exception ex)
         {
+            string operationText = operation == EncryptOperation.Encrypt ? "Encrypting" : "Decrypting";
             ShowError(ex, operationText.ToLower(), operation);
         }
         finally

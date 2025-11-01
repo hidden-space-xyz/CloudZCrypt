@@ -10,14 +10,4 @@ public interface IFileProcessingOrchestrator
         IProgress<FileProcessingStatus> progress,
         CancellationToken cancellationToken = default
     );
-
-    Task<IReadOnlyList<string>> ValidateErrorsAsync(
-        FileProcessingOrchestratorRequest request,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<IReadOnlyList<string>> ValidateWarningsAsync(
-        FileProcessingOrchestratorRequest request,
-        CancellationToken cancellationToken = default
-    );
 }

@@ -8,6 +8,7 @@ public sealed record FileProcessingResult
     public int ProcessedFiles { get; }
     public int TotalFiles { get; }
     public IReadOnlyList<string> Errors { get; }
+    public IReadOnlyList<string> Warnings { get; }
 
     public FileProcessingResult(
         bool isSuccess,
@@ -15,7 +16,8 @@ public sealed record FileProcessingResult
         long totalBytes,
         int processedFiles,
         int totalFiles,
-        IEnumerable<string> errors
+        IEnumerable<string>? errors = null,
+        IEnumerable<string>? warnings = null
     )
     {
         ValidateInputs(elapsedTime, totalBytes, processedFiles, totalFiles);
@@ -26,9 +28,11 @@ public sealed record FileProcessingResult
         ProcessedFiles = processedFiles;
         TotalFiles = totalFiles;
         Errors = errors?.ToArray() ?? Array.Empty<string>();
+        Warnings = warnings?.ToArray() ?? Array.Empty<string>();
     }
 
     public bool HasErrors => Errors.Count > 0;
+    public bool HasWarnings => Warnings.Count > 0;
     public int FailedFiles => TotalFiles - ProcessedFiles;
     public double SuccessRate => TotalFiles == 0 ? 0.0 : (double)ProcessedFiles / TotalFiles;
     public bool IsPartialSuccess => ProcessedFiles > 0 && ProcessedFiles < TotalFiles;

@@ -10,5 +10,6 @@ public sealed record FileProcessingOrchestratorRequest(
     EncryptionAlgorithm EncryptionAlgorithm,
     KeyDerivationAlgorithm KeyDerivationAlgorithm,
     EncryptOperation Operation,
-    NameObfuscationMode NameObfuscation
+    NameObfuscationMode NameObfuscation,
+    bool ProceedOnWarnings = false
 );
