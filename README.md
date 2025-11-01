@@ -31,6 +31,7 @@ CloudZCrypt gives you privacy and security in a few simple clicks:
 
 - **🔄 Multiple Encryption Algorithms** - AES, ChaCha20, Twofish, Serpent, and Camellia
 - **🔑 Multiple Key Derivation Algorithms** - Argon2id and PBKDF2.
+- **🕵️ Filename Obfuscation** - Prevents sensitive information from being leaked via original file/folder names.
 - **📊 Password Strength Guidance** - Built-in analyzer helps you create truly secure passwords
 - **💻 Local Processing Only** - Your files and passwords never leave your computer
 - **👁️ Zero Data Collection** - We don't track, collect, or transmit any of your information
@@ -68,7 +69,7 @@ We're committed to continuously improving CloudZCrypt based on user feedback and
 ## 📸 Screenshots
 
 <p align="center">
-<img width="786" height="578" alt="image" src="https://github.com/user-attachments/assets/bf70aaeb-1da8-46ce-8cde-effa024830b6" />
+<img width="886" height="578" alt="image" src="https://github.com/user-attachments/assets/e8c9a10d-3ad7-4cf0-bd83-9cd4fa5292c3" />
 </p>
 
 ## 🧩 About the Name
