@@ -1,8 +1,8 @@
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 namespace CloudZCrypt.Application.Validators.Interfaces;
 
-public interface IFileProcessingRequestValidator
+public interface IFileCryptRequestValidator
 {
     Task<IReadOnlyList<string>> AnalyzeErrorsAsync(
         FileCryptRequest request,

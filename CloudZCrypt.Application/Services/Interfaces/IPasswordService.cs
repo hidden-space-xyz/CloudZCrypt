@@ -1,7 +1,7 @@
-﻿using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.ValueObjects.Password;
+﻿using CloudZCrypt.Application.ValueObjects.Password;
+using CloudZCrypt.Domain.Enums;
 
-namespace CloudZCrypt.Domain.Services.Interfaces
+namespace CloudZCrypt.Application.Services.Interfaces
 {
     public interface IPasswordService
     {

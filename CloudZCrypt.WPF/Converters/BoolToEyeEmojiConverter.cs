@@ -7,6 +7,8 @@ public class BoolToEyeEmojiConverter : IValueConverter
 {
     public static readonly BoolToEyeEmojiConverter Instance = new();
 
+    private BoolToEyeEmojiConverter() { }
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         return value is bool isVisible && isVisible ? "🚫" : "👁️";

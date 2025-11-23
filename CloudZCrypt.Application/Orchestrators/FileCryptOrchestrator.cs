@@ -1,21 +1,22 @@
-using CloudZCrypt.Application.Helpers;
+using System.Diagnostics;
 using CloudZCrypt.Application.Orchestrators.Interfaces;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.Utilities.Helpers;
 using CloudZCrypt.Application.Validators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
+using CloudZCrypt.Application.ValueObjects.Manifest;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
-using CloudZCrypt.Domain.ValueObjects.Manifest;
-using System.Diagnostics;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 namespace CloudZCrypt.Application.Orchestrators;
 
 internal sealed class FileCryptOrchestrator(
     IEncryptionServiceFactory encryptionServiceFactory,
     INameObfuscationServiceFactory nameObfuscationServiceFactory,
-    IFileProcessingRequestValidator fileProcessingRequestValidator,
+    IFileCryptRequestValidator fileProcessingRequestValidator,
     IFileOperationsService fileOperations,
     IManifestService manifestService
 ) : IFileCryptOrchestrator
@@ -92,9 +93,7 @@ internal sealed class FileCryptOrchestrator(
         }
         catch (Exception ex)
         {
-            return Result<FileCryptResult>.Failure(
-                $"An unexpected error occurred: {ex.Message}"
-            );
+            return Result<FileCryptResult>.Failure($"An unexpected error occurred: {ex.Message}");
         }
     }
 
@@ -176,9 +175,7 @@ internal sealed class FileCryptOrchestrator(
                 { /* ignore */
                 }
 
-                progress?.Report(
-                    new FileCryptStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed)
-                );
+                progress?.Report(new FileCryptStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed));
                 stopwatch.Stop();
                 return Result<FileCryptResult>.Success(
                     new FileCryptResult(

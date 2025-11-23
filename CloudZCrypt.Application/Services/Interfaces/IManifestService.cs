@@ -1,8 +1,8 @@
+using CloudZCrypt.Application.ValueObjects.Manifest;
 using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
-using CloudZCrypt.Domain.ValueObjects.Manifest;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
-namespace CloudZCrypt.Domain.Services.Interfaces;
+namespace CloudZCrypt.Application.Services.Interfaces;
 
 public interface IManifestService
 {

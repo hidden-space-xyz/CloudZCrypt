@@ -1,4 +1,4 @@
-namespace CloudZCrypt.Domain.Utilities;
+namespace CloudZCrypt.Application.Utilities.Formatters;
 
 public static class ByteSizeFormatter
 {

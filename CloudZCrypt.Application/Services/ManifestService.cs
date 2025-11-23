@@ -1,11 +1,11 @@
-using CloudZCrypt.Domain.Services.Interfaces;
-using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
-using CloudZCrypt.Domain.ValueObjects.Manifest;
 using System.Text;
 using System.Text.Json;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.ValueObjects.Manifest;
+using CloudZCrypt.Domain.Strategies.Interfaces;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
-namespace CloudZCrypt.Domain.Services;
+namespace CloudZCrypt.Application.Services;
 
 internal sealed class ManifestService : IManifestService
 {

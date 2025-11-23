@@ -1,4 +1,4 @@
-namespace CloudZCrypt.Domain.ValueObjects.Password;
+namespace CloudZCrypt.Application.ValueObjects.Password;
 
 public sealed record PasswordComposition(
     bool HasUpper,

@@ -1,12 +1,12 @@
-using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Exceptions;
-using CloudZCrypt.Domain.Services.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.ValueObjects.Password;
+using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.Exceptions;
 
-namespace CloudZCrypt.Domain.Services
+namespace CloudZCrypt.Application.Services
 {
     internal class PasswordService : IPasswordService
     {

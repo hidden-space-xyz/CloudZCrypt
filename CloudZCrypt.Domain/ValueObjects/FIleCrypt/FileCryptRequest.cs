@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 
-namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
+namespace CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 public sealed record FileCryptRequest(
     string SourcePath,

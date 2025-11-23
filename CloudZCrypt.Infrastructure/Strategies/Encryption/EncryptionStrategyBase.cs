@@ -1,9 +1,9 @@
+using System.Security.Cryptography;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
-using System.Security.Cryptography;
 
 namespace CloudZCrypt.Infrastructure.Strategies.Encryption;
 

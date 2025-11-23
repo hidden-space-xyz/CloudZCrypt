@@ -1,6 +1,6 @@
-using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 using System.Windows;
+using CloudZCrypt.Domain.Enums;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 namespace CloudZCrypt.WPF.Services.Interfaces;
 

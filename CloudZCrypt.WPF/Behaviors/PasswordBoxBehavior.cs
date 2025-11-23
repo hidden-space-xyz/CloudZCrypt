@@ -1,8 +1,8 @@
-using CloudZCrypt.Domain.Enums;
-using CloudZCrypt.Domain.Services.Interfaces;
-using CloudZCrypt.Domain.ValueObjects.Password;
 using System.Windows;
 using System.Windows.Controls;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.ValueObjects.Password;
+using CloudZCrypt.Domain.Enums;
 using MediaBrush = System.Windows.Media.Brush;
 using MediaBrushes = System.Windows.Media.Brushes;
 using MediaColor = System.Windows.Media.Color;

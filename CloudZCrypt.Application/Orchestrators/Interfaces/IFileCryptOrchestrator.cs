@@ -1,5 +1,5 @@
 using CloudZCrypt.Application.ValueObjects;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 namespace CloudZCrypt.Application.Orchestrators.Interfaces;
 

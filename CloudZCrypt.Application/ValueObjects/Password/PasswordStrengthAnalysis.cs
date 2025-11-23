@@ -1,6 +1,6 @@
 using CloudZCrypt.Domain.Enums;
 
-namespace CloudZCrypt.Domain.ValueObjects.Password;
+namespace CloudZCrypt.Application.ValueObjects.Password;
 
 public sealed record PasswordStrengthAnalysis(
     PasswordStrength Strength,

@@ -1,8 +1,10 @@
-using CloudZCrypt.Application.Helpers;
+using CloudZCrypt.Application.Services.Interfaces;
+using CloudZCrypt.Application.Utilities.Formatters;
+using CloudZCrypt.Application.Utilities.Helpers;
 using CloudZCrypt.Application.Validators.Interfaces;
+using CloudZCrypt.Application.ValueObjects.Password;
 using CloudZCrypt.Domain.Services.Interfaces;
-using CloudZCrypt.Domain.Utilities;
-using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 
 namespace CloudZCrypt.Application.Validators;
 
@@ -10,7 +12,7 @@ internal sealed class FileCryptRequestValidator(
     IFileOperationsService fileOperations,
     ISystemStorageService systemStorage,
     IPasswordService passwordService
-) : IFileProcessingRequestValidator
+) : IFileCryptRequestValidator
 {
     public async Task<IReadOnlyList<string>> AnalyzeErrorsAsync(
         FileCryptRequest request,
@@ -346,8 +348,9 @@ internal sealed class FileCryptRequestValidator(
                 );
             }
 
-            Domain.ValueObjects.Password.PasswordStrengthAnalysis strength =
-                passwordService.AnalyzePasswordStrength(request.Password);
+            PasswordStrengthAnalysis strength = passwordService.AnalyzePasswordStrength(
+                request.Password
+            );
             if (strength.Score < 60)
             {
                 warnings.Add(
