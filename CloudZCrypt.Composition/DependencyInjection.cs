@@ -1,18 +1,16 @@
 using CloudZCrypt.Application.Orchestrators;
 using CloudZCrypt.Application.Orchestrators.Interfaces;
-using CloudZCrypt.Application.Services;
-using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.Validators;
 using CloudZCrypt.Application.Validators.Interfaces;
+using CloudZCrypt.Domain.Factories;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
-using CloudZCrypt.Infrastructure.Factories;
-using CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
 using CloudZCrypt.Infrastructure.Services.FileSystem;
-using CloudZCrypt.Infrastructure.Services.KeyDerivation;
-using CloudZCrypt.Infrastructure.Services.Obfuscation;
+using CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
+using CloudZCrypt.Infrastructure.Strategies.KeyDerivation;
+using CloudZCrypt.Infrastructure.Strategies.Obfuscation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudZCrypt.Composition;
@@ -53,8 +51,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddSingleton<IFileProcessingOrchestrator, FileProcessingOrchestrator>();
-        services.AddSingleton<IFileProcessingRequestValidator, FileProcessingRequestValidator>();
+        services.AddSingleton<IFileCryptOrchestrator, FileCryptOrchestrator>();
+        services.AddSingleton<IFileProcessingRequestValidator, FileCryptRequestValidator>();
         services.AddSingleton<IManifestService, ManifestService>();
 
         return services;

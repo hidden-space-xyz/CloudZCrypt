@@ -1,10 +1,11 @@
-using CloudZCrypt.Application.Services.Interfaces;
-using CloudZCrypt.Application.ValueObjects;
+using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.Manifest;
 using System.Text;
 using System.Text.Json;
 
-namespace CloudZCrypt.Application.Services;
+namespace CloudZCrypt.Domain.Services;
 
 internal sealed class ManifestService : IManifestService
 {
@@ -14,7 +15,7 @@ internal sealed class ManifestService : IManifestService
     public async Task<Dictionary<string, string>?> TryReadManifestAsync(
         string sourceRoot,
         IEncryptionAlgorithmStrategy encryptionService,
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -52,13 +53,13 @@ internal sealed class ManifestService : IManifestService
             try
             {
                 await using FileStream fs = File.OpenRead(tempJsonPath);
-                List<NameMapEntry>? entries = await JsonSerializer.DeserializeAsync<
-                    List<NameMapEntry>
+                List<ManifestEntry>? entries = await JsonSerializer.DeserializeAsync<
+                    List<ManifestEntry>
                 >(fs, cancellationToken: cancellationToken);
                 Dictionary<string, string> map = new(StringComparer.OrdinalIgnoreCase);
                 if (entries is not null)
                 {
-                    foreach (NameMapEntry e in entries)
+                    foreach (ManifestEntry e in entries)
                     {
                         // Key is obfuscated relative path, value is original relative path
                         map[e.ObfuscatedRelativePath] = e.OriginalRelativePath;
@@ -85,10 +86,10 @@ internal sealed class ManifestService : IManifestService
     }
 
     public async Task<IReadOnlyList<string>> TrySaveManifestAsync(
-        IReadOnlyList<NameMapEntry> entries,
+        IReadOnlyList<ManifestEntry> entries,
         string destinationRoot,
         IEncryptionAlgorithmStrategy encryptionService,
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken
     )
     {

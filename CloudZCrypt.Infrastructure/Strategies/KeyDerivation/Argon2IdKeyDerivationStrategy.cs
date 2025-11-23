@@ -4,7 +4,7 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 
-namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
+namespace CloudZCrypt.Infrastructure.Strategies.KeyDerivation;
 
 internal class Argon2IdKeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
 {

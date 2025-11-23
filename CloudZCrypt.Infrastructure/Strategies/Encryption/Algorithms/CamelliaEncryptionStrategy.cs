@@ -5,22 +5,22 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
 
-internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+internal class CamelliaEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
     : EncryptionStrategyBase(keyDerivationServiceFactory),
         IEncryptionAlgorithmStrategy
 {
-    public EncryptionAlgorithm Id => EncryptionAlgorithm.Twofish;
+    public EncryptionAlgorithm Id => EncryptionAlgorithm.Camellia;
 
-    public string DisplayName => "Twofish-256 GCM";
+    public string DisplayName => "Camellia-256 GCM";
 
     public string Description =>
-        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. "
-        + "Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. "
-        + "Less commonly hardware-accelerated or standardized for AEAD modes.";
+        "A 128‑bit block cipher with a 256‑bit key, jointly designed by NTT and Mitsubishi; performance and security margin comparable to AES. "
+        + "Supported in many international standards (RFCs, ISO/IEC) and suitable where non‑U.S.-origin algorithms or broader jurisdictional acceptance is desired. "
+        + "Used with GCM for AEAD.";
 
-    public string Summary => "Best for design diversity";
+    public string Summary => "Best for international compliance";
 
     protected override async Task EncryptStreamAsync(
         Stream sourceStream,
@@ -29,8 +29,8 @@ internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
         byte[] nonce
     )
     {
-        TwofishEngine twofishEngine = new();
-        GcmBlockCipher gcmCipher = new(twofishEngine);
+        CamelliaEngine camelliaEngine = new();
+        GcmBlockCipher gcmCipher = new(camelliaEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(true, parameters);
 
@@ -44,8 +44,8 @@ internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivat
         byte[] nonce
     )
     {
-        TwofishEngine twofishEngine = new();
-        GcmBlockCipher gcmCipher = new(twofishEngine);
+        CamelliaEngine camelliaEngine = new();
+        GcmBlockCipher gcmCipher = new(camelliaEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(false, parameters);
 

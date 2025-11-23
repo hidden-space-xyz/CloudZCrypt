@@ -5,7 +5,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CloudZCrypt.Infrastructure.Services.KeyDerivation;
+namespace CloudZCrypt.Infrastructure.Strategies.KeyDerivation;
 
 internal class Pbkdf2KeyDerivationStrategy : IKeyDerivationAlgorithmStrategy
 {

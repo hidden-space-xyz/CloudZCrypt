@@ -1,6 +1,5 @@
 using CloudZCrypt.Application.Helpers;
 using CloudZCrypt.Application.Orchestrators.Interfaces;
-using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.Validators.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
@@ -8,24 +7,25 @@ using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.Manifest;
 using System.Diagnostics;
 
 namespace CloudZCrypt.Application.Orchestrators;
 
-internal sealed class FileProcessingOrchestrator(
+internal sealed class FileCryptOrchestrator(
     IEncryptionServiceFactory encryptionServiceFactory,
     INameObfuscationServiceFactory nameObfuscationServiceFactory,
     IFileProcessingRequestValidator fileProcessingRequestValidator,
     IFileOperationsService fileOperations,
     IManifestService manifestService
-) : IFileProcessingOrchestrator
+) : IFileCryptOrchestrator
 {
     private static string AppFileExtension => ".czc";
     private static string ManifestFileName => "manifest" + AppFileExtension;
 
-    public async Task<Result<FileProcessingResult>> ExecuteAsync(
-        FileProcessingOrchestratorRequest request,
-        IProgress<FileProcessingStatus> progress,
+    public async Task<Result<FileCryptResult>> ExecuteAsync(
+        FileCryptRequest request,
+        IProgress<FileCryptStatus> progress,
         CancellationToken cancellationToken = default
     )
     {
@@ -36,8 +36,8 @@ internal sealed class FileProcessingOrchestrator(
         );
         if (errors.Count > 0)
         {
-            return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(false, TimeSpan.Zero, 0, 0, 0, errors: errors)
+            return Result<FileCryptResult>.Success(
+                new FileCryptResult(false, TimeSpan.Zero, 0, 0, 0, errors: errors)
             );
         }
 
@@ -48,8 +48,8 @@ internal sealed class FileProcessingOrchestrator(
         if (warnings.Count > 0 && !request.ProceedOnWarnings)
         {
             // Return a result carrying warnings, letting caller decide to proceed
-            return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(false, TimeSpan.Zero, 0, 0, 0, warnings: warnings)
+            return Result<FileCryptResult>.Success(
+                new FileCryptResult(false, TimeSpan.Zero, 0, 0, 0, warnings: warnings)
             );
         }
 
@@ -92,17 +92,17 @@ internal sealed class FileProcessingOrchestrator(
         }
         catch (Exception ex)
         {
-            return Result<FileProcessingResult>.Failure(
+            return Result<FileCryptResult>.Failure(
                 $"An unexpected error occurred: {ex.Message}"
             );
         }
     }
 
-    private async Task<Result<FileProcessingResult>> ProcessOperationAsync(
+    private async Task<Result<FileCryptResult>> ProcessOperationAsync(
         string sourcePath,
         string destinationPath,
-        FileProcessingOrchestratorRequest request,
-        IProgress<FileProcessingStatus> progress,
+        FileCryptRequest request,
+        IProgress<FileCryptStatus> progress,
         CancellationToken cancellationToken
     )
     {
@@ -112,7 +112,7 @@ internal sealed class FileProcessingOrchestrator(
         bool isFile = fileOperations.FileExists(sourcePath);
         if (!isDirectory && !isFile)
         {
-            return Result<FileProcessingResult>.Failure("Source path does not exist.");
+            return Result<FileCryptResult>.Failure("Source path does not exist.");
         }
 
         IEncryptionAlgorithmStrategy encryptionService = encryptionServiceFactory.Create(
@@ -137,8 +137,8 @@ internal sealed class FileProcessingOrchestrator(
                 )
                 {
                     stopwatch.Stop();
-                    return Result<FileProcessingResult>.Success(
-                        new FileProcessingResult(
+                    return Result<FileCryptResult>.Success(
+                        new FileCryptResult(
                             true,
                             stopwatch.Elapsed,
                             0,
@@ -177,11 +177,11 @@ internal sealed class FileProcessingOrchestrator(
                 }
 
                 progress?.Report(
-                    new FileProcessingStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed)
+                    new FileCryptStatus(1, 1, fileSize, fileSize, stopwatch.Elapsed)
                 );
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Success(
-                    new FileProcessingResult(
+                return Result<FileCryptResult>.Success(
+                    new FileCryptResult(
                         result,
                         stopwatch.Elapsed,
                         fileSize,
@@ -194,7 +194,7 @@ internal sealed class FileProcessingOrchestrator(
             catch (Domain.Exceptions.EncryptionException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure(ex.Message);
+                return Result<FileCryptResult>.Failure(ex.Message);
             }
         }
 
@@ -203,8 +203,8 @@ internal sealed class FileProcessingOrchestrator(
         if (files.Length == 0)
         {
             stopwatch.Stop();
-            return Result<FileProcessingResult>.Success(
-                new FileProcessingResult(
+            return Result<FileCryptResult>.Success(
+                new FileCryptResult(
                     false,
                     stopwatch.Elapsed,
                     0,
@@ -216,7 +216,7 @@ internal sealed class FileProcessingOrchestrator(
         }
 
         // Prepare optional manifest mapping for directory operations
-        List<NameMapEntry> manifestEntries = [];
+        List<ManifestEntry> manifestEntries = [];
         Dictionary<string, string>? manifestMap = null; // obfuscated relative path -> original relative path
 
         // If decrypting, try to decrypt manifest first to map original names
@@ -267,7 +267,7 @@ internal sealed class FileProcessingOrchestrator(
         );
 
         progress?.Report(
-            new FileProcessingStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero)
+            new FileCryptStatus(0, filesToProcess.Length, 0, totalBytes, TimeSpan.Zero)
         );
 
         for (int i = 0; i < filesToProcess.Length; i++)
@@ -296,7 +296,7 @@ internal sealed class FileProcessingOrchestrator(
                     destinationPath,
                     destinationFilePath
                 );
-                manifestEntries.Add(new NameMapEntry(relativePath, obfuscatedRelativePath));
+                manifestEntries.Add(new ManifestEntry(relativePath, obfuscatedRelativePath));
             }
             else
             {
@@ -342,28 +342,28 @@ internal sealed class FileProcessingOrchestrator(
             catch (Domain.Exceptions.EncryptionAccessDeniedException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure(
+                return Result<FileCryptResult>.Failure(
                     $"Operation stopped due to access denied error: {ex.Message}"
                 );
             }
             catch (Domain.Exceptions.EncryptionInsufficientSpaceException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure(
+                return Result<FileCryptResult>.Failure(
                     $"Operation stopped due to insufficient disk space: {ex.Message}"
                 );
             }
             catch (Domain.Exceptions.EncryptionInvalidPasswordException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure(
+                return Result<FileCryptResult>.Failure(
                     $"Operation stopped due to invalid password: {ex.Message}"
                 );
             }
             catch (Domain.Exceptions.EncryptionKeyDerivationException ex)
             {
                 stopwatch.Stop();
-                return Result<FileProcessingResult>.Failure(
+                return Result<FileCryptResult>.Failure(
                     $"Operation stopped due to key derivation error: {ex.Message}"
                 );
             }
@@ -395,7 +395,7 @@ internal sealed class FileProcessingOrchestrator(
 
             processedBytes += fileSize;
             progress?.Report(
-                new FileProcessingStatus(
+                new FileCryptStatus(
                     i + 1,
                     filesToProcess.Length,
                     processedBytes,
@@ -425,11 +425,11 @@ internal sealed class FileProcessingOrchestrator(
         bool isSuccess = errors.Count == 0 && processedFiles == filesToProcess.Length;
 
         return errors.Count > 0 && processedFiles == 0
-            ? Result<FileProcessingResult>.Failure(
+            ? Result<FileCryptResult>.Failure(
                 $"Failed to process any files. Errors: {string.Join("; ", errors)}"
             )
-            : Result<FileProcessingResult>.Success(
-                new FileProcessingResult(
+            : Result<FileCryptResult>.Success(
+                new FileCryptResult(
                     isSuccess,
                     stopwatch.Elapsed,
                     totalBytes,
@@ -503,7 +503,7 @@ internal sealed class FileProcessingOrchestrator(
         IEncryptionAlgorithmStrategy encryptionService,
         string sourceFile,
         string destinationFile,
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken
     )
     {

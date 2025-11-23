@@ -9,7 +9,7 @@ public interface IDialogService
     void ShowMessage(string message, string title, MessageBoxImage icon);
 
     void ShowProcessingResult(
-        FileProcessingResult result,
+        FileCryptResult result,
         EncryptOperation operation,
         string sourceType
     );

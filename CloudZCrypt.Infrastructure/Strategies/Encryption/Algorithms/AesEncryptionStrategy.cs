@@ -5,22 +5,21 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
 
-internal class CamelliaEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
     : EncryptionStrategyBase(keyDerivationServiceFactory),
         IEncryptionAlgorithmStrategy
 {
-    public EncryptionAlgorithm Id => EncryptionAlgorithm.Camellia;
+    public EncryptionAlgorithm Id => EncryptionAlgorithm.Aes;
 
-    public string DisplayName => "Camellia-256 GCM";
+    public string DisplayName => "AES-256 GCM";
 
     public string Description =>
-        "A 128‑bit block cipher with a 256‑bit key, jointly designed by NTT and Mitsubishi; performance and security margin comparable to AES. "
-        + "Supported in many international standards (RFCs, ISO/IEC) and suitable where non‑U.S.-origin algorithms or broader jurisdictional acceptance is desired. "
-        + "Used with GCM for AEAD.";
+        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. "
+        + "Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
 
-    public string Summary => "Best for international compliance";
+    public string Summary => "Best for general purposes (with hardware acceleration)";
 
     protected override async Task EncryptStreamAsync(
         Stream sourceStream,
@@ -29,8 +28,8 @@ internal class CamelliaEncryptionStrategy(IKeyDerivationServiceFactory keyDeriva
         byte[] nonce
     )
     {
-        CamelliaEngine camelliaEngine = new();
-        GcmBlockCipher gcmCipher = new(camelliaEngine);
+        AesEngine aesEngine = new();
+        GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(true, parameters);
 
@@ -44,8 +43,8 @@ internal class CamelliaEncryptionStrategy(IKeyDerivationServiceFactory keyDeriva
         byte[] nonce
     )
     {
-        CamelliaEngine camelliaEngine = new();
-        GcmBlockCipher gcmCipher = new(camelliaEngine);
+        AesEngine aesEngine = new();
+        GcmBlockCipher gcmCipher = new(aesEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(false, parameters);
 

@@ -2,7 +2,7 @@ using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
-public sealed record FileProcessingResult
+public sealed record FileCryptResult
 {
     public bool IsSuccess { get; }
     public TimeSpan ElapsedTime { get; }
@@ -12,7 +12,7 @@ public sealed record FileProcessingResult
     public IReadOnlyList<string> Errors { get; }
     public IReadOnlyList<string> Warnings { get; }
 
-    public FileProcessingResult(
+    public FileCryptResult(
         bool isSuccess,
         TimeSpan elapsedTime,
         long totalBytes,

@@ -1,22 +1,23 @@
-using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Strategies.Interfaces;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
+using CloudZCrypt.Domain.ValueObjects.Manifest;
 
-namespace CloudZCrypt.Application.Services.Interfaces;
+namespace CloudZCrypt.Domain.Services.Interfaces;
 
 public interface IManifestService
 {
     Task<Dictionary<string, string>?> TryReadManifestAsync(
         string sourceRoot,
         IEncryptionAlgorithmStrategy encryptionService,
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken
     );
 
     Task<IReadOnlyList<string>> TrySaveManifestAsync(
-        IReadOnlyList<NameMapEntry> entries,
+        IReadOnlyList<ManifestEntry> entries,
         string destinationRoot,
         IEncryptionAlgorithmStrategy encryptionService,
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken
     );
 }

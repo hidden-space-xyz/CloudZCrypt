@@ -4,7 +4,7 @@ using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
 
 internal class ChaCha20EncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
     : EncryptionStrategyBase(keyDerivationServiceFactory),

@@ -2,7 +2,7 @@ using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 
-namespace CloudZCrypt.Infrastructure.Factories;
+namespace CloudZCrypt.Domain.Factories;
 
 internal class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmStrategy> strategies)
     : IKeyDerivationServiceFactory
@@ -17,7 +17,7 @@ internal class KeyDerivationServiceFactory(IEnumerable<IKeyDerivationAlgorithmSt
         return !strategies.TryGetValue(algorithm, out IKeyDerivationAlgorithmStrategy? strategy)
             ? throw new ArgumentOutOfRangeException(
                 nameof(algorithm),
-                $"Key derivation algorithm '{algorithm}' no registrado."
+                $"Key derivation algorithm '{algorithm}' is not registered."
             )
             : strategy;
     }

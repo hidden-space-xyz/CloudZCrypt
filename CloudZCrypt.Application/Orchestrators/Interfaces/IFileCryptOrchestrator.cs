@@ -3,11 +3,11 @@ using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Application.Orchestrators.Interfaces;
 
-public interface IFileProcessingOrchestrator
+public interface IFileCryptOrchestrator
 {
-    Task<Result<FileProcessingResult>> ExecuteAsync(
-        FileProcessingOrchestratorRequest request,
-        IProgress<FileProcessingStatus> progress,
+    Task<Result<FileCryptResult>> ExecuteAsync(
+        FileCryptRequest request,
+        IProgress<FileCryptStatus> progress,
         CancellationToken cancellationToken = default
     );
 }

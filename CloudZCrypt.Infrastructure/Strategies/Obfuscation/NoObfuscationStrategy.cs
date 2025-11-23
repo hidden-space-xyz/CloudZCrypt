@@ -1,7 +1,7 @@
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 
-namespace CloudZCrypt.Infrastructure.Services.Obfuscation;
+namespace CloudZCrypt.Infrastructure.Strategies.Obfuscation;
 
 internal class NoObfuscationStrategy : INameObfuscationStrategy
 {

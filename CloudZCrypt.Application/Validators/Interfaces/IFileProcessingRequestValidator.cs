@@ -1,16 +1,16 @@
-using CloudZCrypt.Application.ValueObjects;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Application.Validators.Interfaces;
 
 public interface IFileProcessingRequestValidator
 {
     Task<IReadOnlyList<string>> AnalyzeErrorsAsync(
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken = default
     );
 
     Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken = default
     );
 }

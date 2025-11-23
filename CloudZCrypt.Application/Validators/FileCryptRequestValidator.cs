@@ -1,19 +1,19 @@
 using CloudZCrypt.Application.Helpers;
 using CloudZCrypt.Application.Validators.Interfaces;
-using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Services.Interfaces;
 using CloudZCrypt.Domain.Utilities;
+using CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
 namespace CloudZCrypt.Application.Validators;
 
-internal sealed class FileProcessingRequestValidator(
+internal sealed class FileCryptRequestValidator(
     IFileOperationsService fileOperations,
     ISystemStorageService systemStorage,
     IPasswordService passwordService
 ) : IFileProcessingRequestValidator
 {
     public async Task<IReadOnlyList<string>> AnalyzeErrorsAsync(
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken = default
     )
     {
@@ -243,7 +243,7 @@ internal sealed class FileProcessingRequestValidator(
     }
 
     public async Task<IReadOnlyList<string>> AnalyzeWarningsAsync(
-        FileProcessingOrchestratorRequest request,
+        FileCryptRequest request,
         CancellationToken cancellationToken = default
     )
     {

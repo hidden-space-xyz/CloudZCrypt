@@ -5,7 +5,7 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
 
 internal class SerpentEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
     : EncryptionStrategyBase(keyDerivationServiceFactory),

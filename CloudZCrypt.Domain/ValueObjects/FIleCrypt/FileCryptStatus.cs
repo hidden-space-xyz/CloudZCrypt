@@ -2,7 +2,7 @@ using CloudZCrypt.Domain.Enums;
 
 namespace CloudZCrypt.Domain.ValueObjects.FileProcessing;
 
-public sealed record FileProcessingStatus
+public sealed record FileCryptStatus
 {
     public int ProcessedFiles { get; }
     public int TotalFiles { get; }
@@ -10,7 +10,7 @@ public sealed record FileProcessingStatus
     public long TotalBytes { get; }
     public TimeSpan Elapsed { get; }
 
-    public FileProcessingStatus(
+    public FileCryptStatus(
         int processedFiles,
         int totalFiles,
         long processedBytes,

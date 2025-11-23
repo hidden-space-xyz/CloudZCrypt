@@ -43,7 +43,7 @@ public class DialogService : IDialogService
     }
 
     public void ShowProcessingResult(
-        FileProcessingResult result,
+        FileCryptResult result,
         EncryptOperation operation,
         string sourceType
     )

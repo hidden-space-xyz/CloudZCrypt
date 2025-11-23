@@ -5,21 +5,22 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption.Algorithms;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption.Algorithms;
 
-internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
+internal class TwofishEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationServiceFactory)
     : EncryptionStrategyBase(keyDerivationServiceFactory),
         IEncryptionAlgorithmStrategy
 {
-    public EncryptionAlgorithm Id => EncryptionAlgorithm.Aes;
+    public EncryptionAlgorithm Id => EncryptionAlgorithm.Twofish;
 
-    public string DisplayName => "AES-256 GCM";
+    public string DisplayName => "Twofish-256 GCM";
 
     public string Description =>
-        "A NIST-standardized 128‑bit block cipher with a 256‑bit key, widely accelerated via AES-NI and ARMv8 Cryptography Extensions. "
-        + "Galois/Counter Mode (GCM) provides authenticated encryption with associated data (AEAD), combining high performance, confidentiality, and integrity.";
+        "A flexible 128‑bit block cipher (up to 256‑bit keys), also an AES finalist. "
+        + "Offers solid cryptanalytic resilience with a different design philosophy (Feistel + key-dependent S‑boxes) for algorithmic diversity. "
+        + "Less commonly hardware-accelerated or standardized for AEAD modes.";
 
-    public string Summary => "Best for general purposes (with hardware acceleration)";
+    public string Summary => "Best for design diversity";
 
     protected override async Task EncryptStreamAsync(
         Stream sourceStream,
@@ -28,8 +29,8 @@ internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationS
         byte[] nonce
     )
     {
-        AesEngine aesEngine = new();
-        GcmBlockCipher gcmCipher = new(aesEngine);
+        TwofishEngine twofishEngine = new();
+        GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(true, parameters);
 
@@ -43,8 +44,8 @@ internal class AesEncryptionStrategy(IKeyDerivationServiceFactory keyDerivationS
         byte[] nonce
     )
     {
-        AesEngine aesEngine = new();
-        GcmBlockCipher gcmCipher = new(aesEngine);
+        TwofishEngine twofishEngine = new();
+        GcmBlockCipher gcmCipher = new(twofishEngine);
         AeadParameters parameters = new(new KeyParameter(key), MacSize, nonce);
         gcmCipher.Init(false, parameters);
 

@@ -5,7 +5,7 @@ using CloudZCrypt.Domain.Strategies.Interfaces;
 using Org.BouncyCastle.Crypto.Modes;
 using System.Security.Cryptography;
 
-namespace CloudZCrypt.Infrastructure.Services.Encryption;
+namespace CloudZCrypt.Infrastructure.Strategies.Encryption;
 
 internal abstract class EncryptionStrategyBase(
     IKeyDerivationServiceFactory keyDerivationServiceFactory

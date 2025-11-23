@@ -17,7 +17,7 @@ namespace CloudZCrypt.WPF.ViewModels;
 public class MainWindowViewModel : ObservableObjectBase
 {
     private readonly IDialogService dialogService;
-    private readonly IFileProcessingOrchestrator fileProcessingOrchestrator;
+    private readonly IFileCryptOrchestrator fileProcessingOrchestrator;
 
     private CancellationTokenSource? cancellationTokenSource;
 
@@ -205,7 +205,7 @@ public class MainWindowViewModel : ObservableObjectBase
 
     public MainWindowViewModel(
         IDialogService dialogService,
-        IFileProcessingOrchestrator orchestrator,
+        IFileCryptOrchestrator orchestrator,
         IPasswordService passwordService,
         IEnumerable<IEncryptionAlgorithmStrategy> encryptionStrategies,
         IEnumerable<IKeyDerivationAlgorithmStrategy> keyDerivationStrategies,
@@ -429,7 +429,7 @@ public class MainWindowViewModel : ObservableObjectBase
     private async Task ProcessFileAsync(EncryptOperation operation)
     {
         // Compose base request
-        FileProcessingOrchestratorRequest baseRequest = new(
+        FileCryptRequest baseRequest = new(
             SourceFilePath,
             DestinationPath,
             Password,
@@ -445,11 +445,11 @@ public class MainWindowViewModel : ObservableObjectBase
 
         try
         {
-            Progress<FileProcessingStatus> progress = new(OnProgressUpdate);
+            Progress<FileCryptStatus> progress = new(OnProgressUpdate);
             cancellationTokenSource = new();
 
             // First call: perform validations and possibly process if no warnings
-            Result<FileProcessingResult> result = await fileProcessingOrchestrator.ExecuteAsync(
+            Result<FileCryptResult> result = await fileProcessingOrchestrator.ExecuteAsync(
                 baseRequest,
                 progress,
                 cancellationTokenSource.Token
@@ -465,7 +465,7 @@ public class MainWindowViewModel : ObservableObjectBase
                 return;
             }
 
-            FileProcessingResult response = result.Value;
+            FileCryptResult response = result.Value;
 
             // Handle validation errors
             if (response.HasErrors && response.TotalFiles == 0 && response.ProcessedFiles == 0)
@@ -490,7 +490,7 @@ public class MainWindowViewModel : ObservableObjectBase
                 }
 
                 // Re-run with permission to proceed
-                FileProcessingOrchestratorRequest proceedRequest = baseRequest with
+                FileCryptRequest proceedRequest = baseRequest with
                 {
                     ProceedOnWarnings = true,
                 };
@@ -552,7 +552,7 @@ public class MainWindowViewModel : ObservableObjectBase
         }
     }
 
-    private void OnProgressUpdate(FileProcessingStatus update)
+    private void OnProgressUpdate(FileCryptStatus update)
     {
         double progress =
             update.TotalBytes > 0 ? (double)update.ProcessedBytes / update.TotalBytes * 100 : 100;

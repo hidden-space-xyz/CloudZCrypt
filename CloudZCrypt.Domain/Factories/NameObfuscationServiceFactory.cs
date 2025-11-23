@@ -2,7 +2,7 @@ using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Factories.Interfaces;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 
-namespace CloudZCrypt.Infrastructure.Factories;
+namespace CloudZCrypt.Domain.Factories;
 
 internal class NameObfuscationServiceFactory(IEnumerable<INameObfuscationStrategy> strategies)
     : INameObfuscationServiceFactory

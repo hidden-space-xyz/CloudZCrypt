@@ -3,19 +3,19 @@ using CloudZCrypt.Domain.Strategies.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CloudZCrypt.Infrastructure.Services.Obfuscation;
+namespace CloudZCrypt.Infrastructure.Strategies.Obfuscation;
 
-internal class Sha256ObfuscationStrategy : INameObfuscationStrategy
+internal class Sha512ObfuscationStrategy : INameObfuscationStrategy
 {
-    public NameObfuscationMode Id => NameObfuscationMode.Sha256;
+    public NameObfuscationMode Id => NameObfuscationMode.Sha512;
 
-    public string DisplayName => "SHA-256";
+    public string DisplayName => "SHA-512";
 
     public string Description =>
-        "Replaces the filename with a 64‑character SHA‑256 hexadecimal digest computed from the file content. "
-        + "Deterministic across identical content, enabling deduplication and content-addressable naming without leaking the original filename.";
+        "Replaces the filename with a 128‑character SHA‑512 hexadecimal digest computed from the file content. "
+        + "Offers stronger collision resistance than SHA‑256 at the cost of longer names; deterministic across identical content.";
 
-    public string Summary => "Best for content-addressed naming (64-char digest)";
+    public string Summary => "Best for maximum collision resistance (128-char digest)";
 
     public string ObfuscateFileName(string sourceFilePath, string originalFileName)
     {
@@ -40,14 +40,14 @@ internal class Sha256ObfuscationStrategy : INameObfuscationStrategy
     private static string ComputeFileHash(string filePath)
     {
         using FileStream stream = File.OpenRead(filePath);
-        byte[] hash = SHA256.HashData(stream);
+        byte[] hash = SHA512.HashData(stream);
         return ToHex(hash);
     }
 
     private static string ComputeStringHash(string input)
     {
         byte[] data = Encoding.UTF8.GetBytes(input);
-        byte[] hash = SHA256.HashData(data);
+        byte[] hash = SHA512.HashData(data);
         return ToHex(hash);
     }
 
