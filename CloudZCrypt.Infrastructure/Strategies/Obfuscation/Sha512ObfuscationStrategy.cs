@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
-using System.Text;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Strategies.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CloudZCrypt.Infrastructure.Strategies.Obfuscation;
 

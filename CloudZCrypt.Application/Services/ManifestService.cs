@@ -1,9 +1,9 @@
-using System.Text;
-using System.Text.Json;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects.Manifest;
 using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileCrypt;
+using System.Text;
+using System.Text.Json;
 
 namespace CloudZCrypt.Application.Services;
 

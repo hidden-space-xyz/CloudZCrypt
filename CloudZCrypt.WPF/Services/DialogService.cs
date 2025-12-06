@@ -1,9 +1,9 @@
-﻿using System.Text;
-using System.Windows;
-using CloudZCrypt.Domain.Enums;
+﻿using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.Views;
+using System.Text;
+using System.Windows;
 
 namespace CloudZCrypt.WPF.Services;
 
