@@ -1,9 +1,8 @@
 <p align="center">
-<img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4" />  
-<img alt="C#" src="https://img.shields.io/badge/C%23-14-239120" />  
-<img alt="WPF" src="https://img.shields.io/badge/WPF-Desktop-5C2D91" />  
-<img alt="Windows" src="https://img.shields.io/badge/OS-Windows-0078D6" />  
-<img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg" />  
+<img alt=".NET" src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" />
+<img alt="Windows" src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" />
+<img alt="Linux" src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" />
+<img alt="License" src="https://img.shields.io/badge/GPL--3.0-red?style=for-the-badge" />
 </p>
 
  # 🔐 CloudZCrypt
