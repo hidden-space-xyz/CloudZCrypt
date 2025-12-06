@@ -1,9 +1,9 @@
+using System.Windows;
 using CloudZCrypt.Composition;
 using CloudZCrypt.WPF.Services;
 using CloudZCrypt.WPF.Services.Interfaces;
 using CloudZCrypt.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
 
 namespace CloudZCrypt.WPF;
 

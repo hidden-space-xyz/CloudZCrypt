@@ -1,10 +1,10 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects.Password;
 using CloudZCrypt.Domain.Enums;
 using CloudZCrypt.Domain.Exceptions;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace CloudZCrypt.Application.Services
 {

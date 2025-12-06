@@ -1,4 +1,8 @@
-﻿using CloudZCrypt.Application.Orchestrators.Interfaces;
+﻿using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Input;
+using CloudZCrypt.Application.Orchestrators.Interfaces;
 using CloudZCrypt.Application.Services.Interfaces;
 using CloudZCrypt.Application.ValueObjects;
 using CloudZCrypt.Domain.Enums;
@@ -7,10 +11,6 @@ using CloudZCrypt.Domain.Strategies.Interfaces;
 using CloudZCrypt.Domain.ValueObjects.FileCrypt;
 using CloudZCrypt.WPF.Commands;
 using CloudZCrypt.WPF.Services.Interfaces;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Input;
 
 namespace CloudZCrypt.WPF.ViewModels;
 
@@ -602,59 +602,59 @@ public class MainWindowViewModel : ObservableObjectBase
         switch (ex)
         {
             case EncryptionException enc:
+            {
+                (string Title, string? Advice) = enc.Code switch
                 {
-                    (string Title, string? Advice) = enc.Code switch
-                    {
-                        EncryptionErrorCode.AccessDenied => (
-                            "Access Denied",
-                            "Check file or folder permissions or run as administrator."
-                        ),
-                        EncryptionErrorCode.InsufficientDiskSpace => (
-                            "Insufficient Disk Space",
-                            "Free disk space or choose another destination."
-                        ),
-                        EncryptionErrorCode.InvalidPassword => (
-                            "Invalid Password",
-                            "Verify the password and try again."
-                        ),
-                        EncryptionErrorCode.FileCorruption => (
-                            "File Corruption",
-                            "The file may be damaged or not properly encrypted."
-                        ),
-                        EncryptionErrorCode.KeyDerivationFailed => (
-                            "Key Derivation Error",
-                            "A problem occurred while deriving the encryption key."
-                        ),
-                        EncryptionErrorCode.FileNotFound => (
-                            "File Not Found",
-                            "Ensure the file exists and is accessible."
-                        ),
-                        EncryptionErrorCode.CipherOperationFailed => (
-                            "Encryption Error",
-                            "The cryptographic operation failed."
-                        ),
-                        _ => ("Operation Failed", null),
-                    };
+                    EncryptionErrorCode.AccessDenied => (
+                        "Access Denied",
+                        "Check file or folder permissions or run as administrator."
+                    ),
+                    EncryptionErrorCode.InsufficientDiskSpace => (
+                        "Insufficient Disk Space",
+                        "Free disk space or choose another destination."
+                    ),
+                    EncryptionErrorCode.InvalidPassword => (
+                        "Invalid Password",
+                        "Verify the password and try again."
+                    ),
+                    EncryptionErrorCode.FileCorruption => (
+                        "File Corruption",
+                        "The file may be damaged or not properly encrypted."
+                    ),
+                    EncryptionErrorCode.KeyDerivationFailed => (
+                        "Key Derivation Error",
+                        "A problem occurred while deriving the encryption key."
+                    ),
+                    EncryptionErrorCode.FileNotFound => (
+                        "File Not Found",
+                        "Ensure the file exists and is accessible."
+                    ),
+                    EncryptionErrorCode.CipherOperationFailed => (
+                        "Encryption Error",
+                        "The cryptographic operation failed."
+                    ),
+                    _ => ("Operation Failed", null),
+                };
 
-                    string msg = enc.Message ?? enc.Code.ToString();
-                    return (Title, Advice is null ? msg : $"{msg}\n\n{Advice}");
-                }
+                string msg = enc.Message ?? enc.Code.ToString();
+                return (Title, Advice is null ? msg : $"{msg}\n\n{Advice}");
+            }
             case ValidationException val:
-                {
-                    string title = "Validation Error";
-                    string msg = string.IsNullOrWhiteSpace(val.Message)
-                        ? val.Code.ToString()
-                        : val.Message;
-                    return (title, msg);
-                }
+            {
+                string title = "Validation Error";
+                string msg = string.IsNullOrWhiteSpace(val.Message)
+                    ? val.Code.ToString()
+                    : val.Message;
+                return (title, msg);
+            }
             default:
-                {
-                    string opText = operation is null
-                        ? string.Empty
-                        : $" during {operation.Value.ToString().ToLower()}";
-                    string raw = ex.Message ?? "Unknown error.";
-                    return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
-                }
+            {
+                string opText = operation is null
+                    ? string.Empty
+                    : $" during {operation.Value.ToString().ToLower()}";
+                string raw = ex.Message ?? "Unknown error.";
+                return ("Operation Failed", $"An error occurred{opText} while {context}: {raw}");
+            }
         }
     }
 }

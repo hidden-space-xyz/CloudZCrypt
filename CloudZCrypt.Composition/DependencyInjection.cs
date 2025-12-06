@@ -53,6 +53,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IFileCryptOrchestrator, FileCryptOrchestrator>();
+        services.AddSingleton<IFileCryptSingleFileService, FileCryptSingleFileService>();
+        services.AddSingleton<IFileCryptDirectoryService, FileCryptDirectoryService>();
         services.AddSingleton<IFileCryptRequestValidator, FileCryptRequestValidator>();
         services.AddSingleton<IManifestService, ManifestService>();
 
